@@ -6,14 +6,19 @@ import (
 )
 
 type User struct {
-	ModelCore
+	Core
+	UserAttributes
+
+	LastLoginAt time.Time
+}
+
+type UserAttributes struct {
 	Name      string
 	IsAdmin   bool
-	LastLogin *time.Time
+	IsEnabled bool
 }
 
 func (u User) String() string {
-	s := fmt.Sprintf("U%d: \"%s\"\n",
-		u.ID, u.Name)
+	s := fmt.Sprintf("u.%d: %s", u.ID, u.Name)
 	return s
 }
