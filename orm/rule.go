@@ -7,12 +7,17 @@ import (
 
 type Rule struct {
 	Core
+	RuleAttributes
+
+	Owner   User
+	OwnerID uint
+}
+
+type RuleAttributes struct {
 	Name         string
 	PollDuration time.Duration
 	IsEnabled    bool
 	Expression   string
-	Owner        User
-	OwnerID      uint
 }
 
 func (r Rule) String() string {

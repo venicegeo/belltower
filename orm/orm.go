@@ -3,6 +3,8 @@ package orm
 import (
 	"os"
 
+	"fmt"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
@@ -47,25 +49,45 @@ func (model *Orm) Close() error {
 	return model.db.Close()
 }
 
-func (model *Orm) AddUser(name string, attrs *UserAttributes) error {
+//---------------------------------------------------------------------
+
+func (model *Orm) AddUser(attrs *UserAttributes) (uint, error) {
 	user := &User{}
 	user.UserAttributes = *attrs
-	return model.db.Create(user).Error
+	err := model.db.Create(user).Error
+	id := user.ID
+	return id, err
 }
 
-func (model *Orm) UpdateUser(name string, attrs *UserAttributes) error {
-	user, err := model.GetUserByName(name)
+func (model *Orm) UpdateUser(id uint, attrs *UserAttributes) error {
+	r, err := model.GetUser(id)
 	if err != nil {
 		return err
 	}
-	user.UserAttributes = *attrs
-	return model.db.Save(user).Error
+	r.UserAttributes = *attrs
+	return model.db.Save(r).Error
 }
 
-func (model *Orm) GetUserByName(name string) (*User, error) {
+func (model *Orm) DeleteUser(id uint) error {
+	r, err := model.GetUser(id)
+	if err != nil {
+		return err
+	}
+	if r == nil {
+		return fmt.Errorf("record not found u.%d", id)
+	}
+	err = model.db.Delete(r).Error
+	if err != nil {
+		return err
+	}
 
-	user := &User{}
-	err := model.db.First(user, "name = ?", name).Error
+	return nil
+}
+
+func (model *Orm) GetUser(id uint) (*User, error) {
+
+	r := &User{}
+	err := model.db.First(r, "id = ?", id).Error
 	if err != nil {
 		if err.Error() == "record not found" {
 			return nil, nil
@@ -73,5 +95,250 @@ func (model *Orm) GetUserByName(name string) (*User, error) {
 		return nil, err
 	}
 
-	return user, nil
+	return r, nil
+}
+
+//---------------------------------------------------------------------
+
+func (model *Orm) AddFeedType(attrs *FeedTypeAttributes) (uint, error) {
+	r := &FeedType{}
+	r.FeedTypeAttributes = *attrs
+	err := model.db.Create(r).Error
+	id := r.ID
+	return id, err
+}
+
+func (model *Orm) UpdateFeedType(id uint, attrs *FeedTypeAttributes) error {
+	r, err := model.GetFeedType(id)
+	if err != nil {
+		return err
+	}
+	r.FeedTypeAttributes = *attrs
+	return model.db.Save(r).Error
+}
+
+func (model *Orm) DeleteFeedType(id uint) error {
+	r, err := model.GetFeedType(id)
+	if err != nil {
+		return err
+	}
+	if r == nil {
+		return fmt.Errorf("record not found ft.%d", id)
+	}
+	err = model.db.Delete(r).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (model *Orm) GetFeedType(id uint) (*FeedType, error) {
+
+	r := &FeedType{}
+	err := model.db.First(r, "id = ?", id).Error
+	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return r, nil
+}
+
+//---------------------------------------------------------------------
+
+func (model *Orm) AddFeed(attrs *FeedAttributes) (uint, error) {
+	r := &Feed{}
+	r.FeedAttributes = *attrs
+	err := model.db.Create(r).Error
+	id := r.ID
+	return id, err
+}
+
+func (model *Orm) UpdateFeed(id uint, attrs *FeedAttributes) error {
+	r, err := model.GetFeed(id)
+	if err != nil {
+		return err
+	}
+	r.FeedAttributes = *attrs
+	return model.db.Save(r).Error
+}
+
+func (model *Orm) DeleteFeed(id uint) error {
+	r, err := model.GetFeed(id)
+	if err != nil {
+		return err
+	}
+	if r == nil {
+		return fmt.Errorf("record not found f.%d", id)
+	}
+	err = model.db.Delete(r).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (model *Orm) GetFeed(id uint) (*Feed, error) {
+
+	r := &Feed{}
+	err := model.db.First(r, "id = ?", id).Error
+	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return r, nil
+}
+
+//---------------------------------------------------------------------
+
+func (model *Orm) AddRule(attrs *RuleAttributes) (uint, error) {
+	r := &Rule{}
+	r.RuleAttributes = *attrs
+	err := model.db.Create(r).Error
+	id := r.ID
+	return id, err
+}
+
+func (model *Orm) UpdateRule(id uint, attrs *RuleAttributes) error {
+	r, err := model.GetRule(id)
+	if err != nil {
+		return err
+	}
+	r.RuleAttributes = *attrs
+	return model.db.Save(r).Error
+}
+
+func (model *Orm) DeleteRule(id uint) error {
+	r, err := model.GetRule(id)
+	if err != nil {
+		return err
+	}
+	if r == nil {
+		return fmt.Errorf("record not found r.%d", id)
+	}
+	err = model.db.Delete(r).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (model *Orm) GetRule(id uint) (*Rule, error) {
+
+	r := &Rule{}
+	err := model.db.First(r, "id = ?", id).Error
+	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return r, nil
+}
+
+//---------------------------------------------------------------------
+
+func (model *Orm) AddAction(attrs *ActionAttributes) (uint, error) {
+	r := &Action{}
+	r.ActionAttributes = *attrs
+	err := model.db.Create(r).Error
+	id := r.ID
+	return id, err
+}
+
+func (model *Orm) UpdateAction(id uint, attrs *ActionAttributes) error {
+	r, err := model.GetAction(id)
+	if err != nil {
+		return err
+	}
+	r.ActionAttributes = *attrs
+	return model.db.Save(r).Error
+}
+
+func (model *Orm) DeleteAction(id uint) error {
+	r, err := model.GetAction(id)
+	if err != nil {
+		return err
+	}
+	if r == nil {
+		return fmt.Errorf("record not found a.%d", id)
+	}
+	err = model.db.Delete(r).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (model *Orm) GetAction(id uint) (*Action, error) {
+
+	r := &Action{}
+	err := model.db.First(r, "id = ?", id).Error
+	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return r, nil
+}
+
+//---------------------------------------------------------------------
+
+func (model *Orm) AddActionType(attrs *ActionTypeAttributes) (uint, error) {
+	r := &ActionType{}
+	r.ActionTypeAttributes = *attrs
+	err := model.db.Create(r).Error
+	id := r.ID
+	return id, err
+}
+
+func (model *Orm) UpdateActionType(id uint, attrs *ActionTypeAttributes) error {
+	r, err := model.GetActionType(id)
+	if err != nil {
+		return err
+	}
+	r.ActionTypeAttributes = *attrs
+	return model.db.Save(r).Error
+}
+
+func (model *Orm) DeleteActionType(id uint) error {
+	r, err := model.GetActionType(id)
+	if err != nil {
+		return err
+	}
+	if r == nil {
+		return fmt.Errorf("record not found a.%d", id)
+	}
+	err = model.db.Delete(r).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (model *Orm) GetActionType(id uint) (*ActionType, error) {
+
+	r := &ActionType{}
+	err := model.db.First(r, "id = ?", id).Error
+	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return r, nil
 }

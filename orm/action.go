@@ -4,9 +4,15 @@ import "fmt"
 
 type Action struct {
 	Core
-	Name         string
+	ActionAttributes
+
 	ActionType   ActionType
 	ActionTypeID uint
+}
+
+type ActionAttributes struct {
+	Name      string
+	IsEnabled bool
 }
 
 func (a Action) String() string {

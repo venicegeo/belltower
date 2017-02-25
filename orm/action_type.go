@@ -4,6 +4,12 @@ import "fmt"
 
 type ActionType struct {
 	Core
+	ActionTypeAttributes
+}
+
+type ActionTypeAttributes struct {
+	Name       string
+	IsEnabled  bool
 	ConfigInfo string
 }
 
