@@ -6,6 +6,9 @@ import (
 	"time"
 )
 
+// ClockFeed checks the second hand of the clock and if it is zero when mod'd with the
+// given value, it will give the server a message. It sleeps for the given time length between
+// checks.
 type ClockFeed struct {
 	name          string
 	sleepDuration time.Duration
