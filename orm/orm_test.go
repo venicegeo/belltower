@@ -17,22 +17,22 @@ func TestDBOperations(t *testing.T) {
 
 	db := model.db
 
-	feedType := &FeedType{}
-	feedType.Name = "TestFeedType"
-	feedType.ConfigInfo = "figgy"
+	feed := &FeedType{}
+	feed.Name = "TestFeedType"
+	feed.ConfigInfo = "figgy"
 
-	err = db.Create(feedType).Error
+	err = db.Create(feed).Error
 	assert.NoError(err)
 
-	err = db.First(&feedType, 1).Error
+	err = db.First(&feed, 1).Error
 	assert.NoError(err)
-	assert.Equal("TestFeedType", feedType.Name)
+	assert.Equal("TestFeed", feed.Name)
 
-	err = db.First(&feedType, "name = ?", "xyzzy").Error
+	err = db.First(&feed, "name = ?", "xyzzy").Error
 	assert.Equal("record not found", err.Error())
-	assert.Equal("TestFeedType", feedType.Name)
+	assert.Equal("TestFeed", feed.Name)
 
-	err = db.Model(&feedType).Update("Name", "TFT").Error
+	err = db.Model(&feed).Update("Name", "TFT").Error
 	assert.NoError(err)
 	assert.Equal("TFT", feedType.Name)
 

@@ -4,12 +4,12 @@ import "fmt"
 
 type ActionAccessList struct {
 	Core
-	ActionType   ActionType
-	ActionTypeID uint
-	User         User
-	UserID       uint
-	CanRead      bool
-	CanWrite     bool
+	Action   Action
+	ActionID uint
+	User     User
+	UserID   uint
+	CanRead  bool
+	CanWrite bool
 }
 
 func (aal ActionAccessList) String() string {

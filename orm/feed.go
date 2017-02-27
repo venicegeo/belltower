@@ -13,8 +13,6 @@ type Feed struct {
 	LastMessageAt       *time.Time
 	Owner               User
 	OwnerID             uint
-	FeedType            FeedType
-	FeedTypeID          uint
 }
 
 type FeedAttributes struct {

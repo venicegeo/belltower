@@ -28,9 +28,9 @@ func NewOrm() (*Orm, error) {
 
 	// create all the tables
 	tables := []interface{}{
-		&FeedType{}, &Feed{}, &FeedRuleAssociation{}, &FeedAccessList{},
+		&Feed{}, &FeedRuleAssociation{}, &FeedAccessList{},
 		&Rule{}, &RuleAccessList{},
-		&ActionType{}, &Action{}, &ActionRuleAssociation{}, &ActionAccessList{},
+		&Action{}, &ActionRuleAssociation{}, &ActionAccessList{},
 		&User{},
 	}
 
@@ -87,55 +87,6 @@ func (model *Orm) DeleteUser(id uint) error {
 func (model *Orm) GetUser(id uint) (*User, error) {
 
 	r := &User{}
-	err := model.db.First(r, "id = ?", id).Error
-	if err != nil {
-		if err.Error() == "record not found" {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return r, nil
-}
-
-//---------------------------------------------------------------------
-
-func (model *Orm) AddFeedType(attrs *FeedTypeAttributes) (uint, error) {
-	r := &FeedType{}
-	r.FeedTypeAttributes = *attrs
-	err := model.db.Create(r).Error
-	id := r.ID
-	return id, err
-}
-
-func (model *Orm) UpdateFeedType(id uint, attrs *FeedTypeAttributes) error {
-	r, err := model.GetFeedType(id)
-	if err != nil {
-		return err
-	}
-	r.FeedTypeAttributes = *attrs
-	return model.db.Save(r).Error
-}
-
-func (model *Orm) DeleteFeedType(id uint) error {
-	r, err := model.GetFeedType(id)
-	if err != nil {
-		return err
-	}
-	if r == nil {
-		return fmt.Errorf("record not found ft.%d", id)
-	}
-	err = model.db.Delete(r).Error
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (model *Orm) GetFeedType(id uint) (*FeedType, error) {
-
-	r := &FeedType{}
 	err := model.db.First(r, "id = ?", id).Error
 	if err != nil {
 		if err.Error() == "record not found" {
@@ -283,55 +234,6 @@ func (model *Orm) DeleteAction(id uint) error {
 func (model *Orm) GetAction(id uint) (*Action, error) {
 
 	r := &Action{}
-	err := model.db.First(r, "id = ?", id).Error
-	if err != nil {
-		if err.Error() == "record not found" {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return r, nil
-}
-
-//---------------------------------------------------------------------
-
-func (model *Orm) AddActionType(attrs *ActionTypeAttributes) (uint, error) {
-	r := &ActionType{}
-	r.ActionTypeAttributes = *attrs
-	err := model.db.Create(r).Error
-	id := r.ID
-	return id, err
-}
-
-func (model *Orm) UpdateActionType(id uint, attrs *ActionTypeAttributes) error {
-	r, err := model.GetActionType(id)
-	if err != nil {
-		return err
-	}
-	r.ActionTypeAttributes = *attrs
-	return model.db.Save(r).Error
-}
-
-func (model *Orm) DeleteActionType(id uint) error {
-	r, err := model.GetActionType(id)
-	if err != nil {
-		return err
-	}
-	if r == nil {
-		return fmt.Errorf("record not found a.%d", id)
-	}
-	err = model.db.Delete(r).Error
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (model *Orm) GetActionType(id uint) (*ActionType, error) {
-
-	r := &ActionType{}
 	err := model.db.First(r, "id = ?", id).Error
 	if err != nil {
 		if err.Error() == "record not found" {

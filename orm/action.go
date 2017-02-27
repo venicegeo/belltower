@@ -5,9 +5,6 @@ import "fmt"
 type Action struct {
 	Core
 	ActionAttributes
-
-	ActionType   ActionType
-	ActionTypeID uint
 }
 
 type ActionAttributes struct {
