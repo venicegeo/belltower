@@ -8,8 +8,9 @@ type Action struct {
 }
 
 type ActionAttributes struct {
-	Name      string
-	IsEnabled bool
+	Name       string
+	IsEnabled  bool
+	ConfigInfo string
 }
 
 func (a Action) String() string {

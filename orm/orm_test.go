@@ -17,8 +17,8 @@ func TestDBOperations(t *testing.T) {
 
 	db := model.db
 
-	feed := &FeedType{}
-	feed.Name = "TestFeedType"
+	feed := &Feed{}
+	feed.Name = "TestFeed"
 	feed.ConfigInfo = "figgy"
 
 	err = db.Create(feed).Error
@@ -34,17 +34,17 @@ func TestDBOperations(t *testing.T) {
 
 	err = db.Model(&feed).Update("Name", "TFT").Error
 	assert.NoError(err)
-	assert.Equal("TFT", feedType.Name)
+	assert.Equal("TFT", feed.Name)
 
-	err = db.First(&feedType, 1).Error
+	err = db.First(&feed, 1).Error
 	assert.NoError(err)
-	assert.Equal("TFT", feedType.Name)
+	assert.Equal("TFT", feed.Name)
 
-	err = db.Delete(&feedType).Error
+	err = db.Delete(&feed).Error
 	assert.NoError(err)
-	assert.Equal("TFT", feedType.Name)
+	assert.Equal("TFT", feed.Name)
 
-	err = db.First(&feedType, 1).Error
+	err = db.First(&feed, 1).Error
 	assert.Error(err)
 }
 
@@ -96,35 +96,35 @@ func TestFeedType(tst *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
-	item := &FeedTypeAttributes{
+	item := &FeedAttributes{
 		Name:       "Bob",
 		ConfigInfo: "...",
 		IsEnabled:  true,
 	}
 
-	id, err := model.AddFeedType(item)
+	id, err := model.AddFeed(item)
 	assert.NoError(err)
-	t, err := model.GetFeedType(id)
+	t, err := model.GetFeed(id)
 	assert.NoError(err)
 	assert.True(t.IsEnabled)
-	assert.EqualValues(t.FeedTypeAttributes, *item)
+	assert.EqualValues(t.FeedAttributes, *item)
 
 	item.IsEnabled = false
-	err = model.UpdateFeedType(id, item)
+	err = model.UpdateFeed(id, item)
 	assert.NoError(err)
 
-	t, err = model.GetFeedType(id)
+	t, err = model.GetFeed(id)
 	assert.NoError(err)
 	assert.False(t.IsEnabled)
-	assert.EqualValues(t.FeedTypeAttributes, *item)
+	assert.EqualValues(t.FeedAttributes, *item)
 
-	err = model.DeleteFeedType(id)
+	err = model.DeleteFeed(id)
 	assert.NoError(err)
-	t, err = model.GetFeedType(id)
+	t, err = model.GetFeed(id)
 	assert.NoError(err)
 	assert.Nil(t)
 
-	err = model.DeleteFeedType(20169)
+	err = model.DeleteFeed(20169)
 	assert.Error(err)
 }
 
@@ -256,34 +256,34 @@ func TestActionType(tst *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
-	item := &ActionTypeAttributes{
+	item := &ActionAttributes{
 		Name:      "Bob",
 		IsEnabled: true,
 	}
 
-	id, err := model.AddActionType(item)
+	id, err := model.AddAction(item)
 	assert.NoError(err)
-	t, err := model.GetActionType(id)
+	t, err := model.GetAction(id)
 	assert.NoError(err)
 	assert.True(t.IsEnabled)
-	assert.EqualValues(t.ActionTypeAttributes, *item)
+	assert.EqualValues(t.ActionAttributes, *item)
 
 	item.IsEnabled = false
-	err = model.UpdateActionType(id, item)
+	err = model.UpdateAction(id, item)
 	assert.NoError(err)
 
-	t, err = model.GetActionType(id)
+	t, err = model.GetAction(id)
 	assert.NoError(err)
 	assert.False(t.IsEnabled)
-	assert.EqualValues(t.ActionTypeAttributes, *item)
+	assert.EqualValues(t.ActionAttributes, *item)
 
-	err = model.DeleteActionType(id)
+	err = model.DeleteAction(id)
 	assert.NoError(err)
-	t, err = model.GetActionType(id)
+	t, err = model.GetAction(id)
 	assert.NoError(err)
 	assert.Nil(t)
 
-	err = model.DeleteActionType(20169)
+	err = model.DeleteAction(20169)
 	assert.Error(err)
 }
 

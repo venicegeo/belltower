@@ -1,4 +1,4 @@
-package server
+package alerters
 
 import (
 	"testing"
@@ -9,7 +9,4 @@ import (
 func TestOne(t *testing.T) {
 	assert := assert.New(t)
 	assert.True(true)
-
-	err := Server()
-	assert.NoError(err)
 }

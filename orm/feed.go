@@ -19,6 +19,7 @@ type FeedAttributes struct {
 	Name                string
 	IsEnabled           bool
 	PersistenceDuration time.Duration
+	ConfigInfo          string
 }
 
 func (f Feed) String() string {
