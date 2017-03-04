@@ -62,10 +62,15 @@ func TestUser(t *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
-	user := &UserAttributes{
-		Name:      "Bob",
-		IsAdmin:   true,
-		IsEnabled: true,
+	now := time.Now()
+
+	user := &User{
+		ID:          17,
+		Name:        "Bob",
+		IsAdmin:     true,
+		IsEnabled:   true,
+		LastLoginAt: now,
+		CreatedAt:   now,
 	}
 
 	id, err := model.AddUser(user)
@@ -73,7 +78,6 @@ func TestUser(t *testing.T) {
 	u, err := model.GetUser(id)
 	assert.NoError(err)
 	assert.True(u.IsEnabled)
-	assert.EqualValues(u.UserAttributes, *user)
 
 	user.IsEnabled = false
 	err = model.UpdateUser(id, user)
@@ -82,7 +86,6 @@ func TestUser(t *testing.T) {
 	u, err = model.GetUser(id)
 	assert.NoError(err)
 	assert.False(u.IsEnabled)
-	assert.EqualValues(u.UserAttributes, *user)
 
 	err = model.DeleteUser(id)
 	assert.NoError(err)
@@ -148,28 +151,32 @@ func TestRule(tst *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
-	item := &RuleAttributes{
+	now := time.Now()
+
+	rule := &Rule{
+		ID:           123,
 		Name:         "Bob",
 		PollDuration: time.Duration(0),
 		IsEnabled:    true,
 		Expression:   "expr expr",
+		CreatedAt:    now,
 	}
 
-	id, err := model.AddRule(item)
+	id, err := model.AddRule(rule)
 	assert.NoError(err)
+	assert.Equal(uint(123), id)
+	r, err := model.GetRule(id)
+	assert.NoError(err)
+	assert.Equal(uint(123), r.ID)
+	assert.True(r.IsEnabled)
+
+	rule.IsEnabled = false
+	err = model.UpdateRule(id, rule)
+	assert.NoError(err)
+
 	t, err := model.GetRule(id)
 	assert.NoError(err)
-	assert.True(t.IsEnabled)
-	assert.EqualValues(t.RuleAttributes, *item)
-
-	item.IsEnabled = false
-	err = model.UpdateRule(id, item)
-	assert.NoError(err)
-
-	t, err = model.GetRule(id)
-	assert.NoError(err)
 	assert.False(t.IsEnabled)
-	assert.EqualValues(t.RuleAttributes, *item)
 
 	err = model.DeleteRule(id)
 	assert.NoError(err)
@@ -189,7 +196,8 @@ func TestAction(tst *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
-	item := &ActionAttributes{
+	item := &Action{
+		ID:        65535,
 		Name:      "Bob",
 		IsEnabled: true,
 	}
@@ -199,7 +207,7 @@ func TestAction(tst *testing.T) {
 	t, err := model.GetAction(id)
 	assert.NoError(err)
 	assert.True(t.IsEnabled)
-	assert.EqualValues(t.ActionAttributes, *item)
+	assert.EqualValues(*t, *item)
 
 	item.IsEnabled = false
 	err = model.UpdateAction(id, item)
@@ -208,7 +216,6 @@ func TestAction(tst *testing.T) {
 	t, err = model.GetAction(id)
 	assert.NoError(err)
 	assert.False(t.IsEnabled)
-	assert.EqualValues(t.ActionAttributes, *item)
 
 	err = model.DeleteAction(id)
 	assert.NoError(err)

@@ -69,6 +69,10 @@ func (rf *FileSysFeedRunner) Name() string {
 
 func (f *FileSysFeedRunner) Run(statusF StatusF, mssgF MssgF) error {
 
+	if f == nil {
+		panic(3)
+
+	}
 	var err error
 	ok := true
 

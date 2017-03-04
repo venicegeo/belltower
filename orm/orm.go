@@ -51,32 +51,34 @@ func (model *Orm) Close() error {
 
 //---------------------------------------------------------------------
 
-func (model *Orm) AddUser(attrs *UserAttributes) (uint, error) {
-	user := &User{}
-	user.UserAttributes = *attrs
+func (model *Orm) AddUser(u *User) (uint, error) {
+	user := *u
 	err := model.db.Create(user).Error
+	if err != nil {
+		return 0, err
+	}
 	id := user.ID
-	return id, err
+	return id, nil
 }
 
-func (model *Orm) UpdateUser(id uint, attrs *UserAttributes) error {
-	r, err := model.GetUser(id)
+func (model *Orm) UpdateUser(id uint, user *User) error {
+	u, err := model.GetUser(id)
 	if err != nil {
 		return err
 	}
-	r.UserAttributes = *attrs
-	return model.db.Save(r).Error
+	*u = *user
+	return model.db.Save(u).Error
 }
 
 func (model *Orm) DeleteUser(id uint) error {
-	r, err := model.GetUser(id)
+	u, err := model.GetUser(id)
 	if err != nil {
 		return err
 	}
-	if r == nil {
+	if u == nil {
 		return fmt.Errorf("record not found u.%d", id)
 	}
-	err = model.db.Delete(r).Error
+	err = model.db.Delete(u).Error
 	if err != nil {
 		return err
 	}
@@ -86,8 +88,8 @@ func (model *Orm) DeleteUser(id uint) error {
 
 func (model *Orm) GetUser(id uint) (*User, error) {
 
-	r := &User{}
-	err := model.db.First(r, "id = ?", id).Error
+	u := &User{}
+	err := model.db.First(u, "id = ?", id).Error
 	if err != nil {
 		if err.Error() == "record not found" {
 			return nil, nil
@@ -95,7 +97,7 @@ func (model *Orm) GetUser(id uint) (*User, error) {
 		return nil, err
 	}
 
-	return r, nil
+	return u, nil
 }
 
 //---------------------------------------------------------------------
@@ -150,20 +152,22 @@ func (model *Orm) GetFeed(id uint) (*Feed, error) {
 
 //---------------------------------------------------------------------
 
-func (model *Orm) AddRule(attrs *RuleAttributes) (uint, error) {
-	r := &Rule{}
-	r.RuleAttributes = *attrs
+func (model *Orm) AddRule(rule *Rule) (uint, error) {
+	r := *rule
 	err := model.db.Create(r).Error
+	if err != nil {
+		return 0, err
+	}
 	id := r.ID
 	return id, err
 }
 
-func (model *Orm) UpdateRule(id uint, attrs *RuleAttributes) error {
+func (model *Orm) UpdateRule(id uint, rule *Rule) error {
 	r, err := model.GetRule(id)
 	if err != nil {
 		return err
 	}
-	r.RuleAttributes = *attrs
+	*r = *rule
 	return model.db.Save(r).Error
 }
 
@@ -199,32 +203,34 @@ func (model *Orm) GetRule(id uint) (*Rule, error) {
 
 //---------------------------------------------------------------------
 
-func (model *Orm) AddAction(attrs *ActionAttributes) (uint, error) {
-	r := &Action{}
-	r.ActionAttributes = *attrs
+func (model *Orm) AddAction(action *Action) (uint, error) {
+	r := *action
 	err := model.db.Create(r).Error
+	if err != nil {
+		return 0, err
+	}
 	id := r.ID
-	return id, err
+	return id, nil
 }
 
-func (model *Orm) UpdateAction(id uint, attrs *ActionAttributes) error {
-	r, err := model.GetAction(id)
+func (model *Orm) UpdateAction(id uint, action *Action) error {
+	a, err := model.GetAction(id)
 	if err != nil {
 		return err
 	}
-	r.ActionAttributes = *attrs
-	return model.db.Save(r).Error
+	*a = *action
+	return model.db.Save(a).Error
 }
 
 func (model *Orm) DeleteAction(id uint) error {
-	r, err := model.GetAction(id)
+	a, err := model.GetAction(id)
 	if err != nil {
 		return err
 	}
-	if r == nil {
+	if a == nil {
 		return fmt.Errorf("record not found a.%d", id)
 	}
-	err = model.db.Delete(r).Error
+	err = model.db.Delete(a).Error
 	if err != nil {
 		return err
 	}
@@ -234,8 +240,8 @@ func (model *Orm) DeleteAction(id uint) error {
 
 func (model *Orm) GetAction(id uint) (*Action, error) {
 
-	r := &Action{}
-	err := model.db.First(r, "id = ?", id).Error
+	a := &Action{}
+	err := model.db.First(a, "id = ?", id).Error
 	if err != nil {
 		if err.Error() == "record not found" {
 			return nil, nil
@@ -243,5 +249,5 @@ func (model *Orm) GetAction(id uint) (*Action, error) {
 		return nil, err
 	}
 
-	return r, nil
+	return a, nil
 }

@@ -6,16 +6,20 @@ import (
 )
 
 type User struct {
-	Core
-	UserAttributes
+	ID        uint `gorm:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	//DeletedAt *time.Time `sql:"index"`
 
-	LastLoginAt time.Time
+	Name                string
+	IsAdmin             bool
+	IsEnabled           bool
+	LastLoginAt         time.Time
+	LastLoginAtInternal string
 }
 
-type UserAttributes struct {
-	Name      string
-	IsAdmin   bool
-	IsEnabled bool
+func (u *User) BeforeSave() {
+	u.LastLoginAtInternal = u.LastLoginAt.Format(time.RFC3339)
 }
 
 func (u User) String() string {

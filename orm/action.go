@@ -1,13 +1,16 @@
 package orm
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type Action struct {
-	Core
-	ActionAttributes
-}
+	ID        uint `gorm:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	//DeletedAt *time.Time `sql:"index"`
 
-type ActionAttributes struct {
 	Name       string
 	IsEnabled  bool
 	ConfigInfo string

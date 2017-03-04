@@ -6,18 +6,18 @@ import (
 )
 
 type Rule struct {
-	Core
-	RuleAttributes
+	ID        uint `gorm:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	//DeletedAt *time.Time `sql:"index"`
 
-	Owner   User
-	OwnerID uint
-}
-
-type RuleAttributes struct {
 	Name         string
 	PollDuration time.Duration
 	IsEnabled    bool
 	Expression   string
+
+	Owner   User
+	OwnerID uint
 }
 
 func (r Rule) String() string {
