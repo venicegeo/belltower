@@ -100,32 +100,33 @@ func (model *Orm) GetUser(id uint) (*User, error) {
 
 //---------------------------------------------------------------------
 
-func (model *Orm) AddFeed(attrs *FeedAttributes) (uint, error) {
-	r := &Feed{}
-	r.FeedAttributes = *attrs
-	err := model.db.Create(r).Error
-	id := r.ID
-	return id, err
+func (model *Orm) AddFeed(feed *Feed) (uint, error) {
+	f := *feed
+	err := model.db.Create(f).Error
+	if err != nil {
+		return 0, err
+	}
+	return f.ID, nil
 }
 
-func (model *Orm) UpdateFeed(id uint, attrs *FeedAttributes) error {
-	r, err := model.GetFeed(id)
+func (model *Orm) UpdateFeed(id uint, feed *Feed) error {
+	f, err := model.GetFeed(id)
 	if err != nil {
 		return err
 	}
-	r.FeedAttributes = *attrs
-	return model.db.Save(r).Error
+	*f = *feed
+	return model.db.Save(f).Error
 }
 
 func (model *Orm) DeleteFeed(id uint) error {
-	r, err := model.GetFeed(id)
+	f, err := model.GetFeed(id)
 	if err != nil {
 		return err
 	}
-	if r == nil {
+	if f == nil {
 		return fmt.Errorf("record not found f.%d", id)
 	}
-	err = model.db.Delete(r).Error
+	err = model.db.Delete(f).Error
 	if err != nil {
 		return err
 	}
@@ -135,8 +136,8 @@ func (model *Orm) DeleteFeed(id uint) error {
 
 func (model *Orm) GetFeed(id uint) (*Feed, error) {
 
-	r := &Feed{}
-	err := model.db.First(r, "id = ?", id).Error
+	f := &Feed{}
+	err := model.db.First(f, "id = ?", id).Error
 	if err != nil {
 		if err.Error() == "record not found" {
 			return nil, nil
@@ -144,7 +145,7 @@ func (model *Orm) GetFeed(id uint) (*Feed, error) {
 		return nil, err
 	}
 
-	return r, nil
+	return f, nil
 }
 
 //---------------------------------------------------------------------

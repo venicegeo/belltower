@@ -1,65 +1,75 @@
-package drivers
+package feeders
 
 import (
-	"fmt"
 	"io/ioutil"
-	"strconv"
 	"strings"
 	"time"
+
+	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/orm"
 )
 
 type FileSysFeed struct {
-	name          string
-	sleepDuration time.Duration
-	path          string
-	files         map[string]bool
+	id    uint
+	name  string
+	sleep time.Duration
+	path  string
+	files map[string]bool
 }
 
-func (f *FileSysFeed) init(config *Config) error {
-	name, ok := (*config)["name"]
-	if !ok {
-		return fmt.Errorf("Missing config field: name")
-	}
-	f.name = name
+func NewFileSysFeed(feed *orm.Feed) (*FileSysFeed, error) {
+	var _ FeedRunner = &FileSysFeed{}
 
-	tim, ok := (*config)["sleep"]
-	if !ok {
-		return fmt.Errorf("Missing config field: sleep")
+	f := &FileSysFeed{
+		id:   feed.ID,
+		name: feed.Name,
 	}
-	secs, err := strconv.Atoi(tim)
+
+	err := f.setVars(feed.Config)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	dur := int64(time.Second) * int64(secs)
-	f.sleepDuration = time.Duration(dur)
-
-	path, ok := (*config)["path"]
-	if !ok {
-		return fmt.Errorf("Missing config field: path")
-	}
-	f.path = path
 
 	f.files = map[string]bool{}
-	currFiles, err := ioutil.ReadDir(path)
+	currFiles, err := ioutil.ReadDir(f.path)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for _, fileInfo := range currFiles {
 		name := fileInfo.Name()
 		f.files[name] = false
 	}
 
-	return nil
+	return f, nil
 }
 
-func (f *FileSysFeed) Run(config Config, statusF StatusF, mssgF MssgF) error {
+func (f *FileSysFeed) setVars(m map[string]interface{}) error {
+	var err error
 
-	err := f.init(&config)
+	f.sleep, err = common.GetMapValueAsDuration(m, "sleep")
 	if err != nil {
 		return err
 	}
 
-	err = nil
+	f.path, err = common.GetMapValueAsString(m, "path")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (rf *FileSysFeed) ID() uint {
+	return rf.id
+}
+
+func (rf *FileSysFeed) Name() string {
+	return rf.name
+}
+
+func (f *FileSysFeed) Run(statusF StatusF, mssgF MssgF) error {
+
+	var err error
 	ok := true
 
 	go func() {
@@ -88,7 +98,7 @@ func (f *FileSysFeed) Run(config Config, statusF StatusF, mssgF MssgF) error {
 				}
 			}
 
-			time.Sleep(f.sleepDuration)
+			time.Sleep(f.sleep)
 		}
 	}()
 

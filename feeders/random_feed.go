@@ -1,25 +1,36 @@
-package drivers
+package feeders
 
 import (
-	"fmt"
 	"math/rand"
 	"strconv"
 	"time"
+
+	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/orm"
 )
 
 // RandFeed checks to see if a random number from the range [0..limit) is equal to zero. If so,
 // it will give the server a message. It sleeps for the given number of seconds between
 // checks.
+
 type RandomFeed struct {
+	id    uint
 	name  string
 	sleep time.Duration
 	limit int
 }
 
-func NewRandomFeed(config *Config) (*RandomFeed, error) {
-	f := &RandomFeed{}
+//---------------------------------------------------------------------
 
-	err := f.init(config)
+func NewRandomFeed(feed *orm.Feed) (*RandomFeed, error) {
+	var _ FeedRunner = &RandomFeed{}
+
+	f := &RandomFeed{
+		id:   feed.ID,
+		name: feed.Name,
+	}
+
+	err := f.setVars(feed.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -27,38 +38,28 @@ func NewRandomFeed(config *Config) (*RandomFeed, error) {
 	return f, nil
 }
 
-func (f *RandomFeed) init(config *Config) error {
+func (f *RandomFeed) setVars(m map[string]interface{}) error {
+	var err error
 
-	name, ok := (*config)["name"]
-	if !ok {
-		return fmt.Errorf("Missing config field: name")
-	}
-	f.name = name
-
-	sleepStr, ok := (*config)["sleep"]
-	if !ok {
-		return fmt.Errorf("Missing config field: sleep")
-	}
-	sleepSecs, err := strconv.Atoi(sleepStr)
+	f.sleep, err = common.GetMapValueAsDuration(m, "sleep")
 	if err != nil {
 		return err
 	}
-	sleep := int64(time.Second) * int64(sleepSecs)
-	f.sleep = time.Duration(sleep)
 
-	limitStr, ok := (*config)["limit"]
-	if !ok {
-		return fmt.Errorf("Missing config field: limit")
-	}
-	limit, err := strconv.Atoi(limitStr)
+	f.limit, err = common.GetMapValueAsInt(m, "limit")
 	if err != nil {
 		return err
 	}
-	f.limit = limit
-
-	rand.Seed(17)
 
 	return nil
+}
+
+func (rf *RandomFeed) ID() uint {
+	return rf.id
+}
+
+func (rf *RandomFeed) Name() string {
+	return rf.name
 }
 
 func (f *RandomFeed) Run(statusF StatusF, mssgF MssgF) error {
