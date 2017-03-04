@@ -2,28 +2,32 @@ package feeders
 
 import (
 	"log"
-	"strconv"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/orm"
 )
 
 func TestRandomFeed(t *testing.T) {
 	assert := assert.New(t)
 	assert.True(true)
 
-	limit := 5
+	feed := &orm.Feed{
+		ID:   17,
+		Name: "randomtest",
+		Settings: map[string]interface{}{
+			"limit": 5,
+			"sleep": 1,
+		},
+	}
+	runner, err := NewRandomFeedRunner(feed)
+	assert.NoError(err)
+
 	hitCount := 0
-	sleep := 1
 	countLimit := 5
 	count := 0
-
-	config := Config{
-		"limit": strconv.Itoa(limit),
-		"name":  "random1",
-		"sleep": strconv.Itoa(sleep),
-	}
 
 	statusF := func(s string) (bool, error) {
 		assert.Equal("good", s)
@@ -39,18 +43,19 @@ func TestRandomFeed(t *testing.T) {
 		//if err != nil {
 		//	return err
 		//}
+		limit, err := common.GetMapValueAsInt(feed.Settings, "limit")
+		assert.NoError(err)
 		log.Printf("event ==> [0..%d)", limit)
 
 		hitCount++
 		return nil
 	}
 
-	tf, err := NewRandomFeed(&config)
+	err = runner.Run(statusF, mssgF)
 	assert.NoError(err)
 
-	err = tf.Run(statusF, mssgF)
+	sleep, err := common.GetMapValueAsInt(feed.Settings, "sleep")
 	assert.NoError(err)
-
 	dur := time.Duration(float64(sleep*countLimit)*1.25) * time.Second
 	time.Sleep(dur)
 

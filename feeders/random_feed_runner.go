@@ -13,7 +13,7 @@ import (
 // it will give the server a message. It sleeps for the given number of seconds between
 // checks.
 
-type RandomFeed struct {
+type RandomFeedRunner struct {
 	id    uint
 	name  string
 	sleep time.Duration
@@ -22,15 +22,15 @@ type RandomFeed struct {
 
 //---------------------------------------------------------------------
 
-func NewRandomFeed(feed *orm.Feed) (*RandomFeed, error) {
-	var _ FeedRunner = &RandomFeed{}
+func NewRandomFeedRunner(feed *orm.Feed) (*RandomFeedRunner, error) {
+	var _ FeedRunner = &RandomFeedRunner{}
 
-	f := &RandomFeed{
+	f := &RandomFeedRunner{
 		id:   feed.ID,
 		name: feed.Name,
 	}
 
-	err := f.setVars(feed.Config)
+	err := f.setVars(feed.Settings)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func NewRandomFeed(feed *orm.Feed) (*RandomFeed, error) {
 	return f, nil
 }
 
-func (f *RandomFeed) setVars(m map[string]interface{}) error {
+func (f *RandomFeedRunner) setVars(m map[string]interface{}) error {
 	var err error
 
 	f.sleep, err = common.GetMapValueAsDuration(m, "sleep")
@@ -54,15 +54,15 @@ func (f *RandomFeed) setVars(m map[string]interface{}) error {
 	return nil
 }
 
-func (rf *RandomFeed) ID() uint {
+func (rf *RandomFeedRunner) ID() uint {
 	return rf.id
 }
 
-func (rf *RandomFeed) Name() string {
+func (rf *RandomFeedRunner) Name() string {
 	return rf.name
 }
 
-func (f *RandomFeed) Run(statusF StatusF, mssgF MssgF) error {
+func (f *RandomFeedRunner) Run(statusF StatusF, mssgF MssgF) error {
 
 	var err error
 	ok := true

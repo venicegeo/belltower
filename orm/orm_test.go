@@ -17,14 +17,20 @@ func TestDBOperations(t *testing.T) {
 
 	db := model.db
 
-	feed := &Feed{}
-	feed.Name = "TestFeed"
-	feed.ConfigInfo = "figgy"
+	now := time.Now()
+	feed := &Feed{
+		ID:   17,
+		Name: "TestFeed",
+		Settings: map[string]interface{}{
+			"alpha": "figgy",
+		},
+		LastMessageAt: &now,
+	}
 
 	err = db.Create(feed).Error
 	assert.NoError(err)
 
-	err = db.First(&feed, 1).Error
+	err = db.First(&feed, 17).Error
 	assert.NoError(err)
 	assert.Equal("TestFeed", feed.Name)
 
@@ -36,7 +42,7 @@ func TestDBOperations(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal("TFT", feed.Name)
 
-	err = db.First(&feed, 1).Error
+	err = db.First(&feed, 17).Error
 	assert.NoError(err)
 	assert.Equal("TFT", feed.Name)
 
@@ -96,10 +102,14 @@ func TestFeed(tst *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
-	item := &FeedAttributes{
-		Name:                "Bob",
-		PersistenceDuration: time.Duration(0),
-		IsEnabled:           true,
+	now := time.Now()
+
+	item := &Feed{
+		ID:            19,
+		Name:          "Bob",
+		IsEnabled:     true,
+		Settings:      map[string]interface{}{},
+		LastMessageAt: &now,
 	}
 
 	id, err := model.AddFeed(item)
@@ -107,7 +117,8 @@ func TestFeed(tst *testing.T) {
 	t, err := model.GetFeed(id)
 	assert.NoError(err)
 	assert.True(t.IsEnabled)
-	assert.EqualValues(t.FeedAttributes, *item)
+	assert.EqualValues(t.Name, item.Name)
+	assert.EqualValues(t.IsEnabled, item.IsEnabled)
 
 	item.IsEnabled = false
 	err = model.UpdateFeed(id, item)
@@ -116,7 +127,8 @@ func TestFeed(tst *testing.T) {
 	t, err = model.GetFeed(id)
 	assert.NoError(err)
 	assert.False(t.IsEnabled)
-	assert.EqualValues(t.FeedAttributes, *item)
+	assert.EqualValues(t.Name, item.Name)
+	assert.EqualValues(t.IsEnabled, item.IsEnabled)
 
 	err = model.DeleteFeed(id)
 	assert.NoError(err)

@@ -9,7 +9,7 @@ import (
 	"github.com/venicegeo/belltower/orm"
 )
 
-type FileSysFeed struct {
+type FileSysFeedRunner struct {
 	id    uint
 	name  string
 	sleep time.Duration
@@ -17,15 +17,15 @@ type FileSysFeed struct {
 	files map[string]bool
 }
 
-func NewFileSysFeed(feed *orm.Feed) (*FileSysFeed, error) {
-	var _ FeedRunner = &FileSysFeed{}
+func NewFileSysFeedRunner(feed *orm.Feed) (*FileSysFeedRunner, error) {
+	var _ FeedRunner = &FileSysFeedRunner{}
 
-	f := &FileSysFeed{
+	f := &FileSysFeedRunner{
 		id:   feed.ID,
 		name: feed.Name,
 	}
 
-	err := f.setVars(feed.Config)
+	err := f.setVars(feed.Settings)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func NewFileSysFeed(feed *orm.Feed) (*FileSysFeed, error) {
 	return f, nil
 }
 
-func (f *FileSysFeed) setVars(m map[string]interface{}) error {
+func (f *FileSysFeedRunner) setVars(m map[string]interface{}) error {
 	var err error
 
 	f.sleep, err = common.GetMapValueAsDuration(m, "sleep")
@@ -59,15 +59,15 @@ func (f *FileSysFeed) setVars(m map[string]interface{}) error {
 	return nil
 }
 
-func (rf *FileSysFeed) ID() uint {
+func (rf *FileSysFeedRunner) ID() uint {
 	return rf.id
 }
 
-func (rf *FileSysFeed) Name() string {
+func (rf *FileSysFeedRunner) Name() string {
 	return rf.name
 }
 
-func (f *FileSysFeed) Run(statusF StatusF, mssgF MssgF) error {
+func (f *FileSysFeedRunner) Run(statusF StatusF, mssgF MssgF) error {
 
 	var err error
 	ok := true
@@ -105,7 +105,7 @@ func (f *FileSysFeed) Run(statusF StatusF, mssgF MssgF) error {
 	return nil
 }
 
-func (f *FileSysFeed) checkFileSys(path string) ([]string, error) {
+func (f *FileSysFeedRunner) checkFileSys(path string) ([]string, error) {
 	for k, _ := range f.files {
 		f.files[k] = false
 	}

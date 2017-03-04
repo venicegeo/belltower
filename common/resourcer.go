@@ -1,8 +1,8 @@
 package common
 
 type Resourcer interface {
-	Create(JSON)
-	Read(id int) (JSON, error)
-	Update(id int) (JSON, error)
-	Delete(id int) (JSON, error)
+	Create(Json)
+	Read(id int) (Json, error)
+	Update(id int) (Json, error)
+	Delete(id int) (Json, error)
 }

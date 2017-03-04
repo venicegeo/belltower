@@ -1,7 +1,6 @@
 package feeders
 
 import (
-	"github.com/venicegeo/belltower/common"
 	"github.com/venicegeo/belltower/orm"
 )
 
@@ -9,14 +8,7 @@ type FeedResourcer struct {
 	orm *orm.Orm
 }
 
-func (fr *FeedResourcer) Create(jstr common.JSON) (uint, error) {
-	feed := &orm.Feed{}
-	err := jstr.ToObject(feed)
-	if err != nil {
-		return 0, err
-	}
-
-	// now make the model
+func (fr *FeedResourcer) Create(feed *orm.Feed) (uint, error) {
 	id, err := fr.orm.AddFeed(feed)
 	if err != nil {
 		return 0, err
@@ -25,16 +17,12 @@ func (fr *FeedResourcer) Create(jstr common.JSON) (uint, error) {
 	return id, nil
 }
 
-func (fr *FeedResourcer) Read(id uint) (common.JSON, error) {
+func (fr *FeedResourcer) Read(id uint) (*orm.Feed, error) {
 	feed, err := fr.orm.GetFeed(id)
 	if err != nil {
-		return common.NilJSON, err
+		return nil, err
 	}
-	s, err := common.ToJson(feed)
-	if err != nil {
-		return common.NilJSON, err
-	}
-	return s, nil
+	return feed, nil
 }
 
 func (fr *FeedResourcer) Update(id uint, feed *orm.Feed) error {
