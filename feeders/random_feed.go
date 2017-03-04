@@ -16,7 +16,19 @@ type RandomFeed struct {
 	limit int
 }
 
+func NewRandomFeed(config *Config) (*RandomFeed, error) {
+	f := &RandomFeed{}
+
+	err := f.init(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
 func (f *RandomFeed) init(config *Config) error {
+
 	name, ok := (*config)["name"]
 	if !ok {
 		return fmt.Errorf("Missing config field: name")
@@ -49,14 +61,9 @@ func (f *RandomFeed) init(config *Config) error {
 	return nil
 }
 
-func (f *RandomFeed) Run(config Config, statusF StatusF, mssgF MssgF) error {
+func (f *RandomFeed) Run(statusF StatusF, mssgF MssgF) error {
 
-	err := f.init(&config)
-	if err != nil {
-		return err
-	}
-
-	err = nil
+	var err error
 	ok := true
 
 	go func() {

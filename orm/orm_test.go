@@ -88,46 +88,6 @@ func TestUser(t *testing.T) {
 	assert.Error(err)
 }
 
-func TestFeedType(tst *testing.T) {
-	assert := assert.New(tst)
-	var err error
-
-	model, err := NewOrm()
-	assert.NoError(err)
-	defer model.Close()
-
-	item := &FeedAttributes{
-		Name:       "Bob",
-		ConfigInfo: "...",
-		IsEnabled:  true,
-	}
-
-	id, err := model.AddFeed(item)
-	assert.NoError(err)
-	t, err := model.GetFeed(id)
-	assert.NoError(err)
-	assert.True(t.IsEnabled)
-	assert.EqualValues(t.FeedAttributes, *item)
-
-	item.IsEnabled = false
-	err = model.UpdateFeed(id, item)
-	assert.NoError(err)
-
-	t, err = model.GetFeed(id)
-	assert.NoError(err)
-	assert.False(t.IsEnabled)
-	assert.EqualValues(t.FeedAttributes, *item)
-
-	err = model.DeleteFeed(id)
-	assert.NoError(err)
-	t, err = model.GetFeed(id)
-	assert.NoError(err)
-	assert.Nil(t)
-
-	err = model.DeleteFeed(20169)
-	assert.Error(err)
-}
-
 func TestFeed(tst *testing.T) {
 	assert := assert.New(tst)
 	var err error
@@ -210,45 +170,6 @@ func TestRule(tst *testing.T) {
 }
 
 func TestAction(tst *testing.T) {
-	assert := assert.New(tst)
-	var err error
-
-	model, err := NewOrm()
-	assert.NoError(err)
-	defer model.Close()
-
-	item := &ActionAttributes{
-		Name:      "Bob",
-		IsEnabled: true,
-	}
-
-	id, err := model.AddAction(item)
-	assert.NoError(err)
-	t, err := model.GetAction(id)
-	assert.NoError(err)
-	assert.True(t.IsEnabled)
-	assert.EqualValues(t.ActionAttributes, *item)
-
-	item.IsEnabled = false
-	err = model.UpdateAction(id, item)
-	assert.NoError(err)
-
-	t, err = model.GetAction(id)
-	assert.NoError(err)
-	assert.False(t.IsEnabled)
-	assert.EqualValues(t.ActionAttributes, *item)
-
-	err = model.DeleteAction(id)
-	assert.NoError(err)
-	t, err = model.GetAction(id)
-	assert.NoError(err)
-	assert.Nil(t)
-
-	err = model.DeleteAction(20169)
-	assert.Error(err)
-}
-
-func TestActionType(tst *testing.T) {
 	assert := assert.New(tst)
 	var err error
 

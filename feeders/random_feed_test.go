@@ -13,8 +13,6 @@ func TestRandomFeed(t *testing.T) {
 	assert := assert.New(t)
 	assert.True(true)
 
-	tf := RandomFeed{}
-
 	limit := 5
 	hitCount := 0
 	sleep := 1
@@ -47,7 +45,10 @@ func TestRandomFeed(t *testing.T) {
 		return nil
 	}
 
-	err := tf.Run(config, statusF, mssgF)
+	tf, err := NewRandomFeed(&config)
+	assert.NoError(err)
+
+	err = tf.Run(statusF, mssgF)
 	assert.NoError(err)
 
 	dur := time.Duration(float64(sleep*countLimit)*1.25) * time.Second
