@@ -18,8 +18,70 @@ type User struct {
 	LastLoginAtInternal string
 }
 
-func (u *User) BeforeSave() {
-	u.LastLoginAtInternal = u.LastLoginAt.Format(time.RFC3339)
+//---------------------------------------------------------------------
+
+type UserFieldsForCreate struct {
+	Name      string
+	IsAdmin   bool
+	IsEnabled bool
+}
+
+type UserFieldsForRead struct {
+	ID        uint
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
+	Name        string
+	IsAdmin     bool
+	IsEnabled   bool
+	LastLoginAt time.Time
+}
+
+type UserFieldsForUpdate struct {
+	Name      string
+	IsAdmin   bool
+	IsEnabled bool
+}
+
+func CreateUser(fields *UserFieldsForCreate) (*User, error) {
+	user := &User{
+		Name:      fields.Name,
+		IsAdmin:   fields.IsAdmin,
+		IsEnabled: fields.IsEnabled,
+	}
+
+	return user, nil
+}
+
+//---------------------------------------------------------------------
+
+func (user *User) Read() (*UserFieldsForRead, error) {
+
+	read := &UserFieldsForRead{
+		ID:   user.ID,
+		Name: user.Name,
+
+		CreatedAt:   user.CreatedAt,
+		UpdatedAt:   user.UpdatedAt,
+		LastLoginAt: user.LastLoginAt,
+
+		IsAdmin:   user.IsAdmin,
+		IsEnabled: user.IsEnabled,
+	}
+
+	return read, nil
+}
+
+func (user *User) Update(update *UserFieldsForUpdate) error {
+
+	if update.Name != "" {
+		user.Name = update.Name
+	}
+
+	user.IsAdmin = update.IsAdmin
+	user.IsEnabled = update.IsEnabled
+
+	return nil
 }
 
 func (u User) String() string {

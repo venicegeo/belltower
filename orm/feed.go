@@ -17,15 +17,13 @@ type Feed struct {
 	UpdatedAt time.Time
 	//DeletedAt *time.Time `sql:"index"`
 
-	FeedType            string
-	IsEnabled           bool
-	MessageDecl         map[string]interface{} `gorm:"-"`
-	MessageDeclInternal *common.Json           // owned by system
-	Settings            map[string]interface{} `gorm:"-"`
-	SettingsInternal    *common.Json           // owned by system
-	MessageCount        uint
-	LastMessageAt       *time.Time
-	OwnerID             uint
+	FeedType        string
+	IsEnabled       bool
+	MessageDeclJson *common.Json
+	SettingsJson    *common.Json
+	MessageCount    uint
+	LastMessageAt   *time.Time
+	OwnerID         uint
 }
 
 //---------------------------------------------------------------------
@@ -61,12 +59,20 @@ type FeedFieldsForUpdate struct {
 }
 
 func CreateFeed(fields *FeedFieldsForCreate) (*Feed, error) {
+	messageJson, err := common.NewJsonFromMap(fields.MessageDecl)
+	if err != nil {
+		return nil, err
+	}
+	settingsJson, err := common.NewJsonFromMap(fields.Settings)
+	if err != nil {
+		return nil, err
+	}
 	feed := &Feed{
-		Name:        fields.Name,
-		FeedType:    fields.FeedType,
-		IsEnabled:   fields.IsEnabled,
-		MessageDecl: fields.MessageDecl,
-		Settings:    fields.Settings,
+		Name:            fields.Name,
+		FeedType:        fields.FeedType,
+		IsEnabled:       fields.IsEnabled,
+		MessageDeclJson: messageJson,
+		SettingsJson:    settingsJson,
 	}
 
 	return feed, nil
@@ -75,6 +81,15 @@ func CreateFeed(fields *FeedFieldsForCreate) (*Feed, error) {
 //---------------------------------------------------------------------
 
 func (feed *Feed) Read() (*FeedFieldsForRead, error) {
+
+	var messageMap, settingsMap map[string]interface{}
+	if feed.MessageDeclJson != nil {
+		messageMap = feed.MessageDeclJson.AsMap()
+	}
+	if feed.SettingsJson != nil {
+		settingsMap = feed.SettingsJson.AsMap()
+	}
+
 	read := &FeedFieldsForRead{
 		ID:   feed.ID,
 		Name: feed.Name,
@@ -85,8 +100,8 @@ func (feed *Feed) Read() (*FeedFieldsForRead, error) {
 
 		FeedType:      feed.FeedType,
 		IsEnabled:     feed.IsEnabled,
-		MessageDecl:   feed.MessageDecl,
-		Settings:      feed.Settings,
+		MessageDecl:   messageMap,
+		Settings:      settingsMap,
 		MessageCount:  feed.MessageCount,
 		LastMessageAt: feed.LastMessageAt,
 		OwnerID:       feed.OwnerID,
@@ -106,7 +121,7 @@ func (feed *Feed) Update(update *FeedFieldsForUpdate) error {
 	return nil
 }
 
-func (f *Feed) BeforeSave() error {
+/*func (f *Feed) BeforeSave() error {
 	var err error
 
 	f.MessageDeclInternal, err = common.NewJsonFromMap(f.MessageDecl)
@@ -120,7 +135,7 @@ func (f *Feed) BeforeSave() error {
 	}
 
 	return nil
-}
+}*/
 
 func (f Feed) String() string {
 	s := fmt.Sprintf("f.%d: %s", f.ID, f.Name)

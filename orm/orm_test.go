@@ -18,21 +18,28 @@ func TestDBOperations(t *testing.T) {
 	db := model.db
 
 	now := time.Now()
-	feed := &Feed{
-		ID:   17,
-		Name: "TestFeed",
+
+	createFields := &FeedFieldsForCreate{
+		Name:        "TestFeed",
+		FeedType:    "myfeedtype",
+		IsEnabled:   false,
+		MessageDecl: map[string]interface{}{},
 		Settings: map[string]interface{}{
 			"alpha": "figgy",
 		},
-		LastMessageAt: &now,
 	}
+
+	feed, err := CreateFeed(createFields)
+	assert.NoError(err)
 
 	err = db.Create(feed).Error
 	assert.NoError(err)
 
-	err = db.First(&feed, 17).Error
+	err = db.First(&feed, 1).Error
 	assert.NoError(err)
 	assert.Equal("TestFeed", feed.Name)
+
+	assert.True(now.Before(feed.CreatedAt))
 
 	err = db.First(&feed, "name = ?", "xyzzy").Error
 	assert.Equal("record not found", err.Error())
@@ -42,7 +49,7 @@ func TestDBOperations(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal("TFT", feed.Name)
 
-	err = db.First(&feed, 17).Error
+	err = db.First(&feed, 1).Error
 	assert.NoError(err)
 	assert.Equal("TFT", feed.Name)
 
@@ -62,36 +69,41 @@ func TestUser(t *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
-	now := time.Now()
-
-	user := &User{
-		ID:          17,
-		Name:        "Bob",
-		IsAdmin:     true,
-		IsEnabled:   true,
-		LastLoginAt: now,
-		CreatedAt:   now,
+	fields := &UserFieldsForCreate{
+		Name:      "Bob",
+		IsAdmin:   true,
+		IsEnabled: true,
 	}
 
-	id, err := model.AddUser(user)
-	assert.NoError(err)
-	u, err := model.GetUser(id)
-	assert.NoError(err)
-	assert.True(u.IsEnabled)
+	var id uint
 
-	user.IsEnabled = false
-	err = model.UpdateUser(id, user)
-	assert.NoError(err)
+	{
+		id, err = model.CreateUser(fields)
+		assert.NoError(err)
+		readFields, err := model.ReadUser(id)
+		assert.NoError(err)
+		assert.True(readFields.IsEnabled)
+	}
 
-	u, err = model.GetUser(id)
-	assert.NoError(err)
-	assert.False(u.IsEnabled)
+	{
+		updateFields := &UserFieldsForUpdate{
+			IsEnabled: false,
+		}
+		err = model.UpdateUser(id, updateFields)
+		assert.NoError(err)
 
-	err = model.DeleteUser(id)
-	assert.NoError(err)
-	u, err = model.GetUser(id)
-	assert.NoError(err)
-	assert.Nil(u)
+		readFields, err := model.ReadUser(id)
+		assert.NoError(err)
+		assert.False(readFields.IsEnabled)
+	}
+
+	{
+		err = model.DeleteUser(id)
+		assert.NoError(err)
+		readFields, err := model.ReadUser(id)
+		assert.NoError(err)
+		assert.Nil(readFields)
+	}
 
 	err = model.DeleteUser(20169)
 	assert.Error(err)

@@ -51,34 +51,53 @@ func (model *Orm) Close() error {
 
 //---------------------------------------------------------------------
 
-func (model *Orm) AddUser(u *User) (uint, error) {
-	user := *u
-	err := model.db.Create(user).Error
+func (model *Orm) readUserById(id uint) (*User, error) {
+	user := &User{}
+	err := model.db.First(user, "id = ?", id).Error
+	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return user, nil
+}
+
+func (model *Orm) CreateUser(fields *UserFieldsForCreate) (uint, error) {
+	user, err := CreateUser(fields)
 	if err != nil {
 		return 0, err
 	}
-	id := user.ID
-	return id, nil
+
+	err = model.db.Create(user).Error
+	if err != nil {
+		return 0, err
+	}
+	return user.ID, nil
 }
 
-func (model *Orm) UpdateUser(id uint, user *User) error {
-	u, err := model.GetUser(id)
+func (model *Orm) UpdateUser(id uint, fields *UserFieldsForUpdate) error {
+	user, err := model.readUserById(id)
 	if err != nil {
 		return err
 	}
-	*u = *user
-	return model.db.Save(u).Error
+	err = user.Update(fields)
+	if err != nil {
+		return err
+	}
+	err = model.db.Save(user).Error
+	return err
 }
 
 func (model *Orm) DeleteUser(id uint) error {
-	u, err := model.GetUser(id)
+	user, err := model.readUserById(id)
 	if err != nil {
 		return err
 	}
-	if u == nil {
-		return fmt.Errorf("record not found u.%d", id)
+	if user == nil {
+		return fmt.Errorf("record not found f.%d", id)
 	}
-	err = model.db.Delete(u).Error
+	err = model.db.Delete(user).Error
 	if err != nil {
 		return err
 	}
@@ -86,18 +105,23 @@ func (model *Orm) DeleteUser(id uint) error {
 	return nil
 }
 
-func (model *Orm) GetUser(id uint) (*User, error) {
+func (model *Orm) ReadUser(id uint) (*UserFieldsForRead, error) {
 
-	u := &User{}
-	err := model.db.First(u, "id = ?", id).Error
+	user, err := model.readUserById(id)
 	if err != nil {
-		if err.Error() == "record not found" {
-			return nil, nil
-		}
 		return nil, err
 	}
 
-	return u, nil
+	if user == nil {
+		return nil, nil
+	}
+
+	fields, err := user.Read()
+	if err != nil {
+		return nil, err
+	}
+
+	return fields, nil
 }
 
 //---------------------------------------------------------------------
