@@ -1,9 +1,16 @@
 package orm
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type FeedRuleAssociation struct {
-	Core
+	ID        uint `gorm:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	//DeletedAt *time.Time `sql:"index"`
+
 	Rule   Rule
 	RuleID uint
 	Feed   Feed

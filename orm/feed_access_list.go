@@ -1,9 +1,16 @@
 package orm
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type FeedAccessList struct {
-	Core
+	ID        uint `gorm:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	//DeletedAt *time.Time `sql:"index"`
+
 	Feed     Feed
 	FeedID   uint
 	User     User

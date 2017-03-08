@@ -1,9 +1,18 @@
 package orm
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type ActionAccessList struct {
-	Core
+	ID   uint `gorm:"primary_key"`
+	Name string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	//DeletedAt *time.Time `sql:"index"`
+
 	Action   Action
 	ActionID uint
 	User     User

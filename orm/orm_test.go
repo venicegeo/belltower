@@ -105,42 +105,52 @@ func TestFeed(tst *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
-	now := time.Now()
+	//now := time.Now()
 
-	item := &Feed{
-		ID:            19,
-		Name:          "Bob",
-		IsEnabled:     true,
-		Settings:      map[string]interface{}{},
-		LastMessageAt: &now,
+	createFields := &FeedFieldsForCreate{
+		Name:        "Bob",
+		FeedType:    "myfeedtype",
+		IsEnabled:   true,
+		Settings:    map[string]interface{}{},
+		MessageDecl: map[string]interface{}{},
 	}
 
-	id, err := model.AddFeed(item)
-	assert.NoError(err)
-	t, err := model.GetFeed(id)
-	assert.NoError(err)
-	assert.True(t.IsEnabled)
-	assert.EqualValues(t.Name, item.Name)
-	assert.EqualValues(t.IsEnabled, item.IsEnabled)
+	var id uint
 
-	item.IsEnabled = false
-	err = model.UpdateFeed(id, item)
-	assert.NoError(err)
+	{
+		id, err = model.CreateFeed(createFields)
+		assert.NoError(err)
+		readFields, err := model.ReadFeed(id)
+		assert.NoError(err)
+		assert.True(readFields.IsEnabled)
+		assert.EqualValues(readFields.Name, createFields.Name)
+		assert.EqualValues(readFields.IsEnabled, createFields.IsEnabled)
+	}
 
-	t, err = model.GetFeed(id)
-	assert.NoError(err)
-	assert.False(t.IsEnabled)
-	assert.EqualValues(t.Name, item.Name)
-	assert.EqualValues(t.IsEnabled, item.IsEnabled)
+	{
+		updateFields := &FeedFieldsForUpdate{
+			IsEnabled: false,
+		}
+		err = model.UpdateFeed(id, updateFields)
+		assert.NoError(err)
+		readFields, err := model.ReadFeed(id)
+		assert.NoError(err)
+		assert.EqualValues(readFields.IsEnabled, updateFields.IsEnabled)
+		assert.False(readFields.IsEnabled)
+	}
 
-	err = model.DeleteFeed(id)
-	assert.NoError(err)
-	t, err = model.GetFeed(id)
-	assert.NoError(err)
-	assert.Nil(t)
+	{
+		err = model.DeleteFeed(id)
+		assert.NoError(err)
+		readFields, err := model.ReadFeed(id)
+		assert.NoError(err)
+		assert.Nil(readFields)
+	}
 
-	err = model.DeleteFeed(20169)
-	assert.Error(err)
+	{
+		err = model.DeleteFeed(20169)
+		assert.Error(err)
+	}
 }
 
 func TestRule(tst *testing.T) {

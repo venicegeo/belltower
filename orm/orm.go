@@ -102,33 +102,53 @@ func (model *Orm) GetUser(id uint) (*User, error) {
 
 //---------------------------------------------------------------------
 
-func (model *Orm) AddFeed(feed *Feed) (uint, error) {
-	f := *feed
-	err := model.db.Create(f).Error
+func (model *Orm) readFeedById(id uint) (*Feed, error) {
+	feed := &Feed{}
+	err := model.db.First(feed, "id = ?", id).Error
+	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return feed, nil
+}
+
+func (model *Orm) CreateFeed(fields *FeedFieldsForCreate) (uint, error) {
+	feed, err := CreateFeed(fields)
 	if err != nil {
 		return 0, err
 	}
-	return f.ID, nil
+
+	err = model.db.Create(feed).Error
+	if err != nil {
+		return 0, err
+	}
+	return feed.ID, nil
 }
 
-func (model *Orm) UpdateFeed(id uint, feed *Feed) error {
-	f, err := model.GetFeed(id)
+func (model *Orm) UpdateFeed(id uint, fields *FeedFieldsForUpdate) error {
+	feed, err := model.readFeedById(id)
 	if err != nil {
 		return err
 	}
-	*f = *feed
-	return model.db.Save(f).Error
+	err = feed.Update(fields)
+	if err != nil {
+		return err
+	}
+	err = model.db.Save(feed).Error
+	return err
 }
 
 func (model *Orm) DeleteFeed(id uint) error {
-	f, err := model.GetFeed(id)
+	feed, err := model.readFeedById(id)
 	if err != nil {
 		return err
 	}
-	if f == nil {
+	if feed == nil {
 		return fmt.Errorf("record not found f.%d", id)
 	}
-	err = model.db.Delete(f).Error
+	err = model.db.Delete(feed).Error
 	if err != nil {
 		return err
 	}
@@ -136,18 +156,23 @@ func (model *Orm) DeleteFeed(id uint) error {
 	return nil
 }
 
-func (model *Orm) GetFeed(id uint) (*Feed, error) {
+func (model *Orm) ReadFeed(id uint) (*FeedFieldsForRead, error) {
 
-	f := &Feed{}
-	err := model.db.First(f, "id = ?", id).Error
+	feed, err := model.readFeedById(id)
 	if err != nil {
-		if err.Error() == "record not found" {
-			return nil, nil
-		}
 		return nil, err
 	}
 
-	return f, nil
+	if feed == nil {
+		return nil, nil
+	}
+
+	fields, err := feed.Read()
+	if err != nil {
+		return nil, err
+	}
+
+	return fields, nil
 }
 
 //---------------------------------------------------------------------
