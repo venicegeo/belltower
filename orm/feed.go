@@ -34,23 +34,23 @@ type FeedFieldsForCreate struct {
 	IsEnabled   bool
 	MessageDecl map[string]interface{} `gorm:"-"`
 	Settings    map[string]interface{} `gorm:"-"`
+	OwnerID     uint
 }
 
 type FeedFieldsForRead struct {
-	ID   uint
-	Name string
-
+	ID        uint
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	//DeletedAt *time.Time `sql:"index"`
 
-	FeedType      string
-	IsEnabled     bool
-	MessageDecl   map[string]interface{}
-	Settings      map[string]interface{}
+	Name        string
+	FeedType    string
+	IsEnabled   bool
+	MessageDecl map[string]interface{}
+	Settings    map[string]interface{}
+	OwnerID     uint
+
 	MessageCount  uint
 	LastMessageAt *time.Time
-	OwnerID       uint
 }
 
 type FeedFieldsForUpdate struct {
@@ -73,6 +73,7 @@ func CreateFeed(fields *FeedFieldsForCreate) (*Feed, error) {
 		IsEnabled:       fields.IsEnabled,
 		MessageDeclJson: messageJson,
 		SettingsJson:    settingsJson,
+		OwnerID:         fields.OwnerID,
 	}
 
 	return feed, nil
@@ -120,22 +121,6 @@ func (feed *Feed) Update(update *FeedFieldsForUpdate) error {
 
 	return nil
 }
-
-/*func (f *Feed) BeforeSave() error {
-	var err error
-
-	f.MessageDeclInternal, err = common.NewJsonFromMap(f.MessageDecl)
-	if err != nil {
-		return err
-	}
-
-	f.SettingsInternal, err = common.NewJsonFromMap(f.Settings)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}*/
 
 func (f Feed) String() string {
 	s := fmt.Sprintf("f.%d: %s", f.ID, f.Name)

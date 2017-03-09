@@ -50,6 +50,7 @@ func (model *Orm) Close() error {
 }
 
 //---------------------------------------------------------------------
+// User
 
 func (model *Orm) readUserById(id uint) (*User, error) {
 	user := &User{}
@@ -125,6 +126,7 @@ func (model *Orm) ReadUser(id uint) (*UserFieldsForRead, error) {
 }
 
 //---------------------------------------------------------------------
+// Feed
 
 func (model *Orm) readFeedById(id uint) (*Feed, error) {
 	feed := &Feed{}
@@ -200,86 +202,55 @@ func (model *Orm) ReadFeed(id uint) (*FeedFieldsForRead, error) {
 }
 
 //---------------------------------------------------------------------
+// Action
 
-func (model *Orm) AddRule(rule *Rule) (uint, error) {
-	r := *rule
-	err := model.db.Create(r).Error
-	if err != nil {
-		return 0, err
-	}
-	id := r.ID
-	return id, err
-}
-
-func (model *Orm) UpdateRule(id uint, rule *Rule) error {
-	r, err := model.GetRule(id)
-	if err != nil {
-		return err
-	}
-	*r = *rule
-	return model.db.Save(r).Error
-}
-
-func (model *Orm) DeleteRule(id uint) error {
-	r, err := model.GetRule(id)
-	if err != nil {
-		return err
-	}
-	if r == nil {
-		return fmt.Errorf("record not found r.%d", id)
-	}
-	err = model.db.Delete(r).Error
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (model *Orm) GetRule(id uint) (*Rule, error) {
-
-	r := &Rule{}
-	err := model.db.First(r, "id = ?", id).Error
+func (model *Orm) readActionById(id uint) (*Action, error) {
+	rule := &Action{}
+	err := model.db.First(rule, "id = ?", id).Error
 	if err != nil {
 		if err.Error() == "record not found" {
 			return nil, nil
 		}
 		return nil, err
 	}
-
-	return r, nil
+	return rule, nil
 }
 
-//---------------------------------------------------------------------
-
-func (model *Orm) AddAction(action *Action) (uint, error) {
-	r := *action
-	err := model.db.Create(r).Error
+func (model *Orm) CreateAction(fields *ActionFieldsForCreate) (uint, error) {
+	rule, err := CreateAction(fields)
 	if err != nil {
 		return 0, err
 	}
-	id := r.ID
-	return id, nil
+
+	err = model.db.Create(rule).Error
+	if err != nil {
+		return 0, err
+	}
+	return rule.ID, nil
 }
 
-func (model *Orm) UpdateAction(id uint, action *Action) error {
-	a, err := model.GetAction(id)
+func (model *Orm) UpdateAction(id uint, fields *ActionFieldsForUpdate) error {
+	rule, err := model.readActionById(id)
 	if err != nil {
 		return err
 	}
-	*a = *action
-	return model.db.Save(a).Error
+	err = rule.Update(fields)
+	if err != nil {
+		return err
+	}
+	err = model.db.Save(rule).Error
+	return err
 }
 
 func (model *Orm) DeleteAction(id uint) error {
-	a, err := model.GetAction(id)
+	rule, err := model.readActionById(id)
 	if err != nil {
 		return err
 	}
-	if a == nil {
-		return fmt.Errorf("record not found a.%d", id)
+	if rule == nil {
+		return fmt.Errorf("record not found f.%d", id)
 	}
-	err = model.db.Delete(a).Error
+	err = model.db.Delete(rule).Error
 	if err != nil {
 		return err
 	}
@@ -287,16 +258,97 @@ func (model *Orm) DeleteAction(id uint) error {
 	return nil
 }
 
-func (model *Orm) GetAction(id uint) (*Action, error) {
+func (model *Orm) ReadAction(id uint) (*ActionFieldsForRead, error) {
 
-	a := &Action{}
-	err := model.db.First(a, "id = ?", id).Error
+	rule, err := model.readActionById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if rule == nil {
+		return nil, nil
+	}
+
+	fields, err := rule.Read()
+	if err != nil {
+		return nil, err
+	}
+
+	return fields, nil
+}
+
+//---------------------------------------------------------------------
+// Rule
+
+func (model *Orm) readRuleById(id uint) (*Rule, error) {
+	rule := &Rule{}
+	err := model.db.First(rule, "id = ?", id).Error
 	if err != nil {
 		if err.Error() == "record not found" {
 			return nil, nil
 		}
 		return nil, err
 	}
+	return rule, nil
+}
 
-	return a, nil
+func (model *Orm) CreateRule(fields *RuleFieldsForCreate) (uint, error) {
+	rule, err := CreateRule(fields)
+	if err != nil {
+		return 0, err
+	}
+
+	err = model.db.Create(rule).Error
+	if err != nil {
+		return 0, err
+	}
+	return rule.ID, nil
+}
+
+func (model *Orm) UpdateRule(id uint, fields *RuleFieldsForUpdate) error {
+	rule, err := model.readRuleById(id)
+	if err != nil {
+		return err
+	}
+	err = rule.Update(fields)
+	if err != nil {
+		return err
+	}
+	err = model.db.Save(rule).Error
+	return err
+}
+
+func (model *Orm) DeleteRule(id uint) error {
+	rule, err := model.readRuleById(id)
+	if err != nil {
+		return err
+	}
+	if rule == nil {
+		return fmt.Errorf("record not found f.%d", id)
+	}
+	err = model.db.Delete(rule).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (model *Orm) ReadRule(id uint) (*RuleFieldsForRead, error) {
+
+	rule, err := model.readRuleById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if rule == nil {
+		return nil, nil
+	}
+
+	fields, err := rule.Read()
+	if err != nil {
+		return nil, err
+	}
+
+	return fields, nil
 }
