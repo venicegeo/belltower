@@ -12,23 +12,20 @@ type Action struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	Name           string
-	IsEnabled      bool
-	SettingsJson   string
-	OwnerID        uint
-	PublicCanRead  bool
-	PublicCanWrite bool
+	Name         string
+	IsEnabled    bool
+	SettingsJson string
+	OwnerID      uint
+	IsPublic     bool
 }
 
 //---------------------------------------------------------------------
 
 type ActionFieldsForCreate struct {
-	Name           string
-	IsEnabled      bool
-	Settings       map[string]interface{}
-	OwnerID        uint
-	PublicCanRead  bool
-	PublicCanWrite bool
+	Name      string
+	IsEnabled bool
+	Settings  map[string]interface{}
+	IsPublic  bool
 }
 
 type ActionFieldsForRead struct {
@@ -38,37 +35,42 @@ type ActionFieldsForRead struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	IsEnabled      bool
-	Settings       map[string]interface{}
-	OwnerID        uint
-	PublicCanRead  bool
-	PublicCanWrite bool
+	IsEnabled bool
+	Settings  map[string]interface{}
+	OwnerID   uint
+	IsPublic  bool
 }
 
 type ActionFieldsForUpdate struct {
-	Name           string
-	IsEnabled      bool
-	PublicCanRead  bool
-	PublicCanWrite bool
+	Name      string
+	IsEnabled bool
+	IsPublic  bool
 }
 
 //---------------------------------------------------------------------
 
-func CreateAction(fields *ActionFieldsForCreate) (*Action, error) {
+func CreateAction(requestorID uint, fields *ActionFieldsForCreate) (*Action, error) {
 	settingsJson, err := common.NewJsonFromMap(fields.Settings)
 	if err != nil {
 		return nil, err
 	}
 	action := &Action{
-		Name:           fields.Name,
-		IsEnabled:      fields.IsEnabled,
-		SettingsJson:   settingsJson.AsString(),
-		OwnerID:        fields.OwnerID,
-		PublicCanRead:  fields.PublicCanRead,
-		PublicCanWrite: fields.PublicCanWrite,
+		Name:         fields.Name,
+		IsEnabled:    fields.IsEnabled,
+		SettingsJson: settingsJson.AsString(),
+		OwnerID:      requestorID,
+		IsPublic:     fields.IsPublic,
 	}
 
 	return action, nil
+}
+
+func (action *Action) GetOwnerID() uint {
+	return action.OwnerID
+}
+
+func (action *Action) GetIsPublic() bool {
+	return action.IsPublic
 }
 
 //---------------------------------------------------------------------
@@ -91,11 +93,10 @@ func (action *Action) Read() (*ActionFieldsForRead, error) {
 		CreatedAt: action.CreatedAt,
 		UpdatedAt: action.UpdatedAt,
 
-		IsEnabled:      action.IsEnabled,
-		Settings:       settingsMap,
-		OwnerID:        action.OwnerID,
-		PublicCanRead:  action.PublicCanRead,
-		PublicCanWrite: action.PublicCanWrite,
+		IsEnabled: action.IsEnabled,
+		Settings:  settingsMap,
+		OwnerID:   action.OwnerID,
+		IsPublic:  action.IsPublic,
 	}
 
 	return read, nil
@@ -108,8 +109,7 @@ func (action *Action) Update(update *ActionFieldsForUpdate) error {
 	}
 
 	action.IsEnabled = update.IsEnabled
-	action.PublicCanRead = update.PublicCanRead
-	action.PublicCanWrite = update.PublicCanWrite
+	action.IsPublic = update.IsPublic
 
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Users are never publically visible: only the admin has access rights.
 type User struct {
 	ID        uint `gorm:"primary_key"`
 	CreatedAt time.Time
@@ -12,7 +13,6 @@ type User struct {
 
 	Name        string
 	Rights      uint // what rights this user has
-	IsPublic    bool // what restrictions are there for others trying to access this object
 	IsAdmin     bool
 	IsEnabled   bool
 	LastLoginAt time.Time
@@ -22,10 +22,10 @@ type User struct {
 //---------------------------------------------------------------------
 
 type UserFieldsForCreate struct {
-	Name        string
-	IsEnabled   bool
-	Permissions uint
-	IsAdmin     bool
+	Name      string
+	IsEnabled bool
+	Rights    uint
+	IsAdmin   bool
 }
 
 type UserFieldsForRead struct {
@@ -36,22 +36,22 @@ type UserFieldsForRead struct {
 	Name        string
 	IsEnabled   bool
 	IsAdmin     bool
-	Permissions uint
+	Rights      uint
 	LastLoginAt time.Time
 }
 
 type UserFieldsForUpdate struct {
-	Name        string
-	IsEnabled   bool
-	Permissions uint
+	Name      string
+	IsEnabled bool
+	Rights    uint
 }
 
 func CreateUser(fields *UserFieldsForCreate) (*User, error) {
 	user := &User{
-		Name:        fields.Name,
-		IsEnabled:   fields.IsEnabled,
-		Permissions: fields.Permissions,
-		IsAdmin:     fields.IsAdmin,
+		Name:      fields.Name,
+		IsEnabled: fields.IsEnabled,
+		Rights:    fields.Rights,
+		IsAdmin:   fields.IsAdmin,
 	}
 
 	return user, nil
@@ -69,9 +69,9 @@ func (user *User) Read() (*UserFieldsForRead, error) {
 		UpdatedAt:   user.UpdatedAt,
 		LastLoginAt: user.LastLoginAt,
 
-		IsEnabled:   user.IsEnabled,
-		Permissions: user.Permissions,
-		IsAdmin:     user.IsAdmin,
+		IsEnabled: user.IsEnabled,
+		Rights:    user.Rights,
+		IsAdmin:   user.IsAdmin,
 	}
 
 	return read, nil
@@ -84,7 +84,7 @@ func (user *User) Update(update *UserFieldsForUpdate) error {
 	}
 
 	user.IsEnabled = update.IsEnabled
-	user.Permissions = update.Permissions
+	user.Rights = update.Rights
 
 	return nil
 }

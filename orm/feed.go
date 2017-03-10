@@ -24,21 +24,18 @@ type Feed struct {
 	MessageCount    uint
 	LastMessageAt   *time.Time
 	OwnerID         uint
-	PublicCanRead   bool
-	PublicCanWrite  bool
+	IsPublic        bool
 }
 
 //---------------------------------------------------------------------
 
 type FeedFieldsForCreate struct {
-	Name           string
-	FeedType       string
-	IsEnabled      bool
-	MessageDecl    map[string]interface{} `gorm:"-"`
-	Settings       map[string]interface{} `gorm:"-"`
-	OwnerID        uint
-	PublicCanRead  bool
-	PublicCanWrite bool
+	Name        string
+	FeedType    string
+	IsEnabled   bool
+	MessageDecl map[string]interface{} `gorm:"-"`
+	Settings    map[string]interface{} `gorm:"-"`
+	IsPublic    bool
 }
 
 type FeedFieldsForRead struct {
@@ -53,20 +50,18 @@ type FeedFieldsForRead struct {
 	Settings    map[string]interface{}
 	OwnerID     uint
 
-	MessageCount   uint
-	LastMessageAt  *time.Time
-	PublicCanRead  bool
-	PublicCanWrite bool
+	MessageCount  uint
+	LastMessageAt *time.Time
+	IsPublic      bool
 }
 
 type FeedFieldsForUpdate struct {
-	Name           string
-	IsEnabled      bool
-	PublicCanRead  bool
-	PublicCanWrite bool
+	Name      string
+	IsEnabled bool
+	IsPublic  bool
 }
 
-func CreateFeed(fields *FeedFieldsForCreate) (*Feed, error) {
+func CreateFeed(requestorID uint, fields *FeedFieldsForCreate) (*Feed, error) {
 	messageJson, err := common.NewJsonFromMap(fields.MessageDecl)
 	if err != nil {
 		return nil, err
@@ -81,12 +76,19 @@ func CreateFeed(fields *FeedFieldsForCreate) (*Feed, error) {
 		IsEnabled:       fields.IsEnabled,
 		MessageDeclJson: messageJson,
 		SettingsJson:    settingsJson,
-		OwnerID:         fields.OwnerID,
-		PublicCanRead:   fields.PublicCanRead,
-		PublicCanWrite:  fields.PublicCanWrite,
+		OwnerID:         requestorID,
+		IsPublic:        fields.IsPublic,
 	}
 
 	return feed, nil
+}
+
+func (feed *Feed) GetOwnerID() uint {
+	return feed.OwnerID
+}
+
+func (feed *Feed) GetIsPublic() bool {
+	return feed.IsPublic
 }
 
 //---------------------------------------------------------------------
@@ -109,15 +111,14 @@ func (feed *Feed) Read() (*FeedFieldsForRead, error) {
 		UpdatedAt: feed.UpdatedAt,
 		//DeletedAt *time.Time `sql:"index"`
 
-		FeedType:       feed.FeedType,
-		IsEnabled:      feed.IsEnabled,
-		MessageDecl:    messageMap,
-		Settings:       settingsMap,
-		MessageCount:   feed.MessageCount,
-		LastMessageAt:  feed.LastMessageAt,
-		OwnerID:        feed.OwnerID,
-		PublicCanRead:  feed.PublicCanRead,
-		PublicCanWrite: feed.PublicCanWrite,
+		FeedType:      feed.FeedType,
+		IsEnabled:     feed.IsEnabled,
+		MessageDecl:   messageMap,
+		Settings:      settingsMap,
+		MessageCount:  feed.MessageCount,
+		LastMessageAt: feed.LastMessageAt,
+		OwnerID:       feed.OwnerID,
+		IsPublic:      feed.IsPublic,
 	}
 
 	return read, nil
@@ -130,8 +131,7 @@ func (feed *Feed) Update(update *FeedFieldsForUpdate) error {
 	}
 
 	feed.IsEnabled = update.IsEnabled
-	feed.PublicCanRead = update.PublicCanRead
-	feed.PublicCanWrite = update.PublicCanWrite
+	feed.IsPublic = update.IsPublic
 
 	return nil
 }

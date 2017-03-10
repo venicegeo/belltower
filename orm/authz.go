@@ -14,11 +14,33 @@ const (
 	CanReadRule
 	CanUpdateRule
 	CanDeleteRule
+
+	CanReadAll     = CanReadFeed | CanReadAction | CanReadAction
+	CanAdminFeed   = CanCreateFeed | CanReadFeed | CanUpdateFeed | CanDeleteFeed
+	CanAdminAction = CanCreateAction | CanReadAction | CanUpdateAction | CanDeleteAction
+	CanAdminRule   = CanCreateRule | CanReadRule | CanUpdateRule | CanDeleteRule
+	CanAdminAll    = CanAdminFeed | CanAdminAction | CanAdminRule
 )
 
 type Authorizable interface {
 	GetOwnerID() uint
 	GetIsPublic() bool
+}
+
+func isAuthorizedInGeneral(requestor *User, requestedPermissions uint) bool {
+
+	// admins can do anything
+	if requestor.IsAdmin {
+		return true
+	}
+
+	// finally, the user must have the specific rights
+	if requestor.Rights&requestedPermissions != requestedPermissions {
+		return false
+	}
+
+	// we made it
+	return true
 }
 
 func isAuthorizedForObject(requestor *User, object Authorizable, requestedPermissions uint) bool {
@@ -33,13 +55,13 @@ func isAuthorizedForObject(requestor *User, object Authorizable, requestedPermis
 		return true
 	}
 
-	// the user must have the specific rights
-	if requestor.Rights&requestedPermissions != requestedPermissions {
+	// is the object itself public?
+	if !object.GetIsPublic() {
 		return false
 	}
 
-	// finally, is the object itself public?
-	if !object.GetIsPublic() {
+	// finally, the user must have the specific rights
+	if requestor.Rights&requestedPermissions != requestedPermissions {
 		return false
 	}
 
