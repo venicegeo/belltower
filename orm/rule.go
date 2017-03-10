@@ -14,8 +14,7 @@ type Rule struct {
 	PollDuration time.Duration
 	IsEnabled    bool
 	Expression   string
-
-	OwnerID uint
+	OwnerID      uint
 }
 
 //---------------------------------------------------------------------
@@ -93,7 +92,9 @@ func (rule *Rule) Update(update *RuleFieldsForUpdate) error {
 	if update.Expression != "" {
 		rule.Expression = update.Expression
 	}
-
+	if update.PollDuration != 0 {
+		rule.PollDuration = update.PollDuration
+	}
 	return nil
 }
 

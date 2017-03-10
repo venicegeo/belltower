@@ -72,10 +72,12 @@ func TestUser(t *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
+	const ownerID uint = 1999
 	fields := &UserFieldsForCreate{
 		Name:      "Bob",
 		IsAdmin:   false,
 		IsEnabled: true,
+		OwnerID:   ownerID,
 	}
 
 	var id uint
@@ -95,6 +97,7 @@ func TestUser(t *testing.T) {
 		assert.WithinDuration(now, readFields.CreatedAt, secs2)
 		assert.Equal(readFields.CreatedAt, readFields.UpdatedAt)
 		assert.Zero(readFields.LastLoginAt)
+		assert.Equal(ownerID, readFields.OwnerID)
 	}
 
 	{ // update it
@@ -116,6 +119,7 @@ func TestUser(t *testing.T) {
 		assert.Zero(readFields.LastLoginAt)
 		assert.False(readFields.IsEnabled)
 		assert.True(readFields.IsAdmin)
+		assert.Equal(ownerID, readFields.OwnerID)
 	}
 
 	{ // update with default payload
@@ -135,6 +139,7 @@ func TestUser(t *testing.T) {
 		assert.Zero(readFields.LastLoginAt)
 		assert.False(readFields.IsEnabled)
 		assert.False(readFields.IsAdmin)
+		assert.Equal(ownerID, readFields.OwnerID)
 	}
 
 	{
@@ -158,6 +163,7 @@ func TestFeed(tst *testing.T) {
 	defer model.Close()
 
 	now := time.Now()
+	const ownerID uint = 1888
 
 	createFields := &FeedFieldsForCreate{
 		Name:        "Bob",
@@ -165,7 +171,7 @@ func TestFeed(tst *testing.T) {
 		IsEnabled:   true,
 		MessageDecl: map[string]interface{}{},
 		Settings:    map[string]interface{}{},
-		OwnerID:     17,
+		OwnerID:     ownerID,
 	}
 
 	var id uint
@@ -186,7 +192,7 @@ func TestFeed(tst *testing.T) {
 		// Settings // TODO
 		assert.Zero(readFields.MessageCount)
 		assert.Zero(readFields.LastMessageAt)
-		assert.Equal(uint(17), readFields.OwnerID)
+		assert.Equal(ownerID, readFields.OwnerID)
 	}
 
 	{
@@ -205,11 +211,12 @@ func TestFeed(tst *testing.T) {
 		assert.WithinDuration(now, readFields.UpdatedAt, secs2)
 		assert.EqualValues("myfeedtype", readFields.FeedType)
 		assert.False(readFields.IsEnabled)
+		assert.Equal(ownerID, readFields.OwnerID)
 		// MessageDecl TODO
 		// Settings // TODO
 		assert.Zero(readFields.MessageCount)
 		assert.Zero(readFields.LastMessageAt)
-		assert.Equal(uint(17), readFields.OwnerID)
+		assert.Equal(ownerID, readFields.OwnerID)
 	}
 
 	{ // update with empty object
@@ -226,11 +233,12 @@ func TestFeed(tst *testing.T) {
 		assert.WithinDuration(now, readFields.UpdatedAt, secs2)
 		assert.EqualValues("myfeedtype", readFields.FeedType)
 		assert.False(readFields.IsEnabled)
+		assert.Equal(ownerID, readFields.OwnerID)
 		// MessageDecl TODO
 		// Settings // TODO
 		assert.Zero(readFields.MessageCount)
 		assert.Zero(readFields.LastMessageAt)
-		assert.Equal(uint(17), readFields.OwnerID)
+		assert.Equal(ownerID, readFields.OwnerID)
 	}
 
 	{
@@ -255,14 +263,16 @@ func TestRule(tst *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
+	const ownerID uint = 1777
+
 	//now := time.Now()
 
 	createFields := &RuleFieldsForCreate{
 		Name:         "Bob",
 		IsEnabled:    true,
 		Expression:   "a+b",
-		OwnerID:      17,
-		PollDuration: time.Duration(2 * time.Second),
+		OwnerID:      777,
+		PollDuration: time.Duration(secs2),
 	}
 
 	var id uint
@@ -270,25 +280,50 @@ func TestRule(tst *testing.T) {
 	{
 		id, err = model.CreateRule(createFields)
 		assert.NoError(err)
+
 		readFields, err := model.ReadRule(id)
 		assert.NoError(err)
+
+		assert.Equal("Bob", readFields.Name)
 		assert.True(readFields.IsEnabled)
-		assert.EqualValues(readFields.Name, createFields.Name)
-		assert.EqualValues(readFields.IsEnabled, createFields.IsEnabled)
+		assert.Equal("a+b", readFields.Expression)
+		assert.Equal(uint(777), readFields.OwnerID)
+		assert.Equal(secs2, readFields.PollDuration)
 	}
 
 	{
 		updateFields := &RuleFieldsForUpdate{
 			Name:         "alice",
-			PollDuration: time.Duration(time.Second),
+			PollDuration: time.Duration(secs10),
 			IsEnabled:    false,
+			Expression:   "x-y/z",
 		}
 		err = model.UpdateRule(id, updateFields)
 		assert.NoError(err)
+
 		readFields, err := model.ReadRule(id)
 		assert.NoError(err)
-		assert.EqualValues(readFields.IsEnabled, updateFields.IsEnabled)
+
+		assert.Equal("alice", readFields.Name)
 		assert.False(readFields.IsEnabled)
+		assert.Equal("x-y/z", readFields.Expression)
+		assert.Equal(uint(777), readFields.OwnerID)
+		assert.Equal(secs10, readFields.PollDuration)
+	}
+
+	{
+		updateFields := &RuleFieldsForUpdate{}
+		err = model.UpdateRule(id, updateFields)
+		assert.NoError(err)
+
+		readFields, err := model.ReadRule(id)
+		assert.NoError(err)
+
+		assert.Equal("alice", readFields.Name)
+		assert.False(readFields.IsEnabled)
+		assert.Equal("x-y/z", readFields.Expression)
+		assert.Equal(uint(777), readFields.OwnerID)
+		assert.Equal(secs10, readFields.PollDuration)
 	}
 
 	{
@@ -313,12 +348,15 @@ func TestAction(tst *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
+	const ownerID uint = 1666
+
 	//now := time.Now()
 
 	createFields := &ActionFieldsForCreate{
 		Name:      "Bob",
 		IsEnabled: true,
-		Settings:  map[string]interface{}{},
+		Settings:  map[string]interface{}{"a": "b"},
+		OwnerID:   ownerID,
 	}
 
 	var id uint
@@ -326,11 +364,13 @@ func TestAction(tst *testing.T) {
 	{
 		id, err = model.CreateAction(createFields)
 		assert.NoError(err)
+
 		readFields, err := model.ReadAction(id)
 		assert.NoError(err)
-		assert.True(readFields.IsEnabled)
-		assert.EqualValues(readFields.Name, createFields.Name)
-		assert.EqualValues(readFields.IsEnabled, createFields.IsEnabled)
+		assert.Equal(true, readFields.IsEnabled)
+		assert.EqualValues(map[string]interface{}{"a": "b"}, readFields.Settings)
+		assert.Equal(true, readFields.IsEnabled)
+		assert.Equal(ownerID, readFields.OwnerID)
 	}
 
 	{
@@ -340,11 +380,28 @@ func TestAction(tst *testing.T) {
 		}
 		err = model.UpdateAction(id, updateFields)
 		assert.NoError(err)
+
 		readFields, err := model.ReadAction(id)
 		assert.NoError(err)
-		assert.EqualValues(readFields.IsEnabled, updateFields.IsEnabled)
-		assert.EqualValues(readFields.Name, updateFields.Name)
-		assert.False(readFields.IsEnabled)
+
+		assert.Equal(false, readFields.IsEnabled)
+		assert.EqualValues(map[string]interface{}{"a": "b"}, readFields.Settings)
+		assert.Equal(false, readFields.IsEnabled)
+		assert.Equal(ownerID, readFields.OwnerID)
+	}
+
+	{
+		updateFields := &ActionFieldsForUpdate{}
+		err = model.UpdateAction(id, updateFields)
+		assert.NoError(err)
+
+		readFields, err := model.ReadAction(id)
+		assert.NoError(err)
+
+		assert.Equal(false, readFields.IsEnabled)
+		assert.EqualValues(map[string]interface{}{"a": "b"}, readFields.Settings)
+		assert.Equal(false, readFields.IsEnabled)
+		assert.Equal(ownerID, readFields.OwnerID)
 	}
 
 	{

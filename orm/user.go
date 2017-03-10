@@ -16,6 +16,7 @@ type User struct {
 	IsEnabled           bool
 	LastLoginAt         time.Time
 	LastLoginAtInternal string
+	OwnerID             uint
 }
 
 //---------------------------------------------------------------------
@@ -24,6 +25,7 @@ type UserFieldsForCreate struct {
 	Name      string
 	IsAdmin   bool
 	IsEnabled bool
+	OwnerID   uint
 }
 
 type UserFieldsForRead struct {
@@ -35,6 +37,7 @@ type UserFieldsForRead struct {
 	IsAdmin     bool
 	IsEnabled   bool
 	LastLoginAt time.Time
+	OwnerID     uint
 }
 
 type UserFieldsForUpdate struct {
@@ -47,6 +50,7 @@ func CreateUser(fields *UserFieldsForCreate) (*User, error) {
 	user := &User{
 		Name:      fields.Name,
 		IsAdmin:   fields.IsAdmin,
+		OwnerID:   fields.OwnerID,
 		IsEnabled: fields.IsEnabled,
 	}
 
@@ -67,6 +71,7 @@ func (user *User) Read() (*UserFieldsForRead, error) {
 
 		IsAdmin:   user.IsAdmin,
 		IsEnabled: user.IsEnabled,
+		OwnerID:   user.OwnerID,
 	}
 
 	return read, nil

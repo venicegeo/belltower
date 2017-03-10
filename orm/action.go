@@ -14,7 +14,8 @@ type Action struct {
 
 	Name         string
 	IsEnabled    bool
-	SettingsJson *common.Json
+	SettingsJson string
+	OwnerID      uint
 }
 
 //---------------------------------------------------------------------
@@ -22,7 +23,8 @@ type Action struct {
 type ActionFieldsForCreate struct {
 	Name      string
 	IsEnabled bool
-	Settings  map[string]interface{} `gorm:"-"`
+	Settings  map[string]interface{}
+	OwnerID   uint
 }
 
 type ActionFieldsForRead struct {
@@ -34,6 +36,7 @@ type ActionFieldsForRead struct {
 
 	IsEnabled bool
 	Settings  map[string]interface{}
+	OwnerID   uint
 }
 
 type ActionFieldsForUpdate struct {
@@ -51,7 +54,8 @@ func CreateAction(fields *ActionFieldsForCreate) (*Action, error) {
 	action := &Action{
 		Name:         fields.Name,
 		IsEnabled:    fields.IsEnabled,
-		SettingsJson: settingsJson,
+		SettingsJson: settingsJson.AsString(),
+		OwnerID:      fields.OwnerID,
 	}
 
 	return action, nil
@@ -61,9 +65,13 @@ func CreateAction(fields *ActionFieldsForCreate) (*Action, error) {
 
 func (action *Action) Read() (*ActionFieldsForRead, error) {
 
+	var j, err = common.NewJsonFromString(action.SettingsJson)
+	if err != nil {
+		return nil, err
+	}
 	var settingsMap map[string]interface{}
-	if action.SettingsJson != nil {
-		settingsMap = action.SettingsJson.AsMap()
+	if j.AsString() != "" {
+		settingsMap = j.AsMap()
 	}
 
 	read := &ActionFieldsForRead{
@@ -75,6 +83,7 @@ func (action *Action) Read() (*ActionFieldsForRead, error) {
 
 		IsEnabled: action.IsEnabled,
 		Settings:  settingsMap,
+		OwnerID:   action.OwnerID,
 	}
 
 	return read, nil
