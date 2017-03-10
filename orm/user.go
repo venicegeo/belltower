@@ -9,23 +9,23 @@ type User struct {
 	ID        uint `gorm:"primary_key"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	//DeletedAt *time.Time `sql:"index"`
 
-	Name                string
-	IsAdmin             bool
-	IsEnabled           bool
-	LastLoginAt         time.Time
-	LastLoginAtInternal string
-	OwnerID             uint
+	Name        string
+	Rights      uint // what rights this user has
+	IsPublic    bool // what restrictions are there for others trying to access this object
+	IsAdmin     bool
+	IsEnabled   bool
+	LastLoginAt time.Time
+	OwnerID     uint
 }
 
 //---------------------------------------------------------------------
 
 type UserFieldsForCreate struct {
-	Name      string
-	IsAdmin   bool
-	IsEnabled bool
-	OwnerID   uint
+	Name        string
+	IsEnabled   bool
+	Permissions uint
+	IsAdmin     bool
 }
 
 type UserFieldsForRead struct {
@@ -34,24 +34,24 @@ type UserFieldsForRead struct {
 	UpdatedAt time.Time
 
 	Name        string
-	IsAdmin     bool
 	IsEnabled   bool
+	IsAdmin     bool
+	Permissions uint
 	LastLoginAt time.Time
-	OwnerID     uint
 }
 
 type UserFieldsForUpdate struct {
-	Name      string
-	IsAdmin   bool
-	IsEnabled bool
+	Name        string
+	IsEnabled   bool
+	Permissions uint
 }
 
 func CreateUser(fields *UserFieldsForCreate) (*User, error) {
 	user := &User{
-		Name:      fields.Name,
-		IsAdmin:   fields.IsAdmin,
-		OwnerID:   fields.OwnerID,
-		IsEnabled: fields.IsEnabled,
+		Name:        fields.Name,
+		IsEnabled:   fields.IsEnabled,
+		Permissions: fields.Permissions,
+		IsAdmin:     fields.IsAdmin,
 	}
 
 	return user, nil
@@ -69,9 +69,9 @@ func (user *User) Read() (*UserFieldsForRead, error) {
 		UpdatedAt:   user.UpdatedAt,
 		LastLoginAt: user.LastLoginAt,
 
-		IsAdmin:   user.IsAdmin,
-		IsEnabled: user.IsEnabled,
-		OwnerID:   user.OwnerID,
+		IsEnabled:   user.IsEnabled,
+		Permissions: user.Permissions,
+		IsAdmin:     user.IsAdmin,
 	}
 
 	return read, nil
@@ -83,8 +83,8 @@ func (user *User) Update(update *UserFieldsForUpdate) error {
 		user.Name = update.Name
 	}
 
-	user.IsAdmin = update.IsAdmin
 	user.IsEnabled = update.IsEnabled
+	user.Permissions = update.Permissions
 
 	return nil
 }

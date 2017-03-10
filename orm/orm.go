@@ -10,7 +10,8 @@ import (
 )
 
 type Orm struct {
-	db *gorm.DB
+	db      *gorm.DB
+	adminID uint
 }
 
 func NewOrm() (*Orm, error) {
@@ -28,9 +29,9 @@ func NewOrm() (*Orm, error) {
 
 	// create all the tables
 	tables := []interface{}{
-		&Feed{}, &FeedRuleAssociation{}, &FeedAccessList{},
-		&Rule{}, &RuleAccessList{},
-		&Action{}, &ActionRuleAssociation{}, &ActionAccessList{},
+		&Feed{}, &FeedRuleAssociation{},
+		&Rule{},
+		&Action{}, &ActionRuleAssociation{},
 		&User{},
 	}
 
@@ -40,6 +41,16 @@ func NewOrm() (*Orm, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// add the admin user -- requestor is 0, since there really isn't one
+	model.adminID, err = model.CreateUser(0, &UserFieldsForCreate{
+		Name:        "admin",
+		IsEnabled:   true,
+		Permissions: 1,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return model, nil
@@ -52,7 +63,7 @@ func (model *Orm) Close() error {
 //---------------------------------------------------------------------
 // User
 
-func (model *Orm) readUserById(id uint) (*User, error) {
+func (model *Orm) readUserByID(id uint) (*User, error) {
 	user := &User{}
 	err := model.db.First(user, "id = ?", id).Error
 	if err != nil {
@@ -64,7 +75,11 @@ func (model *Orm) readUserById(id uint) (*User, error) {
 	return user, nil
 }
 
-func (model *Orm) CreateUser(fields *UserFieldsForCreate) (uint, error) {
+func (model *Orm) CreateUser(requestorID uint, fields *UserFieldsForCreate) (uint, error) {
+	if requestorID != model.adminID {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
 	user, err := CreateUser(fields)
 	if err != nil {
 		return 0, err
@@ -77,8 +92,12 @@ func (model *Orm) CreateUser(fields *UserFieldsForCreate) (uint, error) {
 	return user.ID, nil
 }
 
-func (model *Orm) UpdateUser(id uint, fields *UserFieldsForUpdate) error {
-	user, err := model.readUserById(id)
+func (model *Orm) UpdateUser(requestorID uint, id uint, fields *UserFieldsForUpdate) error {
+	if requestorID != model.adminID {
+		return fmt.Errorf("Permission denied.")
+	}
+
+	user, err := model.readUserByID(id)
 	if err != nil {
 		return err
 	}
@@ -90,8 +109,12 @@ func (model *Orm) UpdateUser(id uint, fields *UserFieldsForUpdate) error {
 	return err
 }
 
-func (model *Orm) DeleteUser(id uint) error {
-	user, err := model.readUserById(id)
+func (model *Orm) DeleteUser(requestorID uint, id uint) error {
+	if requestorID != model.adminID {
+		return fmt.Errorf("Permission denied.")
+	}
+
+	user, err := model.readUserByID(id)
 	if err != nil {
 		return err
 	}
@@ -104,11 +127,15 @@ func (model *Orm) DeleteUser(id uint) error {
 	}
 
 	return nil
+
 }
 
-func (model *Orm) ReadUser(id uint) (*UserFieldsForRead, error) {
+func (model *Orm) ReadUser(requestorID uint, id uint) (*UserFieldsForRead, error) {
+	if requestorID != model.adminID {
+		return nil, fmt.Errorf("Permission denied.")
+	}
 
-	user, err := model.readUserById(id)
+	user, err := model.readUserByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +167,17 @@ func (model *Orm) readFeedById(id uint) (*Feed, error) {
 	return feed, nil
 }
 
-func (model *Orm) CreateFeed(fields *FeedFieldsForCreate) (uint, error) {
+func (model *Orm) CreateFeed(requestorID uint, fields *FeedFieldsForCreate) (uint, error) {
+
+	user, err := model.readUserByID(requestorID)
+	if err != nil {
+		return 0, err
+	}
+
+	if !isAuthorized(user, CanCreateFeed) {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
 	feed, err := CreateFeed(fields)
 	if err != nil {
 		return 0, err
@@ -153,7 +190,16 @@ func (model *Orm) CreateFeed(fields *FeedFieldsForCreate) (uint, error) {
 	return feed.ID, nil
 }
 
-func (model *Orm) UpdateFeed(id uint, fields *FeedFieldsForUpdate) error {
+func (model *Orm) UpdateFeed(requestorID uint, id uint, fields *FeedFieldsForUpdate) error {
+	user, err := model.readUserByID(requestorID)
+	if err != nil {
+		return err
+	}
+
+	if !isAuthorized(user, CanUpdateFeed) {
+		return fmt.Errorf("Permission denied.")
+	}
+
 	feed, err := model.readFeedById(id)
 	if err != nil {
 		return err
@@ -166,7 +212,16 @@ func (model *Orm) UpdateFeed(id uint, fields *FeedFieldsForUpdate) error {
 	return err
 }
 
-func (model *Orm) DeleteFeed(id uint) error {
+func (model *Orm) DeleteFeed(requestorID uint, id uint) error {
+	user, err := model.readUserByID(requestorID)
+	if err != nil {
+		return err
+	}
+
+	if !isAuthorized(user, CanDeleteFeed) {
+		return fmt.Errorf("Permission denied.")
+	}
+
 	feed, err := model.readFeedById(id)
 	if err != nil {
 		return err
@@ -182,7 +237,15 @@ func (model *Orm) DeleteFeed(id uint) error {
 	return nil
 }
 
-func (model *Orm) ReadFeed(id uint) (*FeedFieldsForRead, error) {
+func (model *Orm) ReadFeed(requestorID uint, id uint) (*FeedFieldsForRead, error) {
+	user, err := model.readUserByID(requestorID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isAuthorized(user, CanReadFeed) {
+		return nil, fmt.Errorf("Permission denied.")
+	}
 
 	feed, err := model.readFeedById(id)
 	if err != nil {
@@ -216,7 +279,16 @@ func (model *Orm) readActionById(id uint) (*Action, error) {
 	return rule, nil
 }
 
-func (model *Orm) CreateAction(fields *ActionFieldsForCreate) (uint, error) {
+func (model *Orm) CreateAction(requestorID uint, fields *ActionFieldsForCreate) (uint, error) {
+	user, err := model.readUserByID(requestorID)
+	if err != nil {
+		return 0, err
+	}
+
+	if !isAuthorized(user, CanCreateAction) {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
 	rule, err := CreateAction(fields)
 	if err != nil {
 		return 0, err
@@ -229,7 +301,16 @@ func (model *Orm) CreateAction(fields *ActionFieldsForCreate) (uint, error) {
 	return rule.ID, nil
 }
 
-func (model *Orm) UpdateAction(id uint, fields *ActionFieldsForUpdate) error {
+func (model *Orm) UpdateAction(requestorID uint, id uint, fields *ActionFieldsForUpdate) error {
+	user, err := model.readUserByID(requestorID)
+	if err != nil {
+		return err
+	}
+
+	if !isAuthorized(user, CanUpdateAction) {
+		return fmt.Errorf("Permission denied.")
+	}
+
 	rule, err := model.readActionById(id)
 	if err != nil {
 		return err
@@ -242,7 +323,16 @@ func (model *Orm) UpdateAction(id uint, fields *ActionFieldsForUpdate) error {
 	return err
 }
 
-func (model *Orm) DeleteAction(id uint) error {
+func (model *Orm) DeleteAction(requestorID uint, id uint) error {
+	user, err := model.readUserByID(requestorID)
+	if err != nil {
+		return err
+	}
+
+	if !isAuthorized(user, CanDeleteAction) {
+		return fmt.Errorf("Permission denied.")
+	}
+
 	rule, err := model.readActionById(id)
 	if err != nil {
 		return err
@@ -258,7 +348,15 @@ func (model *Orm) DeleteAction(id uint) error {
 	return nil
 }
 
-func (model *Orm) ReadAction(id uint) (*ActionFieldsForRead, error) {
+func (model *Orm) ReadAction(requestorID uint, id uint) (*ActionFieldsForRead, error) {
+	user, err := model.readUserByID(requestorID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isAuthorized(user, CanReadAction) {
+		return nil, fmt.Errorf("Permission denied.")
+	}
 
 	rule, err := model.readActionById(id)
 	if err != nil {
@@ -292,7 +390,16 @@ func (model *Orm) readRuleById(id uint) (*Rule, error) {
 	return rule, nil
 }
 
-func (model *Orm) CreateRule(fields *RuleFieldsForCreate) (uint, error) {
+func (model *Orm) CreateRule(requestorID uint, fields *RuleFieldsForCreate) (uint, error) {
+	user, err := model.readUserByID(requestorID)
+	if err != nil {
+		return 0, err
+	}
+
+	if !isAuthorized(user, CanCreateRule) {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
 	rule, err := CreateRule(fields)
 	if err != nil {
 		return 0, err
@@ -305,7 +412,16 @@ func (model *Orm) CreateRule(fields *RuleFieldsForCreate) (uint, error) {
 	return rule.ID, nil
 }
 
-func (model *Orm) UpdateRule(id uint, fields *RuleFieldsForUpdate) error {
+func (model *Orm) UpdateRule(requestorID uint, id uint, fields *RuleFieldsForUpdate) error {
+	user, err := model.readUserByID(requestorID)
+	if err != nil {
+		return err
+	}
+
+	if !isAuthorized(user, CanUpdateRule) {
+		return fmt.Errorf("Permission denied.")
+	}
+
 	rule, err := model.readRuleById(id)
 	if err != nil {
 		return err
@@ -318,7 +434,16 @@ func (model *Orm) UpdateRule(id uint, fields *RuleFieldsForUpdate) error {
 	return err
 }
 
-func (model *Orm) DeleteRule(id uint) error {
+func (model *Orm) DeleteRule(requestorID uint, id uint) error {
+	requestor, err := model.readUserByID(requestorID)
+	if err != nil {
+		return err
+	}
+
+	if !isAuthorized(requestor, CanDeleteRule) {
+		return fmt.Errorf("Permission denied.")
+	}
+
 	rule, err := model.readRuleById(id)
 	if err != nil {
 		return err
@@ -334,7 +459,15 @@ func (model *Orm) DeleteRule(id uint) error {
 	return nil
 }
 
-func (model *Orm) ReadRule(id uint) (*RuleFieldsForRead, error) {
+func (model *Orm) ReadRule(requestorID uint, id uint) (*RuleFieldsForRead, error) {
+	user, err := model.readUserByID(requestorID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isAuthorized(user, CanReadRule) {
+		return nil, fmt.Errorf("Permission denied.")
+	}
 
 	rule, err := model.readRuleById(id)
 	if err != nil {

@@ -24,17 +24,21 @@ type Feed struct {
 	MessageCount    uint
 	LastMessageAt   *time.Time
 	OwnerID         uint
+	PublicCanRead   bool
+	PublicCanWrite  bool
 }
 
 //---------------------------------------------------------------------
 
 type FeedFieldsForCreate struct {
-	Name        string
-	FeedType    string
-	IsEnabled   bool
-	MessageDecl map[string]interface{} `gorm:"-"`
-	Settings    map[string]interface{} `gorm:"-"`
-	OwnerID     uint
+	Name           string
+	FeedType       string
+	IsEnabled      bool
+	MessageDecl    map[string]interface{} `gorm:"-"`
+	Settings       map[string]interface{} `gorm:"-"`
+	OwnerID        uint
+	PublicCanRead  bool
+	PublicCanWrite bool
 }
 
 type FeedFieldsForRead struct {
@@ -49,13 +53,17 @@ type FeedFieldsForRead struct {
 	Settings    map[string]interface{}
 	OwnerID     uint
 
-	MessageCount  uint
-	LastMessageAt *time.Time
+	MessageCount   uint
+	LastMessageAt  *time.Time
+	PublicCanRead  bool
+	PublicCanWrite bool
 }
 
 type FeedFieldsForUpdate struct {
-	Name      string
-	IsEnabled bool
+	Name           string
+	IsEnabled      bool
+	PublicCanRead  bool
+	PublicCanWrite bool
 }
 
 func CreateFeed(fields *FeedFieldsForCreate) (*Feed, error) {
@@ -74,6 +82,8 @@ func CreateFeed(fields *FeedFieldsForCreate) (*Feed, error) {
 		MessageDeclJson: messageJson,
 		SettingsJson:    settingsJson,
 		OwnerID:         fields.OwnerID,
+		PublicCanRead:   fields.PublicCanRead,
+		PublicCanWrite:  fields.PublicCanWrite,
 	}
 
 	return feed, nil
@@ -99,13 +109,15 @@ func (feed *Feed) Read() (*FeedFieldsForRead, error) {
 		UpdatedAt: feed.UpdatedAt,
 		//DeletedAt *time.Time `sql:"index"`
 
-		FeedType:      feed.FeedType,
-		IsEnabled:     feed.IsEnabled,
-		MessageDecl:   messageMap,
-		Settings:      settingsMap,
-		MessageCount:  feed.MessageCount,
-		LastMessageAt: feed.LastMessageAt,
-		OwnerID:       feed.OwnerID,
+		FeedType:       feed.FeedType,
+		IsEnabled:      feed.IsEnabled,
+		MessageDecl:    messageMap,
+		Settings:       settingsMap,
+		MessageCount:   feed.MessageCount,
+		LastMessageAt:  feed.LastMessageAt,
+		OwnerID:        feed.OwnerID,
+		PublicCanRead:  feed.PublicCanRead,
+		PublicCanWrite: feed.PublicCanWrite,
 	}
 
 	return read, nil
@@ -118,6 +130,8 @@ func (feed *Feed) Update(update *FeedFieldsForUpdate) error {
 	}
 
 	feed.IsEnabled = update.IsEnabled
+	feed.PublicCanRead = update.PublicCanRead
+	feed.PublicCanWrite = update.PublicCanWrite
 
 	return nil
 }

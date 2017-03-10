@@ -12,19 +12,23 @@ type Action struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	Name         string
-	IsEnabled    bool
-	SettingsJson string
-	OwnerID      uint
+	Name           string
+	IsEnabled      bool
+	SettingsJson   string
+	OwnerID        uint
+	PublicCanRead  bool
+	PublicCanWrite bool
 }
 
 //---------------------------------------------------------------------
 
 type ActionFieldsForCreate struct {
-	Name      string
-	IsEnabled bool
-	Settings  map[string]interface{}
-	OwnerID   uint
+	Name           string
+	IsEnabled      bool
+	Settings       map[string]interface{}
+	OwnerID        uint
+	PublicCanRead  bool
+	PublicCanWrite bool
 }
 
 type ActionFieldsForRead struct {
@@ -34,14 +38,18 @@ type ActionFieldsForRead struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	IsEnabled bool
-	Settings  map[string]interface{}
-	OwnerID   uint
+	IsEnabled      bool
+	Settings       map[string]interface{}
+	OwnerID        uint
+	PublicCanRead  bool
+	PublicCanWrite bool
 }
 
 type ActionFieldsForUpdate struct {
-	Name      string
-	IsEnabled bool
+	Name           string
+	IsEnabled      bool
+	PublicCanRead  bool
+	PublicCanWrite bool
 }
 
 //---------------------------------------------------------------------
@@ -52,10 +60,12 @@ func CreateAction(fields *ActionFieldsForCreate) (*Action, error) {
 		return nil, err
 	}
 	action := &Action{
-		Name:         fields.Name,
-		IsEnabled:    fields.IsEnabled,
-		SettingsJson: settingsJson.AsString(),
-		OwnerID:      fields.OwnerID,
+		Name:           fields.Name,
+		IsEnabled:      fields.IsEnabled,
+		SettingsJson:   settingsJson.AsString(),
+		OwnerID:        fields.OwnerID,
+		PublicCanRead:  fields.PublicCanRead,
+		PublicCanWrite: fields.PublicCanWrite,
 	}
 
 	return action, nil
@@ -81,9 +91,11 @@ func (action *Action) Read() (*ActionFieldsForRead, error) {
 		CreatedAt: action.CreatedAt,
 		UpdatedAt: action.UpdatedAt,
 
-		IsEnabled: action.IsEnabled,
-		Settings:  settingsMap,
-		OwnerID:   action.OwnerID,
+		IsEnabled:      action.IsEnabled,
+		Settings:       settingsMap,
+		OwnerID:        action.OwnerID,
+		PublicCanRead:  action.PublicCanRead,
+		PublicCanWrite: action.PublicCanWrite,
 	}
 
 	return read, nil
@@ -96,6 +108,8 @@ func (action *Action) Update(update *ActionFieldsForUpdate) error {
 	}
 
 	action.IsEnabled = update.IsEnabled
+	action.PublicCanRead = update.PublicCanRead
+	action.PublicCanWrite = update.PublicCanWrite
 
 	return nil
 }
