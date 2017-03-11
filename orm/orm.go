@@ -175,7 +175,7 @@ func (model *Orm) CreateFeed(requestorID uint, fields *FeedFieldsForCreate) (uin
 		return 0, err
 	}
 
-	if !testRole(requestor.Role, CreatorRole) {
+	if !isCreator(requestor.Role) {
 		return 0, fmt.Errorf("Permission denied.")
 	}
 
@@ -197,7 +197,7 @@ func (model *Orm) UpdateFeed(requestorID uint, feedID uint, fields *FeedFieldsFo
 		return err
 	}
 
-	feed, err := model.getFeedAndCheckAuthn(requestor, feedID, WriteOperation)
+	feed, err := model.getFeedAndCheckAuthn(requestor, feedID, UpdateOperation)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func (model *Orm) DeleteFeed(requestorID uint, feedID uint) error {
 		return err
 	}
 
-	feed, err := model.getFeedAndCheckAuthn(requestor, feedID, WriteOperation)
+	feed, err := model.getFeedAndCheckAuthn(requestor, feedID, DeleteOperation)
 	if err != nil {
 		return err
 	}
@@ -249,21 +249,21 @@ func (model *Orm) ReadFeed(requestorID uint, feedID uint) (*FeedFieldsForRead, e
 }
 
 // returns "field,nil" or "nil,err" -- exactly one of the two will be set
-func (model *Orm) getFeedAndCheckAuthn(requestor *User, feedID uint, role uint) (*Feed, error) {
+func (model *Orm) getFeedAndCheckAuthn(requestor *User, feedID uint, operation Operation) (*Feed, error) {
 	feed, err := model.readFeedById(feedID)
 	if err != nil {
 		return nil, err
 	}
 
 	if feed == nil {
-		if testRole(requestor.Role, CreatorRole) {
+		if isCreator(requestor.Role) {
 			return nil, fmt.Errorf("Feed %d not found", feedID)
 		} else {
 			return nil, fmt.Errorf("Permission denied")
 		}
 	}
 
-	if !isAuthorized(requestor, feed, role) {
+	if !isAuthorized(requestor, feed, operation) {
 		return nil, fmt.Errorf("Permission denied.")
 	}
 
@@ -291,7 +291,7 @@ func (model *Orm) CreateAction(requestorID uint, fields *ActionFieldsForCreate) 
 		return 0, err
 	}
 
-	if !testRole(requestor.Role, CreatorRole) {
+	if !isCreator(requestor.Role) {
 		return 0, fmt.Errorf("Permission denied.")
 	}
 
@@ -313,7 +313,7 @@ func (model *Orm) UpdateAction(requestorID uint, actionID uint, fields *ActionFi
 		return err
 	}
 
-	action, err := model.getActionAndCheckAuthn(requestor, actionID, WriteOperation)
+	action, err := model.getActionAndCheckAuthn(requestor, actionID, UpdateOperation)
 	if err != nil {
 		return err
 	}
@@ -332,7 +332,7 @@ func (model *Orm) DeleteAction(requestorID uint, actionID uint) error {
 		return err
 	}
 
-	action, err := model.getActionAndCheckAuthn(requestor, actionID, WriteOperation)
+	action, err := model.getActionAndCheckAuthn(requestor, actionID, DeleteOperation)
 	if err != nil {
 		return err
 	}
@@ -365,21 +365,21 @@ func (model *Orm) ReadAction(requestorID uint, actionID uint) (*ActionFieldsForR
 }
 
 // returns "field,nil" or "nil,err" -- exactly one of the two will be set
-func (model *Orm) getActionAndCheckAuthn(requestor *User, actionID uint, role uint) (*Action, error) {
+func (model *Orm) getActionAndCheckAuthn(requestor *User, actionID uint, operation Operation) (*Action, error) {
 	action, err := model.readActionById(actionID)
 	if err != nil {
 		return nil, err
 	}
 
 	if action == nil {
-		if testRole(requestor.Role, CreatorRole) {
+		if isCreator(requestor.Role) {
 			return nil, fmt.Errorf("Action %d not found", actionID)
 		} else {
 			return nil, fmt.Errorf("Permission denied")
 		}
 	}
 
-	if !isAuthorized(requestor, action, role) {
+	if !isAuthorized(requestor, action, operation) {
 		return nil, fmt.Errorf("Permission denied.")
 	}
 
@@ -407,7 +407,7 @@ func (model *Orm) CreateRule(requestorID uint, fields *RuleFieldsForCreate) (uin
 		return 0, err
 	}
 
-	if !testRole(requestor.Role, CreatorRole) {
+	if !isCreator(requestor.Role) {
 		return 0, fmt.Errorf("Permission denied.")
 	}
 
@@ -430,7 +430,7 @@ func (model *Orm) UpdateRule(requestorID uint, ruleID uint, fields *RuleFieldsFo
 		return err
 	}
 
-	rule, err := model.getRuleAndCheckAuthn(requestor, ruleID, WriteOperation)
+	rule, err := model.getRuleAndCheckAuthn(requestor, ruleID, UpdateOperation)
 	if err != nil {
 		return err
 	}
@@ -449,7 +449,7 @@ func (model *Orm) DeleteRule(requestorID uint, ruleID uint) error {
 		return err
 	}
 
-	rule, err := model.getRuleAndCheckAuthn(requestor, ruleID, WriteOperation)
+	rule, err := model.getRuleAndCheckAuthn(requestor, ruleID, DeleteOperation)
 	if err != nil {
 		return err
 	}
@@ -482,14 +482,14 @@ func (model *Orm) ReadRule(requestorID uint, ruleID uint) (*RuleFieldsForRead, e
 }
 
 // returns "field,nil" or "nil,err" -- exactly one of the two will be set
-func (model *Orm) getRuleAndCheckAuthn(requestor *User, ruleID uint, operation uint) (*Rule, error) {
+func (model *Orm) getRuleAndCheckAuthn(requestor *User, ruleID uint, operation Operation) (*Rule, error) {
 	rule, err := model.readRuleById(ruleID)
 	if err != nil {
 		return nil, err
 	}
 
 	if rule == nil {
-		if testRole(requestor.Role, CreatorRole) {
+		if isCreator(requestor.Role) {
 			return nil, fmt.Errorf("Rule %d not found", ruleID)
 		} else {
 			return nil, fmt.Errorf("Permission denied")
@@ -512,7 +512,7 @@ func (model *Orm) CreateRuleToActionAssociatio(requestorID uint, ruleID uint, ac
 		return 0, err
 	}
 
-	if !testRole(requestor.Role, CreatorRole) {
+	if !isCreator(requestor.Role) {
 		return 0, fmt.Errorf("Permission denied.")
 	}
 
@@ -560,7 +560,7 @@ func (model *Orm) CreateFeedToRule(requestorID uint, feedID uint, ruleID uint) (
 		return 0, err
 	}
 
-	if !testRole(requestor.Role, CreatorRole) {
+	if !isCreator(requestor.Role) {
 		return 0, fmt.Errorf("Permission denied.")
 	}
 

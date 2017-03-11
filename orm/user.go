@@ -12,7 +12,7 @@ type User struct {
 	UpdatedAt time.Time
 
 	Name        string
-	Role        uint
+	Role        Role
 	IsEnabled   bool
 	LastLoginAt time.Time
 	OwnerID     uint
@@ -23,7 +23,7 @@ type User struct {
 type UserFieldsForCreate struct {
 	Name      string
 	IsEnabled bool
-	Role      uint
+	Role      Role
 }
 
 type UserFieldsForRead struct {
@@ -33,14 +33,14 @@ type UserFieldsForRead struct {
 
 	Name        string
 	IsEnabled   bool
-	Role        uint
+	Role        Role
 	LastLoginAt time.Time
 }
 
 type UserFieldsForUpdate struct {
 	Name      string
 	IsEnabled bool
-	Role      uint
+	Role      Role
 }
 
 func CreateUser(fields *UserFieldsForCreate) (*User, error) {
