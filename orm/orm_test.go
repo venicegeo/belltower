@@ -80,7 +80,7 @@ func TestUser(t *testing.T) {
 
 	fields := &UserFieldsForCreate{
 		Name:      "Bob",
-		IsAdmin:   false,
+		Role:      AdminRole,
 		IsEnabled: true,
 	}
 
@@ -93,7 +93,7 @@ func TestUser(t *testing.T) {
 		assert.NoError(err)
 
 		assert.True(readFields.IsEnabled)
-		assert.False(readFields.IsAdmin)
+		assert.Equal(AdminRole, readFields.Role)
 		assert.EqualValues("Bob", readFields.Name)
 		assert.Equal(itemID, readFields.ID)
 		assert.WithinDuration(now, readFields.CreatedAt, secs2)
@@ -105,6 +105,7 @@ func TestUser(t *testing.T) {
 		updateFields := &UserFieldsForUpdate{
 			IsEnabled: false,
 			Name:      "Alice",
+			Role:      CreatorRole,
 		}
 		err = model.UpdateUser(requestorID, itemID, updateFields)
 		assert.NoError(err)
@@ -118,7 +119,7 @@ func TestUser(t *testing.T) {
 		assert.WithinDuration(now, readFields.UpdatedAt, secs2)
 		assert.Zero(readFields.LastLoginAt)
 		assert.False(readFields.IsEnabled)
-		assert.False(readFields.IsAdmin)
+		assert.Equal(CreatorRole, readFields.Role)
 	}
 
 	{ // update with default payload
@@ -137,11 +138,11 @@ func TestUser(t *testing.T) {
 		assert.WithinDuration(now, readFields.UpdatedAt, secs2)
 		assert.Zero(readFields.LastLoginAt)
 		assert.False(readFields.IsEnabled)
-		assert.False(readFields.IsAdmin)
+		assert.Equal(UserRole, readFields.Role)
 	}
 
 	{
-		err = model.DeleteUser(requestorID, itemID)
+		err = model.DeleteUser(model.adminID, itemID)
 		assert.NoError(err)
 		readFields, err := model.ReadUser(requestorID, itemID)
 		assert.NoError(err)

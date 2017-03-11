@@ -29,9 +29,9 @@ func NewOrm() (*Orm, error) {
 
 	// create all the tables
 	tables := []interface{}{
-		&Feed{}, &FeedRuleAssociation{},
-		&Rule{},
-		&Action{}, &ActionRuleAssociation{},
+		&Feed{}, &FeedToRule{},
+		&Rule{}, &RuleToAction{},
+		&Action{},
 		&User{},
 	}
 
@@ -47,7 +47,7 @@ func NewOrm() (*Orm, error) {
 	model.adminID, err = model.CreateUser(0, &UserFieldsForCreate{
 		Name:      "admin",
 		IsEnabled: true,
-		Rights:    CanAdminAll,
+		Role:      AdminRole,
 	})
 	if err != nil {
 		return nil, err
@@ -175,7 +175,7 @@ func (model *Orm) CreateFeed(requestorID uint, fields *FeedFieldsForCreate) (uin
 		return 0, err
 	}
 
-	if !isAuthorizedInGeneral(requestor, CanCreateFeed) {
+	if !testRole(requestor.Role, CreatorRole) {
 		return 0, fmt.Errorf("Permission denied.")
 	}
 
@@ -197,7 +197,7 @@ func (model *Orm) UpdateFeed(requestorID uint, feedID uint, fields *FeedFieldsFo
 		return err
 	}
 
-	feed, err := model.getFeedAndCheckAuthn(requestor, feedID, CanUpdateFeed)
+	feed, err := model.getFeedAndCheckAuthn(requestor, feedID, WriteOperation)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func (model *Orm) DeleteFeed(requestorID uint, feedID uint) error {
 		return err
 	}
 
-	feed, err := model.getFeedAndCheckAuthn(requestor, feedID, CanDeleteFeed)
+	feed, err := model.getFeedAndCheckAuthn(requestor, feedID, WriteOperation)
 	if err != nil {
 		return err
 	}
@@ -235,7 +235,7 @@ func (model *Orm) ReadFeed(requestorID uint, feedID uint) (*FeedFieldsForRead, e
 		return nil, err
 	}
 
-	feed, err := model.getFeedAndCheckAuthn(requestor, feedID, CanReadFeed)
+	feed, err := model.getFeedAndCheckAuthn(requestor, feedID, ReadOperation)
 	if err != nil {
 		return nil, err
 	}
@@ -249,21 +249,21 @@ func (model *Orm) ReadFeed(requestorID uint, feedID uint) (*FeedFieldsForRead, e
 }
 
 // returns "field,nil" or "nil,err" -- exactly one of the two will be set
-func (model *Orm) getFeedAndCheckAuthn(requestor *User, feedID uint, permissions uint) (*Feed, error) {
+func (model *Orm) getFeedAndCheckAuthn(requestor *User, feedID uint, role uint) (*Feed, error) {
 	feed, err := model.readFeedById(feedID)
 	if err != nil {
 		return nil, err
 	}
 
 	if feed == nil {
-		if !isAuthorizedInGeneral(requestor, permissions) {
-			return nil, fmt.Errorf("Permission denied")
-		} else {
+		if testRole(requestor.Role, CreatorRole) {
 			return nil, fmt.Errorf("Feed %d not found", feedID)
+		} else {
+			return nil, fmt.Errorf("Permission denied")
 		}
 	}
 
-	if !isAuthorizedForObject(requestor, feed, permissions) {
+	if !isAuthorized(requestor, feed, role) {
 		return nil, fmt.Errorf("Permission denied.")
 	}
 
@@ -291,7 +291,7 @@ func (model *Orm) CreateAction(requestorID uint, fields *ActionFieldsForCreate) 
 		return 0, err
 	}
 
-	if !isAuthorizedInGeneral(requestor, CanCreateAction) {
+	if !testRole(requestor.Role, CreatorRole) {
 		return 0, fmt.Errorf("Permission denied.")
 	}
 
@@ -313,7 +313,7 @@ func (model *Orm) UpdateAction(requestorID uint, actionID uint, fields *ActionFi
 		return err
 	}
 
-	action, err := model.getActionAndCheckAuthn(requestor, actionID, CanUpdateAction)
+	action, err := model.getActionAndCheckAuthn(requestor, actionID, WriteOperation)
 	if err != nil {
 		return err
 	}
@@ -332,7 +332,7 @@ func (model *Orm) DeleteAction(requestorID uint, actionID uint) error {
 		return err
 	}
 
-	action, err := model.getActionAndCheckAuthn(requestor, actionID, CanDeleteAction)
+	action, err := model.getActionAndCheckAuthn(requestor, actionID, WriteOperation)
 	if err != nil {
 		return err
 	}
@@ -351,7 +351,7 @@ func (model *Orm) ReadAction(requestorID uint, actionID uint) (*ActionFieldsForR
 		return nil, err
 	}
 
-	action, err := model.getActionAndCheckAuthn(requestor, actionID, CanReadAction)
+	action, err := model.getActionAndCheckAuthn(requestor, actionID, ReadOperation)
 	if err != nil {
 		return nil, err
 	}
@@ -365,21 +365,21 @@ func (model *Orm) ReadAction(requestorID uint, actionID uint) (*ActionFieldsForR
 }
 
 // returns "field,nil" or "nil,err" -- exactly one of the two will be set
-func (model *Orm) getActionAndCheckAuthn(requestor *User, actionID uint, permissions uint) (*Action, error) {
+func (model *Orm) getActionAndCheckAuthn(requestor *User, actionID uint, role uint) (*Action, error) {
 	action, err := model.readActionById(actionID)
 	if err != nil {
 		return nil, err
 	}
 
 	if action == nil {
-		if !isAuthorizedInGeneral(requestor, permissions) {
-			return nil, fmt.Errorf("Permission denied")
-		} else {
+		if testRole(requestor.Role, CreatorRole) {
 			return nil, fmt.Errorf("Action %d not found", actionID)
+		} else {
+			return nil, fmt.Errorf("Permission denied")
 		}
 	}
 
-	if !isAuthorizedForObject(requestor, action, permissions) {
+	if !isAuthorized(requestor, action, role) {
 		return nil, fmt.Errorf("Permission denied.")
 	}
 
@@ -407,7 +407,7 @@ func (model *Orm) CreateRule(requestorID uint, fields *RuleFieldsForCreate) (uin
 		return 0, err
 	}
 
-	if !isAuthorizedInGeneral(requestor, CanCreateRule) {
+	if !testRole(requestor.Role, CreatorRole) {
 		return 0, fmt.Errorf("Permission denied.")
 	}
 
@@ -430,7 +430,7 @@ func (model *Orm) UpdateRule(requestorID uint, ruleID uint, fields *RuleFieldsFo
 		return err
 	}
 
-	rule, err := model.getRuleAndCheckAuthn(requestor, ruleID, CanUpdateRule)
+	rule, err := model.getRuleAndCheckAuthn(requestor, ruleID, WriteOperation)
 	if err != nil {
 		return err
 	}
@@ -449,7 +449,7 @@ func (model *Orm) DeleteRule(requestorID uint, ruleID uint) error {
 		return err
 	}
 
-	rule, err := model.getRuleAndCheckAuthn(requestor, ruleID, CanDeleteRule)
+	rule, err := model.getRuleAndCheckAuthn(requestor, ruleID, WriteOperation)
 	if err != nil {
 		return err
 	}
@@ -468,7 +468,7 @@ func (model *Orm) ReadRule(requestorID uint, ruleID uint) (*RuleFieldsForRead, e
 		return nil, err
 	}
 
-	rule, err := model.getRuleAndCheckAuthn(requestor, ruleID, CanReadRule)
+	rule, err := model.getRuleAndCheckAuthn(requestor, ruleID, ReadOperation)
 	if err != nil {
 		return nil, err
 	}
@@ -482,23 +482,122 @@ func (model *Orm) ReadRule(requestorID uint, ruleID uint) (*RuleFieldsForRead, e
 }
 
 // returns "field,nil" or "nil,err" -- exactly one of the two will be set
-func (model *Orm) getRuleAndCheckAuthn(requestor *User, ruleID uint, permissions uint) (*Rule, error) {
+func (model *Orm) getRuleAndCheckAuthn(requestor *User, ruleID uint, operation uint) (*Rule, error) {
 	rule, err := model.readRuleById(ruleID)
 	if err != nil {
 		return nil, err
 	}
 
 	if rule == nil {
-		if !isAuthorizedInGeneral(requestor, permissions) {
-			return nil, fmt.Errorf("Permission denied")
-		} else {
+		if testRole(requestor.Role, CreatorRole) {
 			return nil, fmt.Errorf("Rule %d not found", ruleID)
+		} else {
+			return nil, fmt.Errorf("Permission denied")
 		}
 	}
 
-	if !isAuthorizedForObject(requestor, rule, permissions) {
+	if !isAuthorized(requestor, rule, operation) {
 		return nil, fmt.Errorf("Permission denied.")
 	}
 
 	return rule, nil
+}
+
+//---------------------------------------------------------------------
+// Action -> Rule Association
+
+func (model *Orm) CreateRuleToActionAssociatio(requestorID uint, ruleID uint, actionID uint) (uint, error) {
+	requestor, err := model.readUserByID(requestorID)
+	if err != nil {
+		return 0, err
+	}
+
+	if !testRole(requestor.Role, CreatorRole) {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	rule, err := model.readRuleById(ruleID)
+	if err != nil {
+		return 0, err
+	}
+
+	if rule == nil {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	action, err := model.readActionById(actionID)
+	if err != nil {
+		return 0, err
+	}
+	if action == nil {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	if !isAuthorized(requestor, rule, ReadOperation) {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	if !isAuthorized(requestor, action, ReadOperation) {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	assoc, err := CreateRuleToAction(requestorID, ruleID, actionID)
+	if err != nil {
+		return 0, err
+	}
+
+	err = model.db.Create(assoc).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return assoc.ID, nil
+}
+
+func (model *Orm) CreateFeedToRule(requestorID uint, feedID uint, ruleID uint) (uint, error) {
+	requestor, err := model.readUserByID(requestorID)
+	if err != nil {
+		return 0, err
+	}
+
+	if !testRole(requestor.Role, CreatorRole) {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	feed, err := model.readFeedById(feedID)
+	if err != nil {
+		return 0, err
+	}
+
+	if feed == nil {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	rule, err := model.readRuleById(ruleID)
+	if err != nil {
+		return 0, err
+	}
+	if rule == nil {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	if !isAuthorized(requestor, feed, ReadOperation) {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	if !isAuthorized(requestor, rule, ReadOperation) {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	assoc, err := CreateFeedToRule(requestorID, feedID, ruleID)
+	if err != nil {
+		return 0, err
+	}
+
+	err = model.db.Create(assoc).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return assoc.ID, nil
 }

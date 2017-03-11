@@ -12,8 +12,7 @@ type User struct {
 	UpdatedAt time.Time
 
 	Name        string
-	Rights      uint // what rights this user has
-	IsAdmin     bool
+	Role        uint
 	IsEnabled   bool
 	LastLoginAt time.Time
 	OwnerID     uint
@@ -24,8 +23,7 @@ type User struct {
 type UserFieldsForCreate struct {
 	Name      string
 	IsEnabled bool
-	Rights    uint
-	IsAdmin   bool
+	Role      uint
 }
 
 type UserFieldsForRead struct {
@@ -35,23 +33,21 @@ type UserFieldsForRead struct {
 
 	Name        string
 	IsEnabled   bool
-	IsAdmin     bool
-	Rights      uint
+	Role        uint
 	LastLoginAt time.Time
 }
 
 type UserFieldsForUpdate struct {
 	Name      string
 	IsEnabled bool
-	Rights    uint
+	Role      uint
 }
 
 func CreateUser(fields *UserFieldsForCreate) (*User, error) {
 	user := &User{
 		Name:      fields.Name,
 		IsEnabled: fields.IsEnabled,
-		Rights:    fields.Rights,
-		IsAdmin:   fields.IsAdmin,
+		Role:      fields.Role,
 	}
 
 	return user, nil
@@ -70,8 +66,7 @@ func (user *User) Read() (*UserFieldsForRead, error) {
 		LastLoginAt: user.LastLoginAt,
 
 		IsEnabled: user.IsEnabled,
-		Rights:    user.Rights,
-		IsAdmin:   user.IsAdmin,
+		Role:      user.Role,
 	}
 
 	return read, nil
@@ -84,7 +79,7 @@ func (user *User) Update(update *UserFieldsForUpdate) error {
 	}
 
 	user.IsEnabled = update.IsEnabled
-	user.Rights = update.Rights
+	user.Role = update.Role
 
 	return nil
 }
