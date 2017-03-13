@@ -29,7 +29,7 @@ func TestFileSysFeed(t *testing.T) {
 	settings := map[string]interface{}{
 		"path":  "/tmp",
 		"name":  "filesys1",
-		"sleep": "1s",
+		"sleep": time.Duration(time.Second * 1),
 	}
 
 	runner, err := NewFileSysFeedRunner(settings)

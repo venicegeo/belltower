@@ -20,7 +20,7 @@ func TestGetMapValue(t *testing.T) {
 		"fx":  true,
 		"s":   "asdf",
 		"sx":  19,
-		"d":   "5s",
+		"d":   time.Duration(time.Second * 5),
 		"dx":  "asdf",
 		"dxx": 17.19,
 	}

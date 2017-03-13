@@ -20,7 +20,7 @@ func TestDBOperations(t *testing.T) {
 
 	db := model.db
 
-	requestorID := model.adminID
+	requestorID := model.AdminID
 
 	now := time.Now()
 
@@ -74,7 +74,7 @@ func TestUser(t *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
-	requestorID := model.adminID
+	requestorID := model.AdminID
 
 	var itemID uint
 
@@ -142,7 +142,7 @@ func TestUser(t *testing.T) {
 	}
 
 	{
-		err = model.DeleteUser(model.adminID, itemID)
+		err = model.DeleteUser(model.AdminID, itemID)
 		assert.NoError(err)
 		readFields, err := model.ReadUser(requestorID, itemID)
 		assert.NoError(err)
@@ -163,7 +163,7 @@ func TestFeed(tst *testing.T) {
 
 	now := time.Now()
 
-	requestorID := model.adminID
+	requestorID := model.AdminID
 
 	var itemID uint
 
@@ -266,7 +266,7 @@ func TestRule(tst *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
-	requestorID := model.adminID
+	requestorID := model.AdminID
 
 	var itemID uint
 
@@ -353,7 +353,7 @@ func TestAction(tst *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
-	requestorID := model.adminID
+	requestorID := model.AdminID
 
 	var itemID uint
 
@@ -433,7 +433,7 @@ func TestFeedToRuleToAction(tst *testing.T) {
 	assert.NoError(err)
 	defer model.Close()
 
-	requestorID := model.adminID
+	requestorID := model.AdminID
 
 	createFeedFields := &FeedFieldsForCreate{
 		Name:        "Bob",

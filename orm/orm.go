@@ -11,7 +11,7 @@ import (
 
 type Orm struct {
 	db      *gorm.DB
-	adminID uint
+	AdminID uint
 }
 
 func NewOrm() (*Orm, error) {
@@ -44,7 +44,7 @@ func NewOrm() (*Orm, error) {
 	}
 
 	// add the admin user -- requestor is 0, since there really isn't one
-	model.adminID, err = model.CreateUser(0, &UserFieldsForCreate{
+	model.AdminID, err = model.CreateUser(0, &UserFieldsForCreate{
 		Name:      "admin",
 		IsEnabled: true,
 		Role:      AdminRole,
@@ -77,7 +77,7 @@ func (model *Orm) readUserByID(id uint) (*User, error) {
 
 func (model *Orm) CreateUser(requestorID uint, fields *UserFieldsForCreate) (uint, error) {
 
-	if requestorID != model.adminID {
+	if requestorID != model.AdminID {
 		return 0, fmt.Errorf("Permission denied.")
 	}
 
@@ -94,7 +94,7 @@ func (model *Orm) CreateUser(requestorID uint, fields *UserFieldsForCreate) (uin
 }
 
 func (model *Orm) UpdateUser(requestorID uint, id uint, fields *UserFieldsForUpdate) error {
-	if requestorID != model.adminID {
+	if requestorID != model.AdminID {
 		return fmt.Errorf("Permission denied.")
 	}
 
@@ -111,7 +111,7 @@ func (model *Orm) UpdateUser(requestorID uint, id uint, fields *UserFieldsForUpd
 }
 
 func (model *Orm) DeleteUser(requestorID uint, id uint) error {
-	if requestorID != model.adminID {
+	if requestorID != model.AdminID {
 		return fmt.Errorf("Permission denied.")
 	}
 
@@ -132,7 +132,7 @@ func (model *Orm) DeleteUser(requestorID uint, id uint) error {
 }
 
 func (model *Orm) ReadUser(requestorID uint, id uint) (*UserFieldsForRead, error) {
-	if requestorID != model.adminID {
+	if requestorID != model.AdminID {
 		return nil, fmt.Errorf("Permission denied.")
 	}
 

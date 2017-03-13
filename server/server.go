@@ -16,12 +16,12 @@ func Server() error {
 	//
 	// Usr
 	//
-	userAttrs := &orm.UserAttributes{
+	userAttrs := &orm.UserFieldsForCreate{
 		Name:      "alice",
-		IsAdmin:   false,
+		Role:      orm.AdminRole,
 		IsEnabled: true,
 	}
-	userId, err := model.AddUser(userAttrs)
+	userId, err := model.CreateUser(model.AdminID, userAttrs)
 	if err != nil {
 		return err
 	}
@@ -30,18 +30,21 @@ func Server() error {
 	//
 	// Feed
 	//
-	feedAttrs := &orm.FeedAttributes{
+	feedAttrs := &orm.FeedFieldsForCreate{
 		Name:      "randomfeed",
 		FeedType:  "RandomFeed",
 		IsEnabled: true,
-		//PersistenceDuration: 0,
-		ConfigInfo: map[string]string{
+		IsPublic:  false,
+		Settings: map[string]interface{}{
 			"name":  "randomfeed2",
 			"limit": "3",
 			"sleep": "5",
 		},
 	}
-	feedId, err := model.AddFeed(feedAttrs)
+	feedId, err := model.CreateFeed(userId, feedAttrs)
+	if err != nil {
+		return err
+	}
 	log.Printf("feedid: %d", feedId)
 
 	//
