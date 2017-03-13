@@ -9,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/venicegeo/belltower/common"
-	"github.com/venicegeo/belltower/orm"
 )
 
 func touchFile(t *testing.T, path string) string {
@@ -27,16 +26,13 @@ func touchFile(t *testing.T, path string) string {
 func TestFileSysFeed(t *testing.T) {
 	assert := assert.New(t)
 
-	feed := &orm.Feed{
-		ID:   17,
-		Name: "filesystest",
-		Settings: map[string]interface{}{
-			"path":  "/tmp",
-			"name":  "filesys1",
-			"sleep": "1s",
-		},
+	settings := map[string]interface{}{
+		"path":  "/tmp",
+		"name":  "filesys1",
+		"sleep": "1s",
 	}
-	runner, err := NewFileSysFeedRunner(feed)
+
+	runner, err := NewFileSysFeedRunner(settings)
 	assert.NoError(err)
 
 	var addedFile string
@@ -51,7 +47,7 @@ func TestFileSysFeed(t *testing.T) {
 			return false, nil
 		}
 		if statusCount == 3 {
-			path, err := common.GetMapValueAsString(feed.Settings, "path")
+			path, err := common.GetMapValueAsString(settings, "path")
 			assert.NoError(err)
 			addedFile = touchFile(t, path)
 		}
@@ -60,7 +56,7 @@ func TestFileSysFeed(t *testing.T) {
 
 	mssgF := func(data map[string]string) error {
 		//log.Printf("event==> %s ... %s", data["mssg"], data["added"])
-		path, err := common.GetMapValueAsString(feed.Settings, "path")
+		path, err := common.GetMapValueAsString(settings, "path")
 		assert.NoError(err)
 		assert.Equal(addedFile, path+"/"+data["added"])
 		hitCount--

@@ -56,13 +56,14 @@ func GetMapValueAsDuration(m map[string]interface{}, key string) (time.Duration,
 	if !ok {
 		return time.Duration(0), fmt.Errorf("Missing config field '%s'", key)
 	}
-	t, ok := value.(string)
+	t, ok := value.(time.Duration)
 	if !ok {
-		return time.Duration(0), fmt.Errorf("Config field '%s' not legal string", key)
+		return time.Duration(0), fmt.Errorf("Config field '%s' not legal time.Duration: %v", key, value)
 	}
-	ret, err := time.ParseDuration(t)
-	if err != nil {
-		return time.Duration(0), err
-	}
-	return ret, nil
+	//	ret, err := time.ParseDuration(t)
+	//	if err != nil {
+	//		return time.Duration(0), err
+	//	}
+	//	return ret, nil
+	return t, nil
 }

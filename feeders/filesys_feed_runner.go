@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/venicegeo/belltower/common"
-	"github.com/venicegeo/belltower/orm"
 )
 
 type FileSysFeedRunner struct {
@@ -17,15 +16,10 @@ type FileSysFeedRunner struct {
 	files map[string]bool
 }
 
-func NewFileSysFeedRunner(feed *orm.Feed) (*FileSysFeedRunner, error) {
-	var _ FeedRunner = &FileSysFeedRunner{}
+func NewFileSysFeedRunner(settings map[string]interface{}) (*FileSysFeedRunner, error) {
+	f := &FileSysFeedRunner{}
 
-	f := &FileSysFeedRunner{
-		id:   feed.ID,
-		name: feed.Name,
-	}
-
-	err := f.setVars(feed.Settings)
+	err := f.setVars(settings)
 	if err != nil {
 		return nil, err
 	}

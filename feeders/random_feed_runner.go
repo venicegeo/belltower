@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/venicegeo/belltower/common"
-	"github.com/venicegeo/belltower/orm"
 )
 
 // RandFeed checks to see if a random number from the range [0..limit) is equal to zero. If so,
@@ -22,15 +21,11 @@ type RandomFeedRunner struct {
 
 //---------------------------------------------------------------------
 
-func NewRandomFeedRunner(feed *orm.Feed) (*RandomFeedRunner, error) {
-	var _ FeedRunner = &RandomFeedRunner{}
+func NewRandomFeedRunner(settings map[string]interface{}) (*RandomFeedRunner, error) {
 
-	f := &RandomFeedRunner{
-		id:   feed.ID,
-		name: feed.Name,
-	}
+	f := &RandomFeedRunner{}
 
-	err := f.setVars(feed.Settings)
+	err := f.setVars(settings)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +71,6 @@ func (f *RandomFeedRunner) Run(statusF StatusF, mssgF MssgF) error {
 			if !ok {
 				return
 			}
-
 			x := rand.Intn(f.limit)
 			if x == 0 {
 				m := map[string]string{
