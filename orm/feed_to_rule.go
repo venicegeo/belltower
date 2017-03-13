@@ -10,19 +10,29 @@ type FeedToRule struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	OwnerID uint
-	RuleID  uint
-	FeedID  uint
+	IsPublic bool
+	OwnerID  uint
+	RuleID   uint
+	FeedID   uint
 }
 
-func CreateFeedToRule(requestorID uint, feedID uint, ruleID uint) (*FeedToRule, error) {
+func CreateFeedToRule(requestorID uint, feedID uint, ruleID uint, isPublic bool) (*FeedToRule, error) {
 	feedToRule := &FeedToRule{
-		OwnerID: requestorID,
-		FeedID:  feedID,
-		RuleID:  ruleID,
+		OwnerID:  requestorID,
+		IsPublic: isPublic,
+		FeedID:   feedID,
+		RuleID:   ruleID,
 	}
 
 	return feedToRule, nil
+}
+
+func (feedToRule *FeedToRule) GetOwnerID() uint {
+	return feedToRule.OwnerID
+}
+
+func (feedToRule *FeedToRule) GetIsPublic() bool {
+	return feedToRule.IsPublic
 }
 
 func (fra FeedToRule) String() string {

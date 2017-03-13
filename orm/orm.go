@@ -506,55 +506,7 @@ func (model *Orm) getRuleAndCheckAuthn(requestor *User, ruleID uint, operation O
 //---------------------------------------------------------------------
 // Action -> Rule Association
 
-func (model *Orm) CreateRuleToActionAssociatio(requestorID uint, ruleID uint, actionID uint) (uint, error) {
-	requestor, err := model.readUserByID(requestorID)
-	if err != nil {
-		return 0, err
-	}
-
-	if !isCreator(requestor.Role) {
-		return 0, fmt.Errorf("Permission denied.")
-	}
-
-	rule, err := model.readRuleById(ruleID)
-	if err != nil {
-		return 0, err
-	}
-
-	if rule == nil {
-		return 0, fmt.Errorf("Permission denied.")
-	}
-
-	action, err := model.readActionById(actionID)
-	if err != nil {
-		return 0, err
-	}
-	if action == nil {
-		return 0, fmt.Errorf("Permission denied.")
-	}
-
-	if !isAuthorized(requestor, rule, ReadOperation) {
-		return 0, fmt.Errorf("Permission denied.")
-	}
-
-	if !isAuthorized(requestor, action, ReadOperation) {
-		return 0, fmt.Errorf("Permission denied.")
-	}
-
-	assoc, err := CreateRuleToAction(requestorID, ruleID, actionID)
-	if err != nil {
-		return 0, err
-	}
-
-	err = model.db.Create(assoc).Error
-	if err != nil {
-		return 0, err
-	}
-
-	return assoc.ID, nil
-}
-
-func (model *Orm) CreateFeedToRule(requestorID uint, feedID uint, ruleID uint) (uint, error) {
+func (model *Orm) CreateFeedToRule(requestorID uint, feedID uint, ruleID uint, isPublic bool) (uint, error) {
 	requestor, err := model.readUserByID(requestorID)
 	if err != nil {
 		return 0, err
@@ -589,7 +541,7 @@ func (model *Orm) CreateFeedToRule(requestorID uint, feedID uint, ruleID uint) (
 		return 0, fmt.Errorf("Permission denied.")
 	}
 
-	assoc, err := CreateFeedToRule(requestorID, feedID, ruleID)
+	assoc, err := CreateFeedToRule(requestorID, feedID, ruleID, isPublic)
 	if err != nil {
 		return 0, err
 	}
@@ -600,4 +552,186 @@ func (model *Orm) CreateFeedToRule(requestorID uint, feedID uint, ruleID uint) (
 	}
 
 	return assoc.ID, nil
+}
+
+func (model *Orm) ReadFeedToRule(requestorID uint, feedToRuleID uint) (*FeedToRule, error) {
+	requestor, err := model.readUserByID(requestorID)
+	if err != nil {
+		return nil, err
+	}
+
+	feedToRule, err := model.getFeedToRuleAndCheckAuthn(requestor, feedToRuleID, ReadOperation)
+	if err != nil {
+		return nil, err
+	}
+
+	return feedToRule, nil
+}
+
+func (model *Orm) DeleteFeedToRule(requestorID uint, feedToRuleID uint) (uint, error) {
+	requestor, err := model.readUserByID(requestorID)
+	if err != nil {
+		return 0, err
+	}
+
+	feedToRule, err := model.getFeedToRuleAndCheckAuthn(requestor, feedToRuleID, DeleteOperation)
+	if err != nil {
+		return 0, err
+	}
+
+	err = model.db.Delete(feedToRule).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return 0, nil
+}
+
+func (model *Orm) getFeedToRuleAndCheckAuthn(requestor *User, feedToRuleID uint, operation Operation) (*FeedToRule, error) {
+	feedToRule, err := model.readFeedToRuleById(feedToRuleID)
+	if err != nil {
+		return nil, err
+	}
+
+	if feedToRule == nil {
+		if isCreator(requestor.Role) {
+			return nil, fmt.Errorf("FeedToRule %d not found", feedToRuleID)
+		} else {
+			return nil, fmt.Errorf("Permission denied")
+		}
+	}
+
+	if !isAuthorized(requestor, feedToRule, operation) {
+		return nil, fmt.Errorf("Permission denied.")
+	}
+
+	return feedToRule, nil
+}
+
+func (model *Orm) readFeedToRuleById(id uint) (*FeedToRule, error) {
+	feedToRule := &FeedToRule{}
+	err := model.db.First(feedToRule, "id = ?", id).Error
+	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return feedToRule, nil
+}
+
+//---------------------------------------------------------------------
+
+func (model *Orm) CreateRuleToAction(requestorID uint, ruleID uint, actionID uint, isPublic bool) (uint, error) {
+	requestor, err := model.readUserByID(requestorID)
+	if err != nil {
+		return 0, err
+	}
+
+	if !isCreator(requestor.Role) {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	rule, err := model.readRuleById(ruleID)
+	if err != nil {
+		return 0, err
+	}
+
+	if rule == nil {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	action, err := model.readActionById(actionID)
+	if err != nil {
+		return 0, err
+	}
+	if action == nil {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	if !isAuthorized(requestor, rule, ReadOperation) {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	if !isAuthorized(requestor, action, ReadOperation) {
+		return 0, fmt.Errorf("Permission denied.")
+	}
+
+	assoc, err := CreateRuleToAction(requestorID, ruleID, actionID, isPublic)
+	if err != nil {
+		return 0, err
+	}
+
+	err = model.db.Create(assoc).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return assoc.ID, nil
+}
+
+func (model *Orm) ReadRuleToAction(requestorID uint, ruleToActionID uint) (*RuleToAction, error) {
+	requestor, err := model.readUserByID(requestorID)
+	if err != nil {
+		return nil, err
+	}
+
+	ruleToAction, err := model.getRuleToActionAndCheckAuthn(requestor, ruleToActionID, ReadOperation)
+	if err != nil {
+		return nil, err
+	}
+
+	return ruleToAction, nil
+}
+
+func (model *Orm) DeleteRuleToAction(requestorID uint, ruleToActionID uint) (uint, error) {
+	requestor, err := model.readUserByID(requestorID)
+	if err != nil {
+		return 0, err
+	}
+
+	ruleToAction, err := model.getRuleToActionAndCheckAuthn(requestor, ruleToActionID, DeleteOperation)
+	if err != nil {
+		return 0, err
+	}
+
+	err = model.db.Delete(ruleToAction).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return 0, nil
+}
+
+func (model *Orm) getRuleToActionAndCheckAuthn(requestor *User, ruleToActionID uint, operation Operation) (*RuleToAction, error) {
+	ruleToAction, err := model.readRuleToActionById(ruleToActionID)
+	if err != nil {
+		return nil, err
+	}
+
+	if ruleToAction == nil {
+		if isCreator(requestor.Role) {
+			return nil, fmt.Errorf("RuleToAction %d not found", ruleToActionID)
+		} else {
+			return nil, fmt.Errorf("Permission denied")
+		}
+	}
+
+	if !isAuthorized(requestor, ruleToAction, operation) {
+		return nil, fmt.Errorf("Permission denied.")
+	}
+
+	return ruleToAction, nil
+}
+
+func (model *Orm) readRuleToActionById(id uint) (*RuleToAction, error) {
+	ruleToAction := &RuleToAction{}
+	err := model.db.First(ruleToAction, "id = ?", id).Error
+	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return ruleToAction, nil
 }

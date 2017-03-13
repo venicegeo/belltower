@@ -424,3 +424,69 @@ func TestAction(tst *testing.T) {
 		assert.Error(err)
 	}
 }
+
+func TestFeedToRuleToAction(tst *testing.T) {
+	assert := assert.New(tst)
+	var err error
+
+	model, err := NewOrm()
+	assert.NoError(err)
+	defer model.Close()
+
+	requestorID := model.adminID
+
+	createFeedFields := &FeedFieldsForCreate{
+		Name:        "Bob",
+		FeedType:    "myfeedtype",
+		IsEnabled:   true,
+		MessageDecl: map[string]interface{}{},
+		Settings:    map[string]interface{}{},
+		IsPublic:    true,
+	}
+
+	feedID, err := model.CreateFeed(requestorID, createFeedFields)
+	assert.NoError(err)
+
+	createRuleFields := &RuleFieldsForCreate{
+		Name:         "Bob",
+		IsEnabled:    true,
+		Expression:   "a+b",
+		PollDuration: time.Duration(secs2),
+		IsPublic:     true,
+	}
+
+	ruleID, err := model.CreateRule(requestorID, createRuleFields)
+	assert.NoError(err)
+
+	createActionFields := &ActionFieldsForCreate{
+		Name:      "Bob",
+		IsEnabled: true,
+		Settings:  map[string]interface{}{"a": "b"},
+		IsPublic:  true,
+	}
+
+	actionID, err := model.CreateAction(requestorID, createActionFields)
+	assert.NoError(err)
+
+	feedToRuleID, err := model.CreateFeedToRule(requestorID, feedID, ruleID, false)
+	assert.NoError(err)
+	_ = feedToRuleID
+
+	ruleToActionID, err := model.CreateRuleToAction(requestorID, ruleID, actionID, false)
+	assert.NoError(err)
+	_ = ruleToActionID
+
+	readFeedToRuleFields, err := model.ReadFeedToRule(requestorID, feedToRuleID)
+	assert.NoError(err)
+	assert.Equal(requestorID, readFeedToRuleFields.OwnerID)
+	assert.Equal(feedID, readFeedToRuleFields.FeedID)
+	assert.Equal(ruleID, readFeedToRuleFields.RuleID)
+	assert.Equal(false, readFeedToRuleFields.IsPublic)
+
+	readRuleToActionFields, err := model.ReadRuleToAction(requestorID, ruleToActionID)
+	assert.NoError(err)
+	assert.Equal(requestorID, readRuleToActionFields.OwnerID)
+	assert.Equal(ruleID, readRuleToActionFields.RuleID)
+	assert.Equal(actionID, readRuleToActionFields.ActionID)
+	assert.Equal(false, readRuleToActionFields.IsPublic)
+}

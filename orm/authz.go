@@ -120,5 +120,5 @@ func isAuthorized(requestor *User, object Authorizable, operation Operation) boo
 	case DeleteOperation:
 		return isAuthorizedForDelete(requestor, object)
 	}
-	panic("intenral error")
+	panic("internal error")
 }
