@@ -1,5 +1,5 @@
 package feeders
-
+/*
 import (
 	"log"
 	"testing"
@@ -49,3 +49,4 @@ func TestRandomFeed(t *testing.T) {
 	assert.Equal(countLimit, count)
 	assert.True(hitCount >= 0 && hitCount < countLimit)
 }
+*/

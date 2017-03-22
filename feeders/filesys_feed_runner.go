@@ -1,5 +1,5 @@
 package feeders
-
+/*
 import (
 	"io/ioutil"
 	"strings"
@@ -144,3 +144,4 @@ func (f *FileSysFeedRunner) checkFileSys(path string) ([]string, error) {
 
 	return added, nil
 }
+*/

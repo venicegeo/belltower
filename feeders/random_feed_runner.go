@@ -1,5 +1,5 @@
 package feeders
-
+/*
 import (
 	"math/rand"
 	"strconv"
@@ -90,3 +90,4 @@ func (f *RandomFeedRunner) Run(statusF StatusF, mssgF MssgF) error {
 
 	return nil
 }
+*/

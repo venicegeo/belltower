@@ -25,10 +25,9 @@ func TestDBOperations(t *testing.T) {
 	now := time.Now()
 
 	createFields := &FeedFieldsForCreate{
-		Name:        "TestFeed",
-		FeedType:    "myfeedtype",
-		IsEnabled:   false,
-		MessageDecl: map[string]interface{}{},
+		Name:      "TestFeed",
+		FeedType:  "900",
+		IsEnabled: false,
 		Settings: map[string]interface{}{
 			"alpha": "figgy",
 		},
@@ -168,12 +167,11 @@ func TestFeed(tst *testing.T) {
 	var itemID uint
 
 	createFields := &FeedFieldsForCreate{
-		Name:        "Bob",
-		FeedType:    "myfeedtype",
-		IsEnabled:   true,
-		MessageDecl: map[string]interface{}{},
-		Settings:    map[string]interface{}{},
-		IsPublic:    true,
+		Name:      "Bob",
+		FeedType:  "901",
+		IsEnabled: true,
+		Settings:  map[string]interface{}{},
+		IsPublic:  true,
 	}
 
 	{
@@ -186,7 +184,7 @@ func TestFeed(tst *testing.T) {
 		assert.Equal("Bob", readFields.Name)
 		assert.WithinDuration(now, readFields.CreatedAt, secs2)
 		assert.WithinDuration(now, readFields.UpdatedAt, secs2)
-		assert.EqualValues("myfeedtype", readFields.FeedType)
+		assert.EqualValues("901", readFields.FeedType)
 		assert.True(readFields.IsEnabled)
 		// MessageDecl TODO
 		// Settings // TODO
@@ -211,7 +209,7 @@ func TestFeed(tst *testing.T) {
 		assert.Equal("Alice", readFields.Name)
 		assert.WithinDuration(now, readFields.CreatedAt, secs2)
 		assert.WithinDuration(now, readFields.UpdatedAt, secs2)
-		assert.EqualValues("myfeedtype", readFields.FeedType)
+		assert.EqualValues("901", readFields.FeedType)
 		assert.False(readFields.IsEnabled)
 		assert.Equal(requestorID, readFields.OwnerID)
 		// MessageDecl TODO
@@ -234,7 +232,7 @@ func TestFeed(tst *testing.T) {
 		assert.Equal("Alice", readFields.Name)
 		assert.WithinDuration(now, readFields.CreatedAt, secs2)
 		assert.WithinDuration(now, readFields.UpdatedAt, secs2)
-		assert.EqualValues("myfeedtype", readFields.FeedType)
+		assert.EqualValues("901", readFields.FeedType)
 		assert.False(readFields.IsEnabled)
 		assert.Equal(requestorID, readFields.OwnerID)
 		// MessageDecl TODO
@@ -436,12 +434,11 @@ func TestFeedToRuleToAction(tst *testing.T) {
 	requestorID := model.AdminID
 
 	createFeedFields := &FeedFieldsForCreate{
-		Name:        "Bob",
-		FeedType:    "myfeedtype",
-		IsEnabled:   true,
-		MessageDecl: map[string]interface{}{},
-		Settings:    map[string]interface{}{},
-		IsPublic:    true,
+		Name:      "Bob",
+		FeedType:  "902",
+		IsEnabled: true,
+		Settings:  map[string]interface{}{},
+		IsPublic:  true,
 	}
 
 	feedID, err := model.CreateFeed(requestorID, createFeedFields)
