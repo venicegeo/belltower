@@ -74,7 +74,7 @@ func TestDocumentCRUD(t *testing.T) {
 	dup, err := orm.ReadDocument(tmp)
 	assert.NoError(err)
 	assert.NotNil(dup)
-	assert.EqualValues(id, dup.GetID())
+	assert.EqualValues(id, dup.GetId())
 	assert.EqualValues(orig.Name, dup.(*Demo).Name)
 
 	// update it
@@ -87,7 +87,7 @@ func TestDocumentCRUD(t *testing.T) {
 	dup, err = orm.ReadDocument(tmp)
 	assert.NoError(err)
 	assert.NotNil(dup)
-	assert.EqualValues(id, dup.GetID())
+	assert.EqualValues(id, dup.GetId())
 	assert.EqualValues("Bob", dup.(*Demo).Name)
 
 	// not allowed to update for invalid id
@@ -153,7 +153,7 @@ func TestDemoMappings(t *testing.T) {
 	assert.NoError(err)
 	assert.NotNil(g)
 	//log.Printf("%#v", g)
-	assert.EqualValues(id, g.GetID())
+	assert.EqualValues(id, g.GetId())
 
 	assert.EqualValues("Bob", feed.Name)
 	assert.EqualValues(feed.Name, g.(*Demo).Name)
@@ -272,11 +272,11 @@ func (f *Demo) GetMapping() string {
 	return mapping
 }
 
-func (f *Demo) GetID() string {
+func (f *Demo) GetId() string {
 	return f.Id
 }
 
-func (f *Demo) SetID() string {
-	f.Id = NewID()
+func (f *Demo) SetId() string {
+	f.Id = NewId()
 	return f.Id
 }

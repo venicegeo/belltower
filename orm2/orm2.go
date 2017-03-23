@@ -48,14 +48,14 @@ func NewOrm() (*Orm, error) {
 
 func (orm *Orm) CreateDocument(obj Elasticable) (string, error) {
 
-	if obj.GetID() != "" {
+	if obj.GetId() != "" {
 		return "", fmt.Errorf("ID already assigned prior to Create()")
 	}
 
 	resp, err := orm.esClient.Index().
 		Index(obj.GetIndexName()).
 		Type(obj.GetTypeName()).
-		Id(obj.SetID()).
+		Id(obj.SetId()).
 		BodyJson(obj).
 		Do(orm.ctx)
 	if err != nil {
@@ -73,7 +73,7 @@ func (orm *Orm) ReadDocument(obj Elasticable) (Elasticable, error) {
 	result, err := orm.esClient.Get().
 		Index(obj.GetIndexName()).
 		Type(obj.GetTypeName()).
-		Id(obj.GetID()).
+		Id(obj.GetId()).
 		Do(orm.ctx)
 	if err != nil {
 		return nil, err
@@ -94,7 +94,7 @@ func (orm *Orm) UpdateDocument(obj Elasticable) error {
 	_, err := orm.esClient.Update().
 		Index(obj.GetIndexName()).
 		Type(obj.GetTypeName()).
-		Id(obj.GetID()).
+		Id(obj.GetId()).
 		Doc(obj).
 		Do(orm.ctx)
 	if err != nil {
@@ -108,7 +108,7 @@ func (orm *Orm) DeleteDocument(obj Elasticable) error {
 	res, err := orm.esClient.Delete().
 		Index(obj.GetIndexName()).
 		Type(obj.GetTypeName()).
-		Id(obj.GetID()).
+		Id(obj.GetId()).
 		Do(orm.ctx)
 	if err != nil {
 		return err
@@ -196,11 +196,11 @@ func validateJson(s string) error {
 
 //---------------------------------------------------------------------
 
-var globalID int = 0
+var globalId int = 0
 
-func NewID() string {
-	globalID++
-	return strconv.Itoa(globalID)
+func NewId() string {
+	globalId++
+	return strconv.Itoa(globalId)
 }
 
 //---------------------------------------------------------------------
@@ -210,6 +210,24 @@ type Elasticable interface {
 	GetIndexName() string
 	GetTypeName() string
 	GetMapping() string
-	GetID() string
-	SetID() string
+	GetId() string
+	SetId() string
+}
+
+//---------------------------------------------------------------------
+
+type BtOrm struct {
+	Orm *Orm
+}
+
+func (orm *BtOrm) CreateAction(requestorID string, fields *ActionFieldsForCreate) (string, error) {
+	action, err := CreateAction(requestorID, fields)
+	if err != nil {
+		return "", err
+	}
+	id, err := orm.Orm.CreateDocument(action)
+	if err != nil {
+		return "", err
+	}
+	return id, nil
 }
