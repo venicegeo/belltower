@@ -3,10 +3,8 @@ package orm2
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"golang.org/x/net/context"
 
@@ -34,7 +32,9 @@ func NewOrm() (*Orm, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Elasticsearch version %s", esversion)
+	if !strings.HasPrefix(esversion, "5.2") {
+		return nil, fmt.Errorf("unsupported elasticsearch version: %s", esversion)
+	}
 
 	orm := &Orm{
 		esClient: client,
@@ -43,26 +43,19 @@ func NewOrm() (*Orm, error) {
 
 	//orm.listAll(true)
 
-	clean := true
-	err = orm.register(&Feed{}, clean)
-	if err != nil {
-		return nil, err
-	}
-
 	return orm, nil
 }
 
-func (orm *Orm) Create(obj Elasticable) (string, error) {
+func (orm *Orm) CreateDocument(obj Elasticable) (string, error) {
 
 	if obj.GetID() != "" {
 		return "", fmt.Errorf("ID already assigned prior to Create()")
 	}
-	obj.SetID()
 
 	resp, err := orm.esClient.Index().
-		Index(obj.GetIndex()).
-		Type(obj.GetType()).
-		Id(obj.GetID()).
+		Index(obj.GetIndexName()).
+		Type(obj.GetTypeName()).
+		Id(obj.SetID()).
 		BodyJson(obj).
 		Do(orm.ctx)
 	if err != nil {
@@ -75,28 +68,44 @@ func (orm *Orm) Create(obj Elasticable) (string, error) {
 	return resp.Id, nil
 }
 
-func (orm *Orm) Read(obj Elasticable) (Elasticable, error) {
+func (orm *Orm) ReadDocument(obj Elasticable) (Elasticable, error) {
 
 	result, err := orm.esClient.Get().
-		Index(obj.GetIndex()).
-		Type(obj.GetType()).
+		Index(obj.GetIndexName()).
+		Type(obj.GetTypeName()).
 		Id(obj.GetID()).
 		Do(orm.ctx)
 	if err != nil {
 		return nil, err
 	}
 	if !result.Found {
-		return nil, nil
+		return nil, fmt.Errorf("document not found")
 	}
 
 	src := result.Source
 
+	//log.Printf("%s", *src)
 	err = json.Unmarshal(*src, &obj)
 	if err != nil {
 		return nil, err
 	}
 
 	return obj, nil
+}
+
+func (orm *Orm) DeleteDocument(obj Elasticable) error {
+	res, err := orm.esClient.Delete().
+		Index(obj.GetIndexName()).
+		Type(obj.GetTypeName()).
+		Id(obj.GetID()).
+		Do(orm.ctx)
+	if err != nil {
+		return err
+	}
+	if !res.Found {
+		return fmt.Errorf("document not found")
+	}
+	return nil
 }
 
 func (orm *Orm) listAll(delete bool) {
@@ -118,36 +127,59 @@ func (orm *Orm) listAll(delete bool) {
 	}
 }
 
-func (orm *Orm) register(e Elasticable, clean bool) error {
-	index := e.GetIndex()
+func (orm *Orm) IndexExists(e Elasticable) (bool, error) {
+	exists, err := orm.esClient.IndexExists(e.GetIndexName()).Do(orm.ctx)
+	return exists, err
+}
 
-	exists, err := orm.esClient.IndexExists(index).Do(orm.ctx)
+func (orm *Orm) DeleteIndex(e Elasticable) error {
+	response, err := orm.esClient.DeleteIndex(e.GetIndexName()).Do(orm.ctx)
+	if err != nil {
+		return err
+	}
+	if !response.Acknowledged {
+		return fmt.Errorf("CreateIndex() not acknowledged")
+	}
+	return nil
+}
+
+func (orm *Orm) CreateIndex(e Elasticable) error {
+	index := e.GetIndexName()
+
+	exists, err := orm.IndexExists(e)
 	if err != nil {
 		return err
 	}
 
-	if clean && exists {
-		response, err := orm.esClient.DeleteIndex(index).Do(orm.ctx)
-		if err != nil {
-			return err
-		}
-		if !response.Acknowledged {
-			return fmt.Errorf("CreateIndex() not acknowledged")
-
-		}
+	if exists {
+		return fmt.Errorf("index already exists")
 	}
 
-	if !exists {
-		result, err := orm.esClient.CreateIndex(index).BodyString(e.GetMapping()).Do(orm.ctx)
-		if err != nil {
-			return err
-		}
-
-		if !result.Acknowledged {
-			return fmt.Errorf("CreateIndex() not acknowledged")
-		}
+	err = validateJson(e.GetMapping())
+	if err != nil {
+		return err
 	}
 
+	result, err := orm.esClient.CreateIndex(index).BodyString(e.GetMapping()).Do(orm.ctx)
+	if err != nil {
+		return err
+	}
+
+	if !result.Acknowledged {
+		return fmt.Errorf("CreateIndex() not acknowledged")
+	}
+
+	return nil
+}
+
+func validateJson(s string) error {
+	//log.Printf("== %s ==", s)
+
+	obj := &map[string]interface{}{}
+	err := json.Unmarshal([]byte(s), obj)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -164,96 +196,9 @@ func NewID() string {
 
 // every object type wil be stored in its own type in its own index
 type Elasticable interface {
-	GetIndex() string
-	GetType() string
+	GetIndexName() string
+	GetTypeName() string
 	GetMapping() string
 	GetID() string
-	SetID()
-}
-
-type CoreX struct {
-	A int
-	B float32
-}
-type Core struct {
-	A int
-	B float32
-	C CoreX
-}
-
-type Feed struct {
-	Id       string
-	Name     string
-	Time     time.Time
-	Bool     bool
-	Int      int
-	Float    float64
-	IntArray []int
-	Object   interface{}
-	Core     Core
-	Nested   []CoreX
-}
-
-func (f *Feed) GetIndex() string {
-	return "feed_index"
-}
-
-func (f *Feed) GetType() string {
-	return "feed_type"
-}
-
-func (f *Feed) GetMapping() string {
-
-	mapping := `{
-	"settings":{
-		"number_of_shards":1,
-		"number_of_replicas":0
-	},
-	"mappings":{
-		"feed_type":{
-			"properties":{
-				"id":{
-					"type":"string"
-				},
-				"name":{
-					"type":"string"
-				},
-				"time":{
-					"type":"date"
-				},
-				"bool":{
-					"type":"bool"
-				},
-				"int":{
-					"type":"integer"
-				},
-				"float":{
-					"type":"double"
-				},
-				"intArray":{
-					"type":"integer"
-				},
-				"object":{
-					"type":"object"
-				},
-				"core":{
-					"type":"object"
-				},
-				"nested":{
-					"type":"nested"
-				}
-			}
-		}
-	}
-}`
-
-	return mapping
-}
-
-func (f *Feed) GetID() string {
-	return f.Id
-}
-
-func (f *Feed) SetID() {
-	f.Id = NewID()
+	SetID() string
 }
