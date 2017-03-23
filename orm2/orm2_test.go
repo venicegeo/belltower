@@ -64,10 +64,12 @@ func TestDocumentCRUD(t *testing.T) {
 	err = orm.CreateIndex(orig)
 	assert.NoError(err)
 
+	// does create work?
 	id, err := orm.CreateDocument(orig)
 	assert.NoError(err)
 	assert.NotEmpty(id)
 
+	// does read work?
 	tmp := &Demo{Id: id}
 	dup, err := orm.ReadDocument(tmp)
 	assert.NoError(err)
@@ -75,11 +77,30 @@ func TestDocumentCRUD(t *testing.T) {
 	assert.EqualValues(id, dup.GetID())
 	assert.EqualValues(orig.Name, dup.(*Demo).Name)
 
+	// update it
+	tmp = &Demo{Id: id, Name: "Bob"}
+	err = orm.UpdateDocument(tmp)
+	assert.NoError(err)
+
+	// read again, to check
+	tmp = &Demo{Id: id}
+	dup, err = orm.ReadDocument(tmp)
+	assert.NoError(err)
+	assert.NotNil(dup)
+	assert.EqualValues(id, dup.GetID())
+	assert.EqualValues("Bob", dup.(*Demo).Name)
+
+	// not allowed to update for invalid id
+	tmp = &Demo{Id: "3241234124", Name: "Bob"}
+	err = orm.UpdateDocument(tmp)
+	assert.Error(err)
+
 	// not allowed to read from an invalid id
 	tmp = &Demo{Id: "99999"}
 	_, err = orm.ReadDocument(tmp)
 	assert.Error(err)
 
+	// try delete
 	tmp = &Demo{Id: id}
 	err = orm.DeleteDocument(tmp)
 	assert.NoError(err)

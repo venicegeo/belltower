@@ -82,15 +82,26 @@ func (orm *Orm) ReadDocument(obj Elasticable) (Elasticable, error) {
 		return nil, fmt.Errorf("document not found")
 	}
 
-	src := result.Source
-
-	//log.Printf("%s", *src)
-	err = json.Unmarshal(*src, &obj)
+	err = json.Unmarshal(*result.Source, &obj)
 	if err != nil {
 		return nil, err
 	}
 
 	return obj, nil
+}
+
+func (orm *Orm) UpdateDocument(obj Elasticable) error {
+	_, err := orm.esClient.Update().
+		Index(obj.GetIndexName()).
+		Type(obj.GetTypeName()).
+		Id(obj.GetID()).
+		Doc(obj).
+		Do(orm.ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (orm *Orm) DeleteDocument(obj Elasticable) error {
@@ -108,7 +119,7 @@ func (orm *Orm) DeleteDocument(obj Elasticable) error {
 	return nil
 }
 
-func (orm *Orm) listAll(delete bool) {
+func (orm *Orm) listIndexes(delete bool) {
 	names, err := orm.esClient.IndexNames()
 	if err != nil {
 		panic(err)
