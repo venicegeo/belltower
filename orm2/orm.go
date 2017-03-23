@@ -3,8 +3,9 @@ package orm2
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
+
+	"github.com/venicegeo/belltower/common"
 
 	"golang.org/x/net/context"
 
@@ -46,7 +47,7 @@ func NewOrm() (*Orm, error) {
 	return orm, nil
 }
 
-func (orm *Orm) CreateDocument(obj Elasticable) (string, error) {
+func (orm *Orm) CreateDocument(obj Elasticable) (common.Ident, error) {
 
 	if obj.GetId() != "" {
 		return "", fmt.Errorf("ID already assigned prior to Create()")
@@ -55,7 +56,7 @@ func (orm *Orm) CreateDocument(obj Elasticable) (string, error) {
 	resp, err := orm.esClient.Index().
 		Index(obj.GetIndexName()).
 		Type(obj.GetTypeName()).
-		Id(obj.SetId()).
+		Id(obj.SetId().String()).
 		BodyJson(obj).
 		Do(orm.ctx)
 	if err != nil {
@@ -65,7 +66,7 @@ func (orm *Orm) CreateDocument(obj Elasticable) (string, error) {
 		return "", fmt.Errorf("Create() did not create")
 	}
 
-	return resp.Id, nil
+	return common.ToIdent(resp.Id), nil
 }
 
 func (orm *Orm) ReadDocument(obj Elasticable) (Elasticable, error) {
@@ -73,7 +74,7 @@ func (orm *Orm) ReadDocument(obj Elasticable) (Elasticable, error) {
 	result, err := orm.esClient.Get().
 		Index(obj.GetIndexName()).
 		Type(obj.GetTypeName()).
-		Id(obj.GetId()).
+		Id(obj.GetId().String()).
 		Do(orm.ctx)
 	if err != nil {
 		return nil, err
@@ -94,7 +95,7 @@ func (orm *Orm) UpdateDocument(obj Elasticable) error {
 	_, err := orm.esClient.Update().
 		Index(obj.GetIndexName()).
 		Type(obj.GetTypeName()).
-		Id(obj.GetId()).
+		Id(obj.GetId().String()).
 		Doc(obj).
 		Do(orm.ctx)
 	if err != nil {
@@ -108,7 +109,7 @@ func (orm *Orm) DeleteDocument(obj Elasticable) error {
 	res, err := orm.esClient.Delete().
 		Index(obj.GetIndexName()).
 		Type(obj.GetTypeName()).
-		Id(obj.GetId()).
+		Id(obj.GetId().String()).
 		Do(orm.ctx)
 	if err != nil {
 		return err
@@ -166,7 +167,7 @@ func (orm *Orm) CreateIndex(e Elasticable) error {
 		return fmt.Errorf("index already exists")
 	}
 
-	err = validateJson(e.GetMapping())
+	err = common.ValidateJsonString(e.GetMapping())
 	if err != nil {
 		return err
 	}
@@ -183,51 +184,57 @@ func (orm *Orm) CreateIndex(e Elasticable) error {
 	return nil
 }
 
-func validateJson(s string) error {
-	//log.Printf("== %s ==", s)
-
-	obj := &map[string]interface{}{}
-	err := json.Unmarshal([]byte(s), obj)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 //---------------------------------------------------------------------
 
-var globalId int = 0
+func (orm *Orm) CreateThing(requestorID common.Ident, thing Elasticable, fields interface{}) (common.Ident, error) {
 
-func NewId() string {
-	globalId++
-	return strconv.Itoa(globalId)
-}
-
-//---------------------------------------------------------------------
-
-// every object type wil be stored in its own type in its own index
-type Elasticable interface {
-	GetIndexName() string
-	GetTypeName() string
-	GetMapping() string
-	GetId() string
-	SetId() string
-}
-
-//---------------------------------------------------------------------
-
-type BtOrm struct {
-	Orm *Orm
-}
-
-func (orm *BtOrm) CreateAction(requestorID string, fields *ActionFieldsForCreate) (string, error) {
-	action, err := CreateAction(requestorID, fields)
+	err := thing.SetFieldsForCreate(requestorID, fields)
 	if err != nil {
 		return "", err
 	}
-	id, err := orm.Orm.CreateDocument(action)
+	id, err := orm.CreateDocument(thing)
 	if err != nil {
 		return "", err
 	}
 	return id, nil
+}
+
+func (orm *Orm) ReadThing(thing Elasticable) (interface{}, error) {
+
+	thing, err := orm.ReadDocument(thing)
+	if err != nil {
+		return nil, err
+	}
+
+	fields, err := thing.GetFieldsForRead()
+	if err != nil {
+		return nil, err
+	}
+
+	return fields, nil
+}
+
+func (orm *Orm) UpdateThing(thing Elasticable, fields interface{}) error {
+
+	err := thing.SetFieldsForUpdate(fields)
+	if err != nil {
+		return err
+	}
+
+	err = orm.UpdateDocument(thing)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (orm *Orm) DeleteThing(thing Elasticable) error {
+
+	err := orm.DeleteDocument(thing)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/venicegeo/belltower/common"
 )
 
 func mapsEqual(assert *assert.Assertions, a map[string]interface{}, b map[string]interface{}) {
@@ -168,6 +169,61 @@ func TestDemoMappings(t *testing.T) {
 	assert.EqualValues(feed.Nested[1].B1, g.(*Demo).Nested[1].B1)
 }
 
+func TestThingCRUD(t *testing.T) {
+	assert := assert.New(t)
+
+	orm, err := NewOrm()
+	assert.NoError(err)
+	assert.NotNil(orm)
+
+	e := &Xyz{}
+
+	exists, err := orm.IndexExists(e)
+	assert.NoError(err)
+	if exists {
+		err = orm.DeleteIndex(e)
+		assert.NoError(err)
+	}
+
+	err = orm.CreateIndex(e)
+	assert.NoError(err)
+
+	// does create work?
+	c := &XyzCreateFields{Name: "one"}
+	id, err := orm.CreateThing("u", e, c)
+	assert.NoError(err)
+	assert.NotEmpty(id)
+
+	tmp := &Xyz{Id: id}
+
+	// does read work?
+	r, err := orm.ReadThing(tmp)
+	assert.NoError(err)
+	assert.NotNil(r)
+	assert.EqualValues(id, r.(*XyzReadFields).Id)
+	assert.EqualValues("one", r.(*XyzReadFields).Name)
+
+	// update it
+	u := &XyzUpdateFields{Name: "two"}
+	err = orm.UpdateThing(tmp, u)
+	assert.NoError(err)
+
+	// read again, to check
+	r, err = orm.ReadThing(tmp)
+	assert.NoError(err)
+	assert.NotNil(r)
+	assert.EqualValues(id, r.(*XyzReadFields).Id)
+	assert.EqualValues("two", r.(*XyzReadFields).Name)
+
+	// try delete
+	err = orm.DeleteThing(tmp)
+	assert.NoError(err)
+
+	// read again, to make sure got deleted
+	_, err = orm.ReadThing(tmp)
+	assert.Error(err)
+}
+
 //---------------------------------------------------------------------
 
 type DemoCoreX struct {
@@ -181,18 +237,23 @@ type DemoCore struct {
 }
 
 type Demo struct {
-	Id       string      `json:"id"`
-	Name     string      `json:"name"`
-	Time     time.Time   `json:"time"`
-	Bool     bool        `json:"bool"`
-	Int      int         `json:"int"`
-	Float    float64     `json:"float"`
-	IntArray []int       `json:"int_array"`
-	Object   interface{} `json:"object"`
-	Core     DemoCore    `json:"core"`
-	CoreX    DemoCoreX   `json:"corex"`
-	Nested   []DemoCoreX `json:"nested"`
+	Id       common.Ident `json:"id"`
+	Name     string       `json:"name"`
+	Time     time.Time    `json:"time"`
+	Bool     bool         `json:"bool"`
+	Int      int          `json:"int"`
+	Float    float64      `json:"float"`
+	IntArray []int        `json:"int_array"`
+	Object   interface{}  `json:"object"`
+	Core     DemoCore     `json:"core"`
+	CoreX    DemoCoreX    `json:"corex"`
+	Nested   []DemoCoreX  `json:"nested"`
 }
+
+func (f *Demo) SetFieldsForCreate(ownerId common.Ident, fields interface{}) error { panic(1) }
+func (f *Demo) GetFieldsForRead() (interface{}, error)                            { panic(1) }
+func (f *Demo) SetFieldsForUpdate(fields interface{}) error                       { panic(1) }
+func (F *Demo) String() string                                                    { panic(1) }
 
 func (f *Demo) GetIndexName() string {
 	return "demo_index"
@@ -272,11 +333,90 @@ func (f *Demo) GetMapping() string {
 	return mapping
 }
 
-func (f *Demo) GetId() string {
+func (f *Demo) GetId() common.Ident {
 	return f.Id
 }
 
-func (f *Demo) SetId() string {
-	f.Id = NewId()
+func (f *Demo) SetId() common.Ident {
+	f.Id = common.NewId()
+	return f.Id
+}
+
+//---------------------------------------------------------------------
+
+type Xyz struct {
+	Id   common.Ident `json:"id"`
+	Name string       `json:"name"`
+}
+
+type XyzCreateFields struct {
+	Name string
+}
+
+type XyzReadFields struct {
+	Id   common.Ident
+	Name string
+}
+
+type XyzUpdateFields struct {
+	Name string
+}
+
+func (xyz *Xyz) SetFieldsForCreate(ownerId common.Ident, fields interface{}) error {
+	xyz.Name = fields.(*XyzCreateFields).Name
+	return nil
+}
+
+func (xyz *Xyz) GetFieldsForRead() (interface{}, error) {
+	fields := &XyzReadFields{}
+	fields.Id = xyz.Id
+	fields.Name = xyz.Name
+	return fields, nil
+}
+
+func (xyz *Xyz) SetFieldsForUpdate(fields interface{}) error {
+	xyz.Name = fields.(*XyzUpdateFields).Name
+	return nil
+}
+
+func (F *Xyz) String() string { panic(1) }
+
+func (f *Xyz) GetIndexName() string {
+	return "xyz_index"
+}
+
+func (f *Xyz) GetTypeName() string {
+	return "xyz_type"
+}
+
+func (f *Xyz) GetMapping() string {
+
+	mapping := `{
+	"settings":{
+	},
+	"mappings":{
+		"xyz_type":{
+			"dynamic":"strict",
+			"properties":{
+				"id":{
+					"type":"string"
+				},
+				"name":{
+					"type":"string"
+				}
+			}
+		}
+	}
+}`
+
+	return mapping
+}
+
+func (f *Xyz) GetId() common.Ident {
+	return f.Id
+}
+
+func (f *Xyz) SetId() common.Ident {
+	f.Id = common.NewId()
 	return f.Id
 }

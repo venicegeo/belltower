@@ -55,3 +55,10 @@ func (j *Json) AsString() string {
 func (j *Json) ToObject(obj interface{}) error {
 	return json.Unmarshal(j.bytes, obj)
 }
+
+func ValidateJsonString(s string) error {
+	//log.Printf("== %s ==", s)
+
+	obj := &map[string]interface{}{}
+	return json.Unmarshal([]byte(s), obj)
+}

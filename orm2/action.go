@@ -3,23 +3,25 @@ package orm2
 import (
 	"fmt"
 	"time"
+
+	"github.com/venicegeo/belltower/common"
 )
 
 type Action struct {
-	Id        string                 `json:"id"`
+	Id        common.Ident           `json:"id"`
 	Name      string                 `json:"name"`
 	CreatedAt time.Time              `json:"created_at"`
 	UpdatedAt time.Time              `json:"updated_at"`
 	IsEnabled bool                   `json:"is_enabled"`
 	IsPublic  bool                   `json:"is_public"`
 	Settings  map[string]interface{} `json:"settings"`
-	OwnerId   string                 `json:"owner_id"`
+	OwnerId   common.Ident           `json:"owner_id"`
 }
 
 //---------------------------------------------------------------------
 
 type ActionFieldsForCreate struct {
-	Id        string
+	Id        common.Ident
 	Name      string
 	IsEnabled bool
 	Settings  map[string]interface{}
@@ -27,7 +29,7 @@ type ActionFieldsForCreate struct {
 }
 
 type ActionFieldsForRead struct {
-	Id   string
+	Id   common.Ident
 	Name string
 
 	CreatedAt time.Time
@@ -35,12 +37,12 @@ type ActionFieldsForRead struct {
 
 	IsEnabled bool
 	Settings  map[string]interface{}
-	OwnerId   string
+	OwnerId   common.Ident
 	IsPublic  bool
 }
 
 type ActionFieldsForUpdate struct {
-	Id        string
+	Id        common.Ident
 	Name      string
 	IsEnabled bool
 	IsPublic  bool
@@ -97,50 +99,38 @@ func (action *Action) GetMapping() string {
 	return mapping
 }
 
-func (action *Action) GetId() string {
+func (action *Action) GetId() common.Ident {
 	return action.Id
 }
 
-func (action *Action) SetId() string {
-	action.Id = NewId()
+func (action *Action) SetId() common.Ident {
+	action.Id = common.NewId()
 	return action.Id
 }
 
 //---------------------------------------------------------------------
 
-func CreateAction(requestorId string, fields *ActionFieldsForCreate) (*Action, error) {
+func (action *Action) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) error {
 
-	action := &Action{
-		Id:        fields.Id,
-		Name:      fields.Name,
-		IsEnabled: fields.IsEnabled,
-		Settings:  fields.Settings,
-		OwnerId:   requestorId,
-		IsPublic:  fields.IsPublic,
-	}
+	fields := ifields.(*ActionFieldsForCreate)
 
-	return action, nil
+	action.Id = fields.Id
+	action.Name = fields.Name
+	action.IsEnabled = fields.IsEnabled
+	action.Settings = fields.Settings
+	action.OwnerId = ownerId
+	action.IsPublic = fields.IsPublic
+
+	return nil
 }
 
-func (action *Action) GetOwnerId() string {
-	return action.OwnerId
-}
-
-func (action *Action) GetIsPublic() bool {
-	return action.IsPublic
-}
-
-//---------------------------------------------------------------------
-
-func (action *Action) Read() (*ActionFieldsForRead, error) {
+func (action *Action) GetFieldsForRead() (interface{}, error) {
 
 	read := &ActionFieldsForRead{
-		Id:   action.Id,
-		Name: action.Name,
-
+		Id:        action.Id,
+		Name:      action.Name,
 		CreatedAt: action.CreatedAt,
 		UpdatedAt: action.UpdatedAt,
-
 		IsEnabled: action.IsEnabled,
 		Settings:  action.Settings,
 		OwnerId:   action.OwnerId,
@@ -150,21 +140,31 @@ func (action *Action) Read() (*ActionFieldsForRead, error) {
 	return read, nil
 }
 
-func (action *Action) Update(update *ActionFieldsForUpdate) error {
+func (action *Action) SetFieldsForUpdate(ifields interface{}) error {
 
-	if update.Name != "" {
-		action.Name = update.Name
+	fields := ifields.(*ActionFieldsForUpdate)
+
+	if fields.Name != "" {
+		action.Name = fields.Name
 	}
 
-	action.IsEnabled = update.IsEnabled
-	action.IsPublic = update.IsPublic
+	action.IsEnabled = fields.IsEnabled
+	action.IsPublic = fields.IsPublic
 
 	return nil
 }
 
 //---------------------------------------------------------------------
 
+func (action *Action) GetOwnerId() common.Ident {
+	return action.OwnerId
+}
+
+func (action *Action) GetIsPublic() bool {
+	return action.IsPublic
+}
+
 func (a Action) String() string {
-	s := fmt.Sprintf("a.%d: %s", a.Id, a.Name)
+	s := fmt.Sprintf("a.%s: %s", a.Id, a.Name)
 	return s
 }
