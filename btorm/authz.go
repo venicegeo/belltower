@@ -1,4 +1,6 @@
-package orm
+package btorm
+
+import "github.com/venicegeo/belltower/common"
 
 // These are the security policies:
 //
@@ -28,7 +30,7 @@ const (
 )
 
 type Authorizable interface {
-	GetOwnerID() uint
+	GetOwnerId() common.Ident
 	GetIsPublic() bool
 }
 
@@ -72,7 +74,7 @@ func isAuthorizedForRead(requestor *User, object Authorizable) bool {
 	}
 
 	// owners can do anything to objects they own
-	if requestor.ID == object.GetOwnerID() {
+	if requestor.Id == object.GetOwnerId() {
 		return true
 	}
 
@@ -97,7 +99,7 @@ func isAuthorizedForUpdate(requestor *User, object Authorizable) bool {
 	}
 
 	// owners can do anything to objects they own
-	if requestor.ID == object.GetOwnerID() {
+	if requestor.Id == object.GetOwnerId() {
 		return true
 	}
 

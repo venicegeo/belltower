@@ -1,17 +1,18 @@
-package orm2
+package btorm
 
 import "github.com/venicegeo/belltower/common"
+import "github.com/venicegeo/belltower/esorm"
 
 //---------------------------------------------------------------------
 
 type BtOrm struct {
-	Orm *Orm
+	Orm *esorm.Orm
 }
 
 //---------------------------------------------------------------------
 
 func NewBtOrm() (*BtOrm, error) {
-	orm, err := NewOrm()
+	orm, err := esorm.NewOrm()
 	if err != nil {
 		return nil, err
 	}
@@ -20,7 +21,7 @@ func NewBtOrm() (*BtOrm, error) {
 		Orm: orm,
 	}
 
-	types := []Elasticable{
+	types := []esorm.Elasticable{
 		&Action{},
 		&Feed{},
 		&Rule{},

@@ -1,4 +1,4 @@
-package orm2
+package esorm
 
 import (
 	"testing"
