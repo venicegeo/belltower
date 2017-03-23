@@ -167,6 +167,7 @@ func (orm *Orm) CreateIndex(e Elasticable) error {
 		return fmt.Errorf("index already exists")
 	}
 
+	//log.Printf("** %s **", e.GetMapping())
 	err = common.ValidateJsonString(e.GetMapping())
 	if err != nil {
 		return err
@@ -200,7 +201,6 @@ func (orm *Orm) CreateThing(requestorID common.Ident, thing Elasticable, fields 
 }
 
 func (orm *Orm) ReadThing(thing Elasticable) (interface{}, error) {
-
 	thing, err := orm.ReadDocument(thing)
 	if err != nil {
 		return nil, err

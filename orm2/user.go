@@ -3,35 +3,34 @@ package orm2
 import (
 	"fmt"
 	"time"
+
+	"github.com/venicegeo/belltower/common"
 )
 
 // Users are never publically visible: only the admin has access rights.
 type User struct {
-	Id        string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-
-	Name        string
-	Role        Role
-	IsEnabled   bool
-	LastLoginAt time.Time
-	OwnerID     uint
+	Id          common.Ident `json:"id"`
+	CreatedAt   time.Time    `json:"created_at"`
+	UpdatedAt   time.Time    `json:"updated_at"`
+	Name        string       `json:"name"`
+	Role        Role         `json:"role"`
+	IsEnabled   bool         `json:"is_enabled"`
+	LastLoginAt time.Time    `json:"last_login_at"`
+	OwnerId     common.Ident `json:"owner_id"`
 }
 
 //---------------------------------------------------------------------
 
 type UserFieldsForCreate struct {
-	Id        string
 	Name      string
 	IsEnabled bool
 	Role      Role
 }
 
 type UserFieldsForRead struct {
-	Id        string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-
+	Id          common.Ident
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 	Name        string
 	IsEnabled   bool
 	Role        Role
@@ -44,49 +43,118 @@ type UserFieldsForUpdate struct {
 	Role      Role
 }
 
-func CreateUser(fields *UserFieldsForCreate) (*User, error) {
-	user := &User{
-		Id:        fields.Id,
-		Name:      fields.Name,
-		IsEnabled: fields.IsEnabled,
-		Role:      fields.Role,
-	}
+//---------------------------------------------------------------------
 
-	return user, nil
+func (user *User) GetIndexName() string {
+	return "user_index"
+}
+
+func (user *User) GetTypeName() string {
+	return "user_type"
+}
+
+func (user *User) GetMapping() string {
+	mapping := `{
+	"settings":{
+	},
+	"mappings":{
+		"user_type":{
+			"dynamic":"strict",
+			"properties":{
+				"id":{
+					"type":"string"
+				},
+				"name":{
+					"type":"string"
+				},
+				"created_at":{
+					"type":"date"
+				},
+				"updated_at":{
+					"type":"date"
+				},
+				"is_enabled":{
+					"type":"boolean"
+				},
+				"role":{
+					"type":"string"
+				},
+				"last_login_at":{
+					"type":"date"
+				},
+				"owner_id":{
+					"type":"string"
+				}
+			}
+		}
+	}
+}`
+
+	return mapping
+}
+
+func (user *User) GetId() common.Ident {
+	return user.Id
+}
+
+func (user *User) SetId() common.Ident {
+	user.Id = common.NewId()
+	return user.Id
 }
 
 //---------------------------------------------------------------------
 
-func (user *User) Read() (*UserFieldsForRead, error) {
+func (user *User) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) error {
+
+	fields := ifields.(*UserFieldsForCreate)
+
+	user.Name = fields.Name
+	user.IsEnabled = fields.IsEnabled
+	user.Role = fields.Role
+
+	return nil
+}
+
+func (user *User) GetFieldsForRead() (interface{}, error) {
 
 	read := &UserFieldsForRead{
-		Id:   user.Id,
-		Name: user.Name,
-
+		Id:          user.Id,
+		Name:        user.Name,
 		CreatedAt:   user.CreatedAt,
 		UpdatedAt:   user.UpdatedAt,
+		IsEnabled:   user.IsEnabled,
 		LastLoginAt: user.LastLoginAt,
-
-		IsEnabled: user.IsEnabled,
-		Role:      user.Role,
+		Role:        user.Role,
 	}
 
 	return read, nil
 }
 
-func (user *User) Update(update *UserFieldsForUpdate) error {
+func (user *User) SetFieldsForUpdate(ifields interface{}) error {
 
-	if update.Name != "" {
-		user.Name = update.Name
+	fields := ifields.(*UserFieldsForUpdate)
+
+	if fields.Name != "" {
+		user.Name = fields.Name
 	}
 
-	user.IsEnabled = update.IsEnabled
-	user.Role = update.Role
+	user.IsEnabled = fields.IsEnabled
+	user.Role = fields.Role
 
 	return nil
 }
 
-func (u User) String() string {
-	s := fmt.Sprintf("u.%d: %s", u.Id, u.Name)
+//---------------------------------------------------------------------
+
+func (user *User) GetOwnerId() common.Ident {
+	return user.OwnerId
+}
+
+func (user *User) GetIsPublic() bool {
+	panic(1)
+}
+
+func (user User) String() string {
+	s := fmt.Sprintf("a.%s: %s", user.Id, user.Name)
 	return s
 }

@@ -7,6 +7,8 @@ import (
 	"github.com/venicegeo/belltower/common"
 )
 
+//---------------------------------------------------------------------
+
 type Action struct {
 	Id        common.Ident           `json:"id"`
 	Name      string                 `json:"name"`
@@ -21,7 +23,6 @@ type Action struct {
 //---------------------------------------------------------------------
 
 type ActionFieldsForCreate struct {
-	Id        common.Ident
 	Name      string
 	IsEnabled bool
 	Settings  map[string]interface{}
@@ -29,12 +30,10 @@ type ActionFieldsForCreate struct {
 }
 
 type ActionFieldsForRead struct {
-	Id   common.Ident
-	Name string
-
+	Id        common.Ident
+	Name      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-
 	IsEnabled bool
 	Settings  map[string]interface{}
 	OwnerId   common.Ident
@@ -42,7 +41,6 @@ type ActionFieldsForRead struct {
 }
 
 type ActionFieldsForUpdate struct {
-	Id        common.Ident
 	Name      string
 	IsEnabled bool
 	IsPublic  bool
@@ -90,7 +88,7 @@ func (action *Action) GetMapping() string {
 				"settings":{
 					"dynamic":"true",
 					"type":"object"
-				},
+				}
 			}
 		}
 	}
@@ -114,7 +112,6 @@ func (action *Action) SetFieldsForCreate(ownerId common.Ident, ifields interface
 
 	fields := ifields.(*ActionFieldsForCreate)
 
-	action.Id = fields.Id
 	action.Name = fields.Name
 	action.IsEnabled = fields.IsEnabled
 	action.Settings = fields.Settings

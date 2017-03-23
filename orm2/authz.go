@@ -1,5 +1,7 @@
 package orm2
 
+import "github.com/venicegeo/belltower/common"
+
 // These are the security policies:
 //
 // admin: can do CRUD
@@ -28,7 +30,7 @@ const (
 )
 
 type Authorizable interface {
-	GetOwnerId() string
+	GetOwnerId() common.Ident
 	GetIsPublic() bool
 }
 

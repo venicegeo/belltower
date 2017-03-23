@@ -3,25 +3,25 @@ package orm2
 import (
 	"fmt"
 	"time"
+
+	"github.com/venicegeo/belltower/common"
 )
 
 type Rule struct {
-	Id        string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-
-	Name         string
-	PollDuration time.Duration
-	IsEnabled    bool
-	Expression   string
-	OwnerId      string
-	IsPublic     bool
+	Id           common.Ident  `json:"id"`
+	CreatedAt    time.Time     `json:"created_at"`
+	UpdatedAt    time.Time     `json:"updated_at"`
+	Name         string        `json:"name"`
+	PollDuration time.Duration `json:"poll_duration"`
+	IsEnabled    bool          `json:"is_enabled"`
+	Expression   string        `json:"expression"`
+	OwnerId      common.Ident  `json:"owner_id"`
+	IsPublic     bool          `json:"is_public"`
 }
 
 //---------------------------------------------------------------------
 
 type RuleFieldsForCreate struct {
-	Id           string
 	Name         string
 	PollDuration time.Duration
 	IsEnabled    bool
@@ -30,21 +30,18 @@ type RuleFieldsForCreate struct {
 }
 
 type RuleFieldsForRead struct {
-	Id   string
-	Name string
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
-
+	Id           common.Ident
+	Name         string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 	PollDuration time.Duration
 	IsEnabled    bool
 	Expression   string
-	OwnerId      string
+	OwnerId      common.Ident
 	IsPublic     bool
 }
 
 type RuleFieldsForUpdate struct {
-	Id           string
 	Name         string
 	PollDuration time.Duration
 	IsEnabled    bool
@@ -52,39 +49,91 @@ type RuleFieldsForUpdate struct {
 	IsPublic     bool
 }
 
-func CreateRule(requestorId string, fields *RuleFieldsForCreate) (*Rule, error) {
-	rule := &Rule{
-		Id:           fields.Id,
-		Name:         fields.Name,
-		IsEnabled:    fields.IsEnabled,
-		Expression:   fields.Expression,
-		PollDuration: fields.PollDuration,
-		OwnerId:      requestorId,
-		IsPublic:     fields.IsPublic,
+//---------------------------------------------------------------------
+
+func (rule *Rule) GetIndexName() string {
+	return "rule_index"
+}
+
+func (rule *Rule) GetTypeName() string {
+	return "rule_type"
+}
+
+func (rule *Rule) GetMapping() string {
+	mapping := `{
+	"settings":{
+	},
+	"mappings":{
+		"rule_type":{
+			"dynamic":"strict",
+			"properties":{
+				"id":{
+					"type":"string"
+				},
+				"name":{
+					"type":"string"
+				},
+				"created_at":{
+					"type":"date"
+				},
+				"updated_at":{
+					"type":"date"
+				},
+				"is_enabled":{
+					"type":"boolean"
+				},
+				"is_public":{
+					"type":"boolean"
+				},
+				"owner_id":{
+					"type":"string"
+				},
+				"poll_duration":{
+					"type":"integer"
+				},
+				"expression":{
+					"type":"string"
+				}
+			}
+		}
 	}
+}`
 
-	return rule, nil
+	return mapping
 }
 
-func (rule *Rule) GetOwnerId() string {
-	return rule.OwnerId
+func (rule *Rule) GetId() common.Ident {
+	return rule.Id
 }
 
-func (rule *Rule) GetIsPublic() bool {
-	return rule.IsPublic
+func (rule *Rule) SetId() common.Ident {
+	rule.Id = common.NewId()
+	return rule.Id
 }
 
 //---------------------------------------------------------------------
 
-func (rule *Rule) Read() (*RuleFieldsForRead, error) {
+func (rule *Rule) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) error {
+
+	fields := ifields.(*RuleFieldsForCreate)
+
+	rule.Name = fields.Name
+	rule.IsEnabled = fields.IsEnabled
+	rule.Expression = fields.Expression
+	rule.PollDuration = fields.PollDuration
+	rule.OwnerId = ownerId
+	rule.IsPublic = fields.IsPublic
+
+	return nil
+}
+
+func (rule *Rule) GetFieldsForRead() (interface{}, error) {
 
 	read := &RuleFieldsForRead{
-		Id:   rule.Id,
-		Name: rule.Name,
-
-		CreatedAt: rule.CreatedAt,
-		UpdatedAt: rule.UpdatedAt,
-
+		Id:           rule.Id,
+		Name:         rule.Name,
+		CreatedAt:    rule.CreatedAt,
+		UpdatedAt:    rule.UpdatedAt,
 		PollDuration: rule.PollDuration,
 		IsEnabled:    rule.IsEnabled,
 		Expression:   rule.Expression,
@@ -95,27 +144,41 @@ func (rule *Rule) Read() (*RuleFieldsForRead, error) {
 	return read, nil
 }
 
-func (rule *Rule) Update(update *RuleFieldsForUpdate) error {
+func (rule *Rule) SetFieldsForUpdate(ifields interface{}) error {
 
-	if update.Name != "" {
-		rule.Name = update.Name
+	fields := ifields.(*RuleFieldsForUpdate)
+
+	if fields.Name != "" {
+		rule.Name = fields.Name
 	}
 
-	rule.IsEnabled = update.IsEnabled
-	if update.PollDuration != 0 {
-		rule.PollDuration = update.PollDuration
+	rule.IsEnabled = fields.IsEnabled
+	rule.IsPublic = fields.IsPublic
+
+	if fields.PollDuration != 0 {
+		rule.PollDuration = fields.PollDuration
 	}
-	if update.Expression != "" {
-		rule.Expression = update.Expression
+	if fields.Expression != "" {
+		rule.Expression = fields.Expression
 	}
-	if update.PollDuration != 0 {
-		rule.PollDuration = update.PollDuration
+	if fields.PollDuration != 0 {
+		rule.PollDuration = fields.PollDuration
 	}
-	rule.IsPublic = update.IsPublic
+
 	return nil
 }
 
-func (f Rule) String() string {
-	s := fmt.Sprintf("f.%s: %s", f.Id, f.Name)
+//---------------------------------------------------------------------
+
+func (rule *Rule) GetOwnerId() common.Ident {
+	return rule.OwnerId
+}
+
+func (rule *Rule) GetIsPublic() bool {
+	return rule.IsPublic
+}
+
+func (rule Rule) String() string {
+	s := fmt.Sprintf("a.%s: %s", rule.Id, rule.Name)
 	return s
 }
