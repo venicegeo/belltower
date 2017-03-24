@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"encoding/json"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/venicegeo/belltower/common"
 )
@@ -51,6 +53,113 @@ func TestIndexOperations(t *testing.T) {
 	// not allowed to delete an index that doesn't exist
 	err = orm.DeleteIndex(e)
 	assert.Error(err)
+}
+
+func TestMappingGeneration(t *testing.T) {
+	assert := assert.New(t)
+
+	xyzMapping := `{
+		"settings":{
+		},
+		"mappings":{
+			"xyz_type":{
+				"dynamic":"strict",
+				"properties":{
+					"id":{
+						"type":"string"
+					},
+					"name":{
+						"type":"string"
+					}
+				}
+			}
+		}
+	}`
+
+	demoMapping := `{
+		"settings":{
+		},
+		"mappings":{
+			"demo_type":{
+				"dynamic":"strict",
+				"properties":{
+					"id":{
+						"type":"string"
+					},
+					"name":{
+						"type":"string"
+					},
+					"time":{
+						"type":"date"
+					},
+					"bool":{
+						"type":"boolean"
+					},
+					"int":{
+						"type":"integer"
+					},
+					"float":{
+						"type":"double"
+					},
+					"int_array":{
+						"type":"integer"
+					},
+					"object":{
+						"dynamic":"true",
+						"type":"object"
+					},
+					"core":{
+						"type":"object",
+						"properties":{
+							"a2":{ "type":"integer" },
+							"b2":{ "type":"double" },
+							"c2":{
+								"type":"object",
+								"properties":{
+									"a1":{ "type":"integer" },
+									"b1":{ "type":"double" }
+								}
+							}
+						}
+					},
+					"corex":{
+						"type":"object",
+						"properties":{
+							"a1":{ "type":"integer" },
+							"b1":{ "type":"double" }
+						}
+					},
+					"nested":{
+						"type":"nested",
+						"properties":{
+							"a1":{ "type":"integer" },
+							"b1":{ "type":"double" }
+						}
+					}
+				}
+			}
+		}
+	}`
+
+	type Data struct {
+		obj      Elasticable
+		expected string
+	}
+	data := []Data{
+		Data{&Xyz{}, xyzMapping},
+		Data{&Demo{}, demoMapping},
+	}
+
+	for _, d := range data {
+
+		m := NewMapping(d.obj)
+		assert.NotNil(m)
+		byts, err := json.MarshalIndent(m, "", "    ")
+		assert.NoError(err)
+		actualMapping := string(byts)
+		//log.Printf("%s", actualMapping)
+		assert.JSONEq(d.expected, actualMapping)
+	}
 }
 
 func TestDocumentCRUD(t *testing.T) {
@@ -255,82 +364,55 @@ func (f *Demo) GetFieldsForRead() (interface{}, error)                          
 func (f *Demo) SetFieldsForUpdate(fields interface{}) error                       { panic(1) }
 func (F *Demo) String() string                                                    { panic(1) }
 
-func (f *Demo) GetIndexName() string {
-	return "demo_index"
-}
+func (f *Demo) GetLoweredName() string { return "demo" }
+func (f *Demo) GetIndexName() string   { return "demo_index" }
+func (f *Demo) GetTypeName() string    { return "demo_type" }
 
-func (f *Demo) GetTypeName() string {
-	return "demo_type"
-}
+func (f *Demo) GetMappingProperties() map[string]MappingPropertyFields {
 
-func (f *Demo) GetMapping() string {
+	data := map[string]MappingPropertyFields{
+		"id":        MappingPropertyFields{Type: "string"},
+		"name":      MappingPropertyFields{Type: "string"},
+		"time":      MappingPropertyFields{Type: "date"},
+		"bool":      MappingPropertyFields{Type: "boolean"},
+		"int":       MappingPropertyFields{Type: "integer"},
+		"float":     MappingPropertyFields{Type: "double"},
+		"int_array": MappingPropertyFields{Type: "integer"},
+		"object":    MappingPropertyFields{Type: "object", Dynamic: "true"},
 
-	mapping := `{
-	"settings":{
-	},
-	"mappings":{
-		"demo_type":{
-			"dynamic":"strict",
-			"properties":{
-				"id":{
-					"type":"string"
+		"core": MappingPropertyFields{
+			Type: "object",
+			Properties: map[string]MappingPropertyFields{
+				"a2": MappingPropertyFields{Type: "integer"},
+				"b2": MappingPropertyFields{Type: "double"},
+				"c2": MappingPropertyFields{
+					Type: "object",
+					Properties: map[string]MappingPropertyFields{
+						"a1": MappingPropertyFields{Type: "integer"},
+						"b1": MappingPropertyFields{Type: "double"},
+					},
 				},
-				"name":{
-					"type":"string"
-				},
-				"time":{
-					"type":"date"
-				},
-				"bool":{
-					"type":"boolean"
-				},
-				"int":{
-					"type":"integer"
-				},
-				"float":{
-					"type":"double"
-				},
-				"int_array":{
-					"type":"integer"
-				},
-				"object":{
-					"dynamic":"true",
-					"type":"object"
-				},
-				"core":{
-					"type":"object",
-					"properties":{
-						"a2":{ "type":"integer" },
-						"b2":{ "type":"double" },
-						"c2":{
-							"type":"object",
-							"properties":{
-								"a1":{ "type":"integer" },
-								"b1":{ "type":"double" }
-							}
-						}
-					}
-				},
-				"corex":{
-					"type":"object",
-					"properties":{
-						"a1":{ "type":"integer" },
-						"b1":{ "type":"double" }
-					}
-				},
-				"nested":{
-					"type":"nested",
-					"properties":{
-						"a1":{ "type":"integer" },
-						"b1":{ "type":"double" }
-					}
-				}
-			}
-		}
+			},
+		},
+
+		"corex": MappingPropertyFields{
+			Type: "object",
+			Properties: map[string]MappingPropertyFields{
+				"a1": MappingPropertyFields{Type: "integer"},
+				"b1": MappingPropertyFields{Type: "double"},
+			},
+		},
+
+		"nested": MappingPropertyFields{
+			Type: "nested",
+			Properties: map[string]MappingPropertyFields{
+				"a1": MappingPropertyFields{Type: "integer"},
+				"b1": MappingPropertyFields{Type: "double"},
+			},
+		},
 	}
-}`
 
-	return mapping
+	return data
 }
 
 func (f *Demo) GetId() common.Ident {
@@ -381,35 +463,18 @@ func (xyz *Xyz) SetFieldsForUpdate(fields interface{}) error {
 
 func (F *Xyz) String() string { panic(1) }
 
-func (f *Xyz) GetIndexName() string {
-	return "xyz_index"
-}
+func (f *Xyz) GetLoweredName() string { return "xyz" }
+func (f *Xyz) GetIndexName() string   { return "xyz_index" }
+func (f *Xyz) GetTypeName() string    { return "xyz_type" }
 
-func (f *Xyz) GetTypeName() string {
-	return "xyz_type"
-}
+func (f *Xyz) GetMappingProperties() map[string]MappingPropertyFields {
 
-func (f *Xyz) GetMapping() string {
-
-	mapping := `{
-	"settings":{
-	},
-	"mappings":{
-		"xyz_type":{
-			"dynamic":"strict",
-			"properties":{
-				"id":{
-					"type":"string"
-				},
-				"name":{
-					"type":"string"
-				}
-			}
-		}
+	data := map[string]MappingPropertyFields{
+		"id":   MappingPropertyFields{Type: "string"},
+		"name": MappingPropertyFields{Type: "string"},
 	}
-}`
 
-	return mapping
+	return data
 }
 
 func (f *Xyz) GetId() common.Ident {

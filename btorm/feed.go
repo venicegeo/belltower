@@ -1,26 +1,21 @@
 package btorm
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/esorm"
 )
 
 //---------------------------------------------------------------------
 
 type Feed struct {
-	Id            common.Ident           `json:"id"`
-	Name          string                 `json:"name"`
-	CreatedAt     time.Time              `json:"created_at"`
-	UpdatedAt     time.Time              `json:"updated_at"`
-	FeedType      string                 `json:"feed_type"`
-	IsEnabled     bool                   `json:"is_enabled"`
-	Settings      map[string]interface{} `json:"settings"`
-	MessageCount  uint                   `json:"message_count"`
-	LastMessageAt time.Time              `json:"last_message_at"`
-	OwnerId       common.Ident           `json:"owner_id"`
-	IsPublic      bool                   `json:"is_public"`
+	Common
+	FeedType        string        `json:"feed_type"`
+	PollingInterval time.Duration `json:"polling_interval"`
+	MessageCount    uint          `json:"message_count"`
+	LastMessageAt   time.Time     `json:"last_message_at"`
+	Settings        interface{}   `json:"settings"`
 }
 
 //---------------------------------------------------------------------
@@ -34,93 +29,37 @@ type FeedFieldsForCreate struct {
 }
 
 type FeedFieldsForRead struct {
-	Id            common.Ident
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Name          string
+	Common
 	FeedType      string
-	IsEnabled     bool
-	Settings      map[string]interface{}
-	OwnerId       common.Ident
+	Settings      interface{}
 	MessageCount  uint
 	LastMessageAt time.Time
-	IsPublic      bool
 }
 
 type FeedFieldsForUpdate struct {
 	Name      string
 	IsEnabled bool
 	IsPublic  bool
-	Settings  map[string]interface{}
+	Settings  interface{}
 }
 
 //---------------------------------------------------------------------
 
-func (feed *Feed) GetIndexName() string {
-	return "feed_index"
-}
+func (feed *Feed) GetLoweredName() string { return "feed" }
 
-func (feed *Feed) GetTypeName() string {
-	return "feed_type"
-}
-
-func (feed *Feed) GetMapping() string {
-	mapping := `{
-	"settings":{
-	},
-	"mappings":{
-		"feed_type":{
-			"dynamic":"strict",
-			"properties":{
-				"id":{
-					"type":"string"
-				},
-				"name":{
-					"type":"string"
-				},
-				"created_at":{
-					"type":"date"
-				},
-				"updated_at":{
-					"type":"date"
-				},
-				"is_enabled":{
-					"type":"boolean"
-				},
-				"is_public":{
-					"type":"boolean"
-				},
-				"feed_type":{
-					"type":"string"
-				},
-				"message_count":{
-					"type":"integer"
-				},
-				"last_message_at":{
-					"type":"date"
-				},
-				"owner_id":{
-					"type":"string"
-				},
-				"settings":{
-					"dynamic":"true",
-					"type":"object"
-				}
-			}
-		}
+func (feed *Feed) GetMappingProperties() map[string]esorm.MappingPropertyFields {
+	properties := map[string]esorm.MappingPropertyFields{
+		"feed_type":       esorm.MappingPropertyFields{Type: "string"},
+		"message_count":   esorm.MappingPropertyFields{Type: "integer"},
+		"last_message_at": esorm.MappingPropertyFields{Type: "date"},
+		"settings":        esorm.MappingPropertyFields{Type: "object", Dynamic: "true"},
 	}
-}`
 
-	return mapping
-}
+	for k, v := range feed.GetMappingProperties() {
+		properties[k] = v
+	}
 
-func (feed *Feed) GetId() common.Ident {
-	return feed.Id
-}
-
-func (feed *Feed) SetId() common.Ident {
-	feed.Id = common.NewId()
-	return feed.Id
+	return properties
 }
 
 //---------------------------------------------------------------------
@@ -142,18 +81,13 @@ func (feed *Feed) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) 
 func (feed *Feed) GetFieldsForRead() (interface{}, error) {
 
 	read := &FeedFieldsForRead{
-		Id:            feed.Id,
-		Name:          feed.Name,
-		CreatedAt:     feed.CreatedAt,
-		UpdatedAt:     feed.UpdatedAt,
 		FeedType:      feed.FeedType,
-		IsEnabled:     feed.IsEnabled,
 		Settings:      feed.Settings,
 		MessageCount:  feed.MessageCount,
 		LastMessageAt: feed.LastMessageAt,
-		OwnerId:       feed.OwnerId,
-		IsPublic:      feed.IsPublic,
 	}
+
+	read.Common = feed.Common
 
 	return read, nil
 }
@@ -170,21 +104,4 @@ func (feed *Feed) SetFieldsForUpdate(ifields interface{}) error {
 	feed.IsPublic = fields.IsPublic
 
 	return nil
-}
-
-//---------------------------------------------------------------------
-
-func (feed *Feed) GetOwnerId() common.Ident {
-	return feed.OwnerId
-}
-
-func (feed *Feed) GetIsPublic() bool {
-	return feed.IsPublic
-}
-
-//---------------------------------------------------------------------
-
-func (f Feed) String() string {
-	s := fmt.Sprintf("f.%s: %s", f.Id, f.Name)
-	return s
 }

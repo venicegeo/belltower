@@ -1,23 +1,14 @@
 package btorm
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/venicegeo/belltower/common"
 )
 
 //---------------------------------------------------------------------
 
 type Action struct {
-	Id        common.Ident           `json:"id"`
-	Name      string                 `json:"name"`
-	CreatedAt time.Time              `json:"created_at"`
-	UpdatedAt time.Time              `json:"updated_at"`
-	IsEnabled bool                   `json:"is_enabled"`
-	IsPublic  bool                   `json:"is_public"`
-	Settings  map[string]interface{} `json:"settings"`
-	OwnerId   common.Ident           `json:"owner_id"`
+	Common
+	Settings interface{} `json:"settings"`
 }
 
 //---------------------------------------------------------------------
@@ -25,19 +16,13 @@ type Action struct {
 type ActionFieldsForCreate struct {
 	Name      string
 	IsEnabled bool
-	Settings  map[string]interface{}
+	Settings  interface{}
 	IsPublic  bool
 }
 
 type ActionFieldsForRead struct {
-	Id        common.Ident
-	Name      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	IsEnabled bool
-	Settings  map[string]interface{}
-	OwnerId   common.Ident
-	IsPublic  bool
+	Common
+	Settings interface{}
 }
 
 type ActionFieldsForUpdate struct {
@@ -48,12 +33,8 @@ type ActionFieldsForUpdate struct {
 
 //---------------------------------------------------------------------
 
-func (action *Action) GetIndexName() string {
-	return "action_index"
-}
-
-func (action *Action) GetTypeName() string {
-	return "action_type"
+func (action *Action) GetLoweredName() string {
+	return "action"
 }
 
 func (action *Action) GetMapping() string {
@@ -97,15 +78,6 @@ func (action *Action) GetMapping() string {
 	return mapping
 }
 
-func (action *Action) GetId() common.Ident {
-	return action.Id
-}
-
-func (action *Action) SetId() common.Ident {
-	action.Id = common.NewId()
-	return action.Id
-}
-
 //---------------------------------------------------------------------
 
 func (action *Action) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) error {
@@ -124,15 +96,9 @@ func (action *Action) SetFieldsForCreate(ownerId common.Ident, ifields interface
 func (action *Action) GetFieldsForRead() (interface{}, error) {
 
 	read := &ActionFieldsForRead{
-		Id:        action.Id,
-		Name:      action.Name,
-		CreatedAt: action.CreatedAt,
-		UpdatedAt: action.UpdatedAt,
-		IsEnabled: action.IsEnabled,
-		Settings:  action.Settings,
-		OwnerId:   action.OwnerId,
-		IsPublic:  action.IsPublic,
+		Settings: action.Settings,
 	}
+	read.Common = action.Common
 
 	return read, nil
 }
@@ -149,19 +115,4 @@ func (action *Action) SetFieldsForUpdate(ifields interface{}) error {
 	action.IsPublic = fields.IsPublic
 
 	return nil
-}
-
-//---------------------------------------------------------------------
-
-func (action *Action) GetOwnerId() common.Ident {
-	return action.OwnerId
-}
-
-func (action *Action) GetIsPublic() bool {
-	return action.IsPublic
-}
-
-func (a Action) String() string {
-	s := fmt.Sprintf("a.%s: %s", a.Id, a.Name)
-	return s
 }

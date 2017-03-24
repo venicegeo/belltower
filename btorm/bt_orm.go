@@ -1,7 +1,9 @@
 package btorm
 
-import "github.com/venicegeo/belltower/common"
-import "github.com/venicegeo/belltower/esorm"
+import (
+	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/esorm"
+)
 
 //---------------------------------------------------------------------
 
@@ -58,7 +60,8 @@ func (orm *BtOrm) CreateAction(requestorID common.Ident, fields *ActionFieldsFor
 }
 
 func (orm *BtOrm) ReadAction(id common.Ident) (*ActionFieldsForRead, error) {
-	action := &Action{Id: id}
+	action := &Action{}
+	action.Id = id
 	fields, err := orm.Orm.ReadThing(action)
 	if err != nil {
 		return nil, err
@@ -67,12 +70,14 @@ func (orm *BtOrm) ReadAction(id common.Ident) (*ActionFieldsForRead, error) {
 }
 
 func (orm *BtOrm) UpdateAction(id common.Ident, fields *ActionFieldsForUpdate) error {
-	action := &Action{Id: id}
+	action := &Action{}
+	action.Id = id
 	return orm.Orm.UpdateThing(action, fields)
 }
 
 func (orm *BtOrm) DeleteAction(id common.Ident) error {
-	action := &Action{Id: id}
+	action := &Action{}
+	action.Id = id
 	return orm.Orm.DeleteThing(action)
 }
 
@@ -84,7 +89,8 @@ func (orm *BtOrm) CreateFeed(requestorID common.Ident, fields *FeedFieldsForCrea
 }
 
 func (orm *BtOrm) ReadFeed(id common.Ident) (*FeedFieldsForRead, error) {
-	feed := &Feed{Id: id}
+	feed := &Feed{}
+	feed.Id = id
 	fields, err := orm.Orm.ReadThing(feed)
 	if err != nil {
 		return nil, err
@@ -93,12 +99,14 @@ func (orm *BtOrm) ReadFeed(id common.Ident) (*FeedFieldsForRead, error) {
 }
 
 func (orm *BtOrm) UpdateFeed(id common.Ident, fields *FeedFieldsForUpdate) error {
-	feed := &Feed{Id: id}
+	feed := &Feed{}
+	feed.Id = id
 	return orm.Orm.UpdateThing(feed, fields)
 }
 
 func (orm *BtOrm) DeleteFeed(id common.Ident) error {
-	feed := &Feed{Id: id}
+	feed := &Feed{}
+	feed.Id = id
 	return orm.Orm.DeleteThing(feed)
 }
 
@@ -110,7 +118,8 @@ func (orm *BtOrm) CreateRule(requestorID common.Ident, fields *RuleFieldsForCrea
 }
 
 func (orm *BtOrm) ReadRule(id common.Ident) (*RuleFieldsForRead, error) {
-	rule := &Rule{Id: id}
+	rule := &Rule{}
+	rule.Id = id
 	fields, err := orm.Orm.ReadThing(rule)
 	if err != nil {
 		return nil, err
@@ -119,12 +128,14 @@ func (orm *BtOrm) ReadRule(id common.Ident) (*RuleFieldsForRead, error) {
 }
 
 func (orm *BtOrm) UpdateRule(id common.Ident, fields *RuleFieldsForUpdate) error {
-	rule := &Rule{Id: id}
+	rule := &Rule{}
+	rule.Id = id
 	return orm.Orm.UpdateThing(rule, fields)
 }
 
 func (orm *BtOrm) DeleteRule(id common.Ident) error {
-	rule := &Rule{Id: id}
+	rule := &Rule{}
+	rule.Id = id
 	return orm.Orm.DeleteThing(rule)
 }
 
@@ -136,7 +147,8 @@ func (orm *BtOrm) CreateUser(requestorID common.Ident, fields *UserFieldsForCrea
 }
 
 func (orm *BtOrm) ReadUser(id common.Ident) (*UserFieldsForRead, error) {
-	user := &User{Id: id}
+	user := &User{}
+	user.Id = id
 	fields, err := orm.Orm.ReadThing(user)
 	if err != nil {
 		return nil, err
@@ -145,11 +157,13 @@ func (orm *BtOrm) ReadUser(id common.Ident) (*UserFieldsForRead, error) {
 }
 
 func (orm *BtOrm) UpdateUser(id common.Ident, fields *UserFieldsForUpdate) error {
-	user := &User{Id: id}
+	user := &User{}
+	user.Id = id
 	return orm.Orm.UpdateThing(user, fields)
 }
 
 func (orm *BtOrm) DeleteUser(id common.Ident) error {
-	user := &User{Id: id}
+	user := &User{}
+	user.Id = id
 	return orm.Orm.DeleteThing(user)
 }

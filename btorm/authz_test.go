@@ -27,37 +27,40 @@ func TestIsAuthorized(t *testing.T) {
 	assert := assert.New(t)
 
 	user := &User{
-		Id:   "1",
 		Role: UserRole,
 	}
+	user.Id = "1"
+
 	creator := &User{
-		Id:   "2",
 		Role: CreatorRole,
 	}
+	creator.Id = "2"
+
 	admin := &User{
-		Id:   "3",
 		Role: AdminRole,
 	}
-	myPublicRule := &Rule{
-		Id:       "10",
-		OwnerId:  creator.Id,
-		IsPublic: true,
-	}
-	myPrivateRule := &Rule{
-		Id:       "11",
-		OwnerId:  creator.Id,
-		IsPublic: false,
-	}
-	yourPublicRule := &Rule{
-		Id:       "12",
-		OwnerId:  "999",
-		IsPublic: true,
-	}
-	yourPrivateRule := &Rule{
-		Id:       "13",
-		OwnerId:  "99",
-		IsPublic: false,
-	}
+	admin.Id = "3"
+
+	myPublicRule := &Rule{}
+	myPublicRule.Id = "10"
+	myPublicRule.OwnerId = creator.Id
+	myPublicRule.IsPublic = true
+
+	myPrivateRule := &Rule{}
+	myPrivateRule.Id = "11"
+	myPrivateRule.OwnerId = creator.Id
+	myPrivateRule.IsPublic = false
+
+	yourPublicRule := &Rule{}
+	yourPublicRule.Id = "11"
+	yourPublicRule.Id = "12"
+	yourPublicRule.OwnerId = "999"
+	yourPublicRule.IsPublic = true
+
+	yourPrivateRule := &Rule{}
+	yourPrivateRule.Id = "13"
+	yourPrivateRule.OwnerId = "99"
+	yourPrivateRule.IsPublic = false
 
 	_ = admin
 

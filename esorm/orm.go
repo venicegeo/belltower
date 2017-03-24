@@ -167,13 +167,15 @@ func (orm *Orm) CreateIndex(e Elasticable) error {
 		return fmt.Errorf("index already exists")
 	}
 
-	//log.Printf("** %s **", e.GetMapping())
-	err = common.ValidateJsonString(e.GetMapping())
+	mapping := NewMapping(e)
+	byts, err := json.Marshal(mapping)
+	//log.Printf("%s", string(byts))
 	if err != nil {
 		return err
 	}
+	mappingString := string(byts)
 
-	result, err := orm.esClient.CreateIndex(index).BodyString(e.GetMapping()).Do(orm.ctx)
+	result, err := orm.esClient.CreateIndex(index).BodyString(mappingString).Do(orm.ctx)
 	if err != nil {
 		return err
 	}

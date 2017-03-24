@@ -1,22 +1,15 @@
 package btorm
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/venicegeo/belltower/common"
 )
 
 type Rule struct {
-	Id           common.Ident  `json:"id"`
-	CreatedAt    time.Time     `json:"created_at"`
-	UpdatedAt    time.Time     `json:"updated_at"`
-	Name         string        `json:"name"`
+	Common
 	PollDuration time.Duration `json:"poll_duration"`
-	IsEnabled    bool          `json:"is_enabled"`
 	Expression   string        `json:"expression"`
-	OwnerId      common.Ident  `json:"owner_id"`
-	IsPublic     bool          `json:"is_public"`
 }
 
 //---------------------------------------------------------------------
@@ -30,15 +23,9 @@ type RuleFieldsForCreate struct {
 }
 
 type RuleFieldsForRead struct {
-	Id           common.Ident
-	Name         string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	Common
 	PollDuration time.Duration
-	IsEnabled    bool
 	Expression   string
-	OwnerId      common.Ident
-	IsPublic     bool
 }
 
 type RuleFieldsForUpdate struct {
@@ -51,13 +38,7 @@ type RuleFieldsForUpdate struct {
 
 //---------------------------------------------------------------------
 
-func (rule *Rule) GetIndexName() string {
-	return "rule_index"
-}
-
-func (rule *Rule) GetTypeName() string {
-	return "rule_type"
-}
+func (rule *Rule) GetLoweredName() string { return "rule" }
 
 func (rule *Rule) GetMapping() string {
 	mapping := `{
@@ -102,15 +83,6 @@ func (rule *Rule) GetMapping() string {
 	return mapping
 }
 
-func (rule *Rule) GetId() common.Ident {
-	return rule.Id
-}
-
-func (rule *Rule) SetId() common.Ident {
-	rule.Id = common.NewId()
-	return rule.Id
-}
-
 //---------------------------------------------------------------------
 
 func (rule *Rule) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) error {
@@ -130,16 +102,10 @@ func (rule *Rule) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) 
 func (rule *Rule) GetFieldsForRead() (interface{}, error) {
 
 	read := &RuleFieldsForRead{
-		Id:           rule.Id,
-		Name:         rule.Name,
-		CreatedAt:    rule.CreatedAt,
-		UpdatedAt:    rule.UpdatedAt,
 		PollDuration: rule.PollDuration,
-		IsEnabled:    rule.IsEnabled,
 		Expression:   rule.Expression,
-		OwnerId:      rule.OwnerId,
-		IsPublic:     rule.IsPublic,
 	}
+	read.Common = rule.Common
 
 	return read, nil
 }
@@ -166,19 +132,4 @@ func (rule *Rule) SetFieldsForUpdate(ifields interface{}) error {
 	}
 
 	return nil
-}
-
-//---------------------------------------------------------------------
-
-func (rule *Rule) GetOwnerId() common.Ident {
-	return rule.OwnerId
-}
-
-func (rule *Rule) GetIsPublic() bool {
-	return rule.IsPublic
-}
-
-func (rule Rule) String() string {
-	s := fmt.Sprintf("a.%s: %s", rule.Id, rule.Name)
-	return s
 }

@@ -1,7 +1,6 @@
 package btorm
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/venicegeo/belltower/common"
@@ -9,14 +8,9 @@ import (
 
 // Users are never publically visible: only the admin has access rights.
 type User struct {
-	Id          common.Ident `json:"id"`
-	CreatedAt   time.Time    `json:"created_at"`
-	UpdatedAt   time.Time    `json:"updated_at"`
-	Name        string       `json:"name"`
-	Role        Role         `json:"role"`
-	IsEnabled   bool         `json:"is_enabled"`
-	LastLoginAt time.Time    `json:"last_login_at"`
-	OwnerId     common.Ident `json:"owner_id"`
+	Common
+	Role        Role      `json:"role"`
+	LastLoginAt time.Time `json:"last_login_at"`
 }
 
 //---------------------------------------------------------------------
@@ -28,11 +22,7 @@ type UserFieldsForCreate struct {
 }
 
 type UserFieldsForRead struct {
-	Id          common.Ident
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Name        string
-	IsEnabled   bool
+	Common
 	Role        Role
 	LastLoginAt time.Time
 }
@@ -45,13 +35,7 @@ type UserFieldsForUpdate struct {
 
 //---------------------------------------------------------------------
 
-func (user *User) GetIndexName() string {
-	return "user_index"
-}
-
-func (user *User) GetTypeName() string {
-	return "user_type"
-}
+func (user *User) GetLoweredName() string { return "user" }
 
 func (user *User) GetMapping() string {
 	mapping := `{
@@ -93,15 +77,6 @@ func (user *User) GetMapping() string {
 	return mapping
 }
 
-func (user *User) GetId() common.Ident {
-	return user.Id
-}
-
-func (user *User) SetId() common.Ident {
-	user.Id = common.NewId()
-	return user.Id
-}
-
 //---------------------------------------------------------------------
 
 func (user *User) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) error {
@@ -118,15 +93,10 @@ func (user *User) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) 
 func (user *User) GetFieldsForRead() (interface{}, error) {
 
 	read := &UserFieldsForRead{
-		Id:          user.Id,
-		Name:        user.Name,
-		CreatedAt:   user.CreatedAt,
-		UpdatedAt:   user.UpdatedAt,
-		IsEnabled:   user.IsEnabled,
 		LastLoginAt: user.LastLoginAt,
 		Role:        user.Role,
 	}
-
+	read.Common = user.Common
 	return read, nil
 }
 
@@ -142,19 +112,4 @@ func (user *User) SetFieldsForUpdate(ifields interface{}) error {
 	user.Role = fields.Role
 
 	return nil
-}
-
-//---------------------------------------------------------------------
-
-func (user *User) GetOwnerId() common.Ident {
-	return user.OwnerId
-}
-
-func (user *User) GetIsPublic() bool {
-	panic(1)
-}
-
-func (user User) String() string {
-	s := fmt.Sprintf("a.%s: %s", user.Id, user.Name)
-	return s
 }

@@ -15,10 +15,11 @@ type FeedType int
 
 type FeedEvent struct {
 	TimeStamp time.Time
+	FeedId    common.Ident
 	Data      interface{}
 }
 
-type FeedRunner interface {
+type Feeder interface {
 	GetName() string
 	GetId() common.Ident
 	GetFeedType() FeedType
@@ -26,12 +27,17 @@ type FeedRunner interface {
 	GetInterval() time.Duration
 }
 
-type FeedRunnerCore struct {
-	Id       common.Ident
-	Name     string
-	FeedType FeedType
-	Interval time.Duration
+type FeederCore struct {
+	id       common.Ident
+	name     string
+	feedType FeedType
+	interval time.Duration
 }
+
+func (f *FeederCore) GetId() common.Ident        { return f.id }
+func (f *FeederCore) GetName() string            { return f.name }
+func (f *FeederCore) GetFeedType() FeedType      { return f.feedType }
+func (f *FeederCore) GetInterval() time.Duration { return f.interval }
 
 //---------------------------------------------------------------------
 
@@ -53,37 +59,37 @@ func (c *Controller) Execute() {
 		Target:       33,
 	}
 
-	randRunner := NewRandomRunner(settings)
+	randFeeder := NewRandomFeeder(settings)
 
-	feeds := []FeedRunner{randRunner}
+	feeds := []Feeder{randFeeder}
 
 	for _, feed := range feeds {
 		go c.RunLoop(feed)
 	}
 }
 
-func (c *Controller) RunLoop(runner FeedRunner) {
+func (c *Controller) RunLoop(feeder Feeder) {
 	errCount := 0
 
 	for {
 		if errCount == 3 {
-			log.Printf("Runner aborting (%s)", runner.GetName())
+			log.Printf("Feeder aborting (%s)", feeder.GetName())
 			break
 		}
 
-		event, err := runner.Poll()
+		event, err := feeder.Poll()
 		if err != nil {
-			log.Printf("Runner poll error (%s): %v", runner.GetName(), err)
+			log.Printf("Feeder poll error (%s): %v", feeder.GetName(), err)
 			errCount++
 		} else {
 			if event != nil {
 				err = c.Post(event)
-				log.Printf("Runner post error (%s): %v", runner.GetName(), err)
+				log.Printf("Feeder post error (%s): %v", feeder.GetName(), err)
 				// TODO
 			}
 		}
 
-		time.Sleep(runner.GetInterval())
+		time.Sleep(feeder.GetInterval())
 	}
 }
 
@@ -106,9 +112,9 @@ func (c *Controller) Post(e *FeedEvent) error {
 
 //---------------------------------------------------------------------
 
-type RandomRunner struct {
-	Core     FeedRunnerCore
-	Settings *RandomSettings
+type RandomFeeder struct {
+	FeederCore
+	settings *RandomSettings
 }
 
 type RandomEventData struct {
@@ -121,25 +127,20 @@ type RandomSettings struct {
 	Target       int // value in range [0..100], 20 means will hit 20% of the time
 }
 
-func NewRandomRunner(settings *RandomSettings) *RandomRunner {
-	r := &RandomRunner{}
-	r.Core.FeedType = FeedTypeRandom
-	r.Core.Id = common.NewId()
-	r.Core.Interval = time.Second * 3
-	r.Core.Name = settings.Name
-	r.Settings = settings
+func NewRandomFeeder(settings *RandomSettings) *RandomFeeder {
+	r := &RandomFeeder{}
+	r.feedType = FeedTypeRandom
+	r.id = common.NewId()
+	r.interval = time.Second * 3
+	r.name = settings.Name
+	r.settings = settings
 
 	return r
 }
 
-func (r *RandomRunner) GetName() string            { return r.Core.Name }
-func (r *RandomRunner) GetId() common.Ident        { return r.Core.Id }
-func (r *RandomRunner) GetFeedType() FeedType      { return r.Core.FeedType }
-func (r *RandomRunner) GetInterval() time.Duration { return r.Core.Interval }
-
-func (r *RandomRunner) Poll() (*FeedEvent, error) {
+func (r *RandomFeeder) Poll() (*FeedEvent, error) {
 	x := rand.Intn(100)
-	if x > r.Settings.Target {
+	if x > r.settings.Target {
 		// not a hit
 		return nil, nil
 	}
