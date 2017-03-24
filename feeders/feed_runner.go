@@ -3,8 +3,37 @@ package feeders
 import (
 	"encoding/json"
 	"log"
+	"math/rand"
 	"time"
+
+	"github.com/venicegeo/belltower/common"
 )
+
+//---------------------------------------------------------------------
+
+type FeedType int
+
+type FeedEvent struct {
+	TimeStamp time.Time
+	Data      interface{}
+}
+
+type FeedRunner interface {
+	GetName() string
+	GetId() common.Ident
+	GetFeedType() FeedType
+	Poll() (*FeedEvent, error)
+	GetInterval() time.Duration
+}
+
+type FeedRunnerCore struct {
+	Id       common.Ident
+	Name     string
+	FeedType FeedType
+	Interval time.Duration
+}
+
+//---------------------------------------------------------------------
 
 const (
 	FeedTypeRandom FeedType = iota
@@ -18,25 +47,47 @@ type Controller struct {
 
 func (c *Controller) Execute() {
 
-	randSettings := &RandomSettings{}
-	randSettings.Interval = 3
-	randSettings.Timeout = 12
+	settings := &RandomSettings{
+		Name:         "myrandrunner",
+		PollInterval: 3 * time.Second,
+		Target:       33,
+	}
 
-	randRunner := NewRandomRunner(randSettings)
+	randRunner := NewRandomRunner(settings)
 
 	feeds := []FeedRunner{randRunner}
 
-	for {
-		event := feeds[0].Poll()
-		if event != nil {
-			c.Post(event)
-		}
-		d := time.Duration(feeds[0].GetInterval()) * time.Second
-		time.Sleep(time.Duration(d))
+	for _, feed := range feeds {
+		go c.RunLoop(feed)
 	}
 }
 
-func (c *Controller) Post(e *FeedEvent) {
+func (c *Controller) RunLoop(runner FeedRunner) {
+	errCount := 0
+
+	for {
+		if errCount == 3 {
+			log.Printf("Runner aborting (%s)", runner.GetName())
+			break
+		}
+
+		event, err := runner.Poll()
+		if err != nil {
+			log.Printf("Runner poll error (%s): %v", runner.GetName(), err)
+			errCount++
+		} else {
+			if event != nil {
+				err = c.Post(event)
+				log.Printf("Runner post error (%s): %v", runner.GetName(), err)
+				// TODO
+			}
+		}
+
+		time.Sleep(runner.GetInterval())
+	}
+}
+
+func (c *Controller) Post(e *FeedEvent) error {
 	log.Printf("POSTED %T %#v", e, e.Data.(*RandomEventData))
 	byts, err := json.Marshal(e)
 	if err != nil {
@@ -50,75 +101,52 @@ func (c *Controller) Post(e *FeedEvent) {
 		panic(err)
 	}
 	log.Printf("%#v", fe)
-}
-
-//---------------------------------------------------------------------
-
-type FeedRunnerCore struct {
-	ID       uint
-	Name     string
-	FeedType FeedType
-}
-
-type FeedSettingsCore struct {
-	Interval int
-	Timeout  int
-}
-
-type FeedEvent struct {
-	Timestamp time.Time
-	Data      interface{}
-}
-
-type FeedRunner interface {
-	Poll() *FeedEvent
-	GetInterval() int
-	GetTimeout() int
+	return nil
 }
 
 //---------------------------------------------------------------------
 
 type RandomRunner struct {
-	FeedRunnerCore
+	Core     FeedRunnerCore
 	Settings *RandomSettings
 }
 
 type RandomEventData struct {
-	Seconds int
+	Value int
 }
 
 type RandomSettings struct {
-	FeedSettingsCore
+	Name         string
+	PollInterval time.Duration
+	Target       int // value in range [0..100], 20 means will hit 20% of the time
 }
 
 func NewRandomRunner(settings *RandomSettings) *RandomRunner {
-	settings = &RandomSettings{}
-	settings.Interval = 3
-	settings.Timeout = 12
-
 	r := &RandomRunner{}
+	r.Core.FeedType = FeedTypeRandom
+	r.Core.Id = common.NewId()
+	r.Core.Interval = time.Second * 3
+	r.Core.Name = settings.Name
 	r.Settings = settings
 
 	return r
 }
 
-func (r *RandomRunner) GetInterval() int {
-	return r.Settings.Interval
-}
+func (r *RandomRunner) GetName() string            { return r.Core.Name }
+func (r *RandomRunner) GetId() common.Ident        { return r.Core.Id }
+func (r *RandomRunner) GetFeedType() FeedType      { return r.Core.FeedType }
+func (r *RandomRunner) GetInterval() time.Duration { return r.Core.Interval }
 
-func (r *RandomRunner) GetTimeout() int {
-	return r.Settings.Timeout
-}
-
-func (r *RandomRunner) Poll() *FeedEvent {
-	now := time.Now()
-	secs := now.Second()
-	if secs%2 == 0 {
-		e := &FeedEvent{
-			Timestamp: now,
-			Data:      &RandomEventData{Seconds: secs},
-		}
-		return e
+func (r *RandomRunner) Poll() (*FeedEvent, error) {
+	x := rand.Intn(100)
+	if x > r.Settings.Target {
+		// not a hit
+		return nil, nil
 	}
-	return nil
+
+	e := &FeedEvent{
+		TimeStamp: time.Now(),
+		Data:      &RandomEventData{Value: x},
+	}
+	return e, nil
 }

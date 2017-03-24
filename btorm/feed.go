@@ -23,15 +23,6 @@ type Feed struct {
 	IsPublic      bool                   `json:"is_public"`
 }
 
-type FeedEvent interface{}
-type FeedSettings interface{}
-type Feeder interface {
-	FeedType() string
-	Poll() (FeedEvent, error)
-	Post(FeedEvent) error
-	Sleep() error
-}
-
 //---------------------------------------------------------------------
 
 type FeedFieldsForCreate struct {
