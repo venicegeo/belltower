@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/esorm"
 )
 
 type Rule struct {
@@ -40,47 +41,17 @@ type RuleFieldsForUpdate struct {
 
 func (rule *Rule) GetLoweredName() string { return "rule" }
 
-func (rule *Rule) GetMapping() string {
-	mapping := `{
-	"settings":{
-	},
-	"mappings":{
-		"rule_type":{
-			"dynamic":"strict",
-			"properties":{
-				"id":{
-					"type":"string"
-				},
-				"name":{
-					"type":"string"
-				},
-				"created_at":{
-					"type":"date"
-				},
-				"updated_at":{
-					"type":"date"
-				},
-				"is_enabled":{
-					"type":"boolean"
-				},
-				"is_public":{
-					"type":"boolean"
-				},
-				"owner_id":{
-					"type":"string"
-				},
-				"poll_duration":{
-					"type":"integer"
-				},
-				"expression":{
-					"type":"string"
-				}
-			}
-		}
+func (rule *Rule) GetMappingProperties() map[string]esorm.MappingPropertyFields {
+	properties := map[string]esorm.MappingPropertyFields{
+		"poll_duration": esorm.MappingPropertyFields{Type: "integer"},
+		"expression":    esorm.MappingPropertyFields{Type: "string"},
 	}
-}`
 
-	return mapping
+	for k, v := range rule.Common.GetCommonMappingProperties() {
+		properties[k] = v
+	}
+
+	return properties
 }
 
 //---------------------------------------------------------------------

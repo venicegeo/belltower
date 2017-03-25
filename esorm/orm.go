@@ -54,8 +54,8 @@ func (orm *Orm) CreateDocument(obj Elasticable) (common.Ident, error) {
 	}
 
 	resp, err := orm.esClient.Index().
-		Index(obj.GetIndexName()).
-		Type(obj.GetTypeName()).
+		Index(GetIndexName(obj)).
+		Type(GetTypeName(obj)).
 		Id(obj.SetId().String()).
 		BodyJson(obj).
 		Do(orm.ctx)
@@ -72,8 +72,8 @@ func (orm *Orm) CreateDocument(obj Elasticable) (common.Ident, error) {
 func (orm *Orm) ReadDocument(obj Elasticable) (Elasticable, error) {
 
 	result, err := orm.esClient.Get().
-		Index(obj.GetIndexName()).
-		Type(obj.GetTypeName()).
+		Index(GetIndexName(obj)).
+		Type(GetTypeName(obj)).
 		Id(obj.GetId().String()).
 		Do(orm.ctx)
 	if err != nil {
@@ -93,8 +93,8 @@ func (orm *Orm) ReadDocument(obj Elasticable) (Elasticable, error) {
 
 func (orm *Orm) UpdateDocument(obj Elasticable) error {
 	_, err := orm.esClient.Update().
-		Index(obj.GetIndexName()).
-		Type(obj.GetTypeName()).
+		Index(GetIndexName(obj)).
+		Type(GetTypeName(obj)).
 		Id(obj.GetId().String()).
 		Doc(obj).
 		Do(orm.ctx)
@@ -107,8 +107,8 @@ func (orm *Orm) UpdateDocument(obj Elasticable) error {
 
 func (orm *Orm) DeleteDocument(obj Elasticable) error {
 	res, err := orm.esClient.Delete().
-		Index(obj.GetIndexName()).
-		Type(obj.GetTypeName()).
+		Index(GetIndexName(obj)).
+		Type(GetTypeName(obj)).
 		Id(obj.GetId().String()).
 		Do(orm.ctx)
 	if err != nil {
@@ -140,23 +140,23 @@ func (orm *Orm) listIndexes(delete bool) {
 }
 
 func (orm *Orm) IndexExists(e Elasticable) (bool, error) {
-	exists, err := orm.esClient.IndexExists(e.GetIndexName()).Do(orm.ctx)
+	exists, err := orm.esClient.IndexExists(GetIndexName(e)).Do(orm.ctx)
 	return exists, err
 }
 
 func (orm *Orm) DeleteIndex(e Elasticable) error {
-	response, err := orm.esClient.DeleteIndex(e.GetIndexName()).Do(orm.ctx)
+	response, err := orm.esClient.DeleteIndex(GetIndexName(e)).Do(orm.ctx)
 	if err != nil {
 		return err
 	}
 	if !response.Acknowledged {
-		return fmt.Errorf("CreateIndex() not acknowledged")
+		return fmt.Errorf("DeleteIndex() not acknowledged")
 	}
 	return nil
 }
 
 func (orm *Orm) CreateIndex(e Elasticable) error {
-	index := e.GetIndexName()
+	index := GetIndexName(e)
 
 	exists, err := orm.IndexExists(e)
 	if err != nil {

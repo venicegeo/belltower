@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/esorm"
 )
 
 // Users are never publically visible: only the admin has access rights.
@@ -37,44 +38,17 @@ type UserFieldsForUpdate struct {
 
 func (user *User) GetLoweredName() string { return "user" }
 
-func (user *User) GetMapping() string {
-	mapping := `{
-	"settings":{
-	},
-	"mappings":{
-		"user_type":{
-			"dynamic":"strict",
-			"properties":{
-				"id":{
-					"type":"string"
-				},
-				"name":{
-					"type":"string"
-				},
-				"created_at":{
-					"type":"date"
-				},
-				"updated_at":{
-					"type":"date"
-				},
-				"is_enabled":{
-					"type":"boolean"
-				},
-				"role":{
-					"type":"string"
-				},
-				"last_login_at":{
-					"type":"date"
-				},
-				"owner_id":{
-					"type":"string"
-				}
-			}
-		}
+func (user *User) GetMappingProperties() map[string]esorm.MappingPropertyFields {
+	properties := map[string]esorm.MappingPropertyFields{
+		"role":          esorm.MappingPropertyFields{Type: "string"},
+		"last_login_at": esorm.MappingPropertyFields{Type: "date"},
 	}
-}`
 
-	return mapping
+	for k, v := range user.Common.GetCommonMappingProperties() {
+		properties[k] = v
+	}
+
+	return properties
 }
 
 //---------------------------------------------------------------------

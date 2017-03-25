@@ -28,7 +28,7 @@ func NewMapping(e Elasticable) *Mapping {
 
 	m := &Mapping{
 		Settings: MappingSettings{},
-		Mappings: map[string]MappingTypeName{e.GetTypeName(): mt},
+		Mappings: map[string]MappingTypeName{GetTypeName(e): mt},
 	}
 
 	return m

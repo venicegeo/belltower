@@ -49,13 +49,14 @@ func (feed *Feed) GetLoweredName() string { return "feed" }
 
 func (feed *Feed) GetMappingProperties() map[string]esorm.MappingPropertyFields {
 	properties := map[string]esorm.MappingPropertyFields{
-		"feed_type":       esorm.MappingPropertyFields{Type: "string"},
-		"message_count":   esorm.MappingPropertyFields{Type: "integer"},
-		"last_message_at": esorm.MappingPropertyFields{Type: "date"},
-		"settings":        esorm.MappingPropertyFields{Type: "object", Dynamic: "true"},
+		"feed_type":        esorm.MappingPropertyFields{Type: "string"},
+		"message_count":    esorm.MappingPropertyFields{Type: "integer"},
+		"polling_interval": esorm.MappingPropertyFields{Type: "integer"},
+		"last_message_at":  esorm.MappingPropertyFields{Type: "date"},
+		"settings":         esorm.MappingPropertyFields{Type: "object", Dynamic: "true"},
 	}
 
-	for k, v := range feed.GetMappingProperties() {
+	for k, v := range feed.Common.GetCommonMappingProperties() {
 		properties[k] = v
 	}
 

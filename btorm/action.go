@@ -2,6 +2,7 @@ package btorm
 
 import (
 	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/esorm"
 )
 
 //---------------------------------------------------------------------
@@ -33,49 +34,18 @@ type ActionFieldsForUpdate struct {
 
 //---------------------------------------------------------------------
 
-func (action *Action) GetLoweredName() string {
-	return "action"
-}
+func (action *Action) GetLoweredName() string { return "action" }
 
-func (action *Action) GetMapping() string {
-	mapping := `{
-	"settings":{
-	},
-	"mappings":{
-		"action_type":{
-			"dynamic":"strict",
-			"properties":{
-				"id":{
-					"type":"string"
-				},
-				"name":{
-					"type":"string"
-				},
-				"created_at":{
-					"type":"date"
-				},
-				"updated_at":{
-					"type":"date"
-				},
-				"is_enabled":{
-					"type":"boolean"
-				},
-				"is_public":{
-					"type":"boolean"
-				},
-				"owner_id":{
-					"type":"string"
-				},
-				"settings":{
-					"dynamic":"true",
-					"type":"object"
-				}
-			}
-		}
+func (action *Action) GetMappingProperties() map[string]esorm.MappingPropertyFields {
+	properties := map[string]esorm.MappingPropertyFields{
+		"settings": esorm.MappingPropertyFields{Type: "object", Dynamic: "true"},
 	}
-}`
 
-	return mapping
+	for k, v := range action.Common.GetCommonMappingProperties() {
+		properties[k] = v
+	}
+
+	return properties
 }
 
 //---------------------------------------------------------------------
