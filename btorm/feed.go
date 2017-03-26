@@ -9,38 +9,15 @@ import (
 
 //---------------------------------------------------------------------
 
+type FeedType string
+
 type Feed struct {
-	Common
-	FeedType        string        `json:"feed_type"`
-	PollingInterval time.Duration `json:"polling_interval"`
-	MessageCount    uint          `json:"message_count"`
-	LastMessageAt   time.Time     `json:"last_message_at"`
-	Settings        interface{}   `json:"settings"`
-}
-
-//---------------------------------------------------------------------
-
-type FeedFieldsForCreate struct {
-	Name      string
-	FeedType  string
-	IsEnabled bool
-	Settings  map[string]interface{}
-	IsPublic  bool
-}
-
-type FeedFieldsForRead struct {
-	Common
-	FeedType      string
-	Settings      interface{}
-	MessageCount  uint
-	LastMessageAt time.Time
-}
-
-type FeedFieldsForUpdate struct {
-	Name      string
-	IsEnabled bool
-	IsPublic  bool
-	Settings  interface{}
+	Core
+	FeedType        FeedType      `json:"feed_type"`        // CR
+	PollingInterval time.Duration `json:"polling_interval"` // CR
+	MessageCount    uint          `json:"message_count"`    // R
+	LastMessageAt   time.Time     `json:"last_message_at"`  // R
+	Settings        interface{}   `json:"settings"`         // CR
 }
 
 //---------------------------------------------------------------------
@@ -56,7 +33,7 @@ func (feed *Feed) GetMappingProperties() map[string]esorm.MappingPropertyFields 
 		"settings":         esorm.MappingPropertyFields{Type: "object", Dynamic: "true"},
 	}
 
-	for k, v := range feed.Common.GetCommonMappingProperties() {
+	for k, v := range feed.Core.GetCoreMappingProperties() {
 		properties[k] = v
 	}
 
@@ -67,13 +44,15 @@ func (feed *Feed) GetMappingProperties() map[string]esorm.MappingPropertyFields 
 
 func (feed *Feed) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) error {
 
-	fields := ifields.(*FeedFieldsForCreate)
+	fields := ifields.(*Feed)
 
-	feed.Name = fields.Name
-	feed.IsEnabled = fields.IsEnabled
+	err := feed.Core.SetFieldsForCreate(ownerId, &fields.Core)
+	if err != nil {
+		return err
+	}
+
+	feed.PollingInterval = fields.PollingInterval
 	feed.Settings = fields.Settings
-	feed.OwnerId = ownerId
-	feed.IsPublic = fields.IsPublic
 	feed.FeedType = fields.FeedType
 
 	return nil
@@ -81,28 +60,30 @@ func (feed *Feed) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) 
 
 func (feed *Feed) GetFieldsForRead() (interface{}, error) {
 
-	read := &FeedFieldsForRead{
+	core, err := feed.Core.GetFieldsForRead()
+	if err != nil {
+		return nil, err
+	}
+
+	fields := &Feed{
+		Core:          core,
 		FeedType:      feed.FeedType,
 		Settings:      feed.Settings,
 		MessageCount:  feed.MessageCount,
 		LastMessageAt: feed.LastMessageAt,
 	}
 
-	read.Common = feed.Common
-
-	return read, nil
+	return fields, nil
 }
 
 func (feed *Feed) SetFieldsForUpdate(ifields interface{}) error {
 
-	fields := ifields.(*FeedFieldsForUpdate)
+	fields := ifields.(*Feed)
 
-	if fields.Name != "" {
-		feed.Name = fields.Name
+	err := feed.Core.SetFieldsForUpdate(&fields.Core)
+	if err != nil {
+		return nil
 	}
-
-	feed.IsEnabled = fields.IsEnabled
-	feed.IsPublic = fields.IsPublic
 
 	return nil
 }

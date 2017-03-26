@@ -9,29 +9,9 @@ import (
 
 // Users are never publically visible: only the admin has access rights.
 type User struct {
-	Common
-	Role        Role      `json:"role"`
-	LastLoginAt time.Time `json:"last_login_at"`
-}
-
-//---------------------------------------------------------------------
-
-type UserFieldsForCreate struct {
-	Name      string
-	IsEnabled bool
-	Role      Role
-}
-
-type UserFieldsForRead struct {
-	Common
-	Role        Role
-	LastLoginAt time.Time
-}
-
-type UserFieldsForUpdate struct {
-	Name      string
-	IsEnabled bool
-	Role      Role
+	Core
+	Role        Role      `json:"role"`          // CR
+	LastLoginAt time.Time `json:"last_login_at"` // R
 }
 
 //---------------------------------------------------------------------
@@ -44,7 +24,7 @@ func (user *User) GetMappingProperties() map[string]esorm.MappingPropertyFields 
 		"last_login_at": esorm.MappingPropertyFields{Type: "date"},
 	}
 
-	for k, v := range user.Common.GetCommonMappingProperties() {
+	for k, v := range user.Core.GetCoreMappingProperties() {
 		properties[k] = v
 	}
 
@@ -55,10 +35,13 @@ func (user *User) GetMappingProperties() map[string]esorm.MappingPropertyFields 
 
 func (user *User) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) error {
 
-	fields := ifields.(*UserFieldsForCreate)
+	fields := ifields.(*User)
 
-	user.Name = fields.Name
-	user.IsEnabled = fields.IsEnabled
+	err := user.Core.SetFieldsForCreate(ownerId, &fields.Core)
+	if err != nil {
+		return err
+	}
+
 	user.Role = fields.Role
 
 	return nil
@@ -66,23 +49,29 @@ func (user *User) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) 
 
 func (user *User) GetFieldsForRead() (interface{}, error) {
 
-	read := &UserFieldsForRead{
+	core, err := user.Core.GetFieldsForRead()
+	if err != nil {
+		return nil, err
+	}
+
+	fields := &User{
+		Core:        core,
 		LastLoginAt: user.LastLoginAt,
 		Role:        user.Role,
 	}
-	read.Common = user.Common
-	return read, nil
+
+	return fields, nil
 }
 
 func (user *User) SetFieldsForUpdate(ifields interface{}) error {
 
-	fields := ifields.(*UserFieldsForUpdate)
+	fields := ifields.(*User)
 
-	if fields.Name != "" {
-		user.Name = fields.Name
+	err := user.Core.SetFieldsForUpdate(&fields.Core)
+	if err != nil {
+		return nil
 	}
 
-	user.IsEnabled = fields.IsEnabled
 	user.Role = fields.Role
 
 	return nil

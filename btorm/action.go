@@ -8,28 +8,8 @@ import (
 //---------------------------------------------------------------------
 
 type Action struct {
-	Common
-	Settings interface{} `json:"settings"`
-}
-
-//---------------------------------------------------------------------
-
-type ActionFieldsForCreate struct {
-	Name      string
-	IsEnabled bool
-	Settings  interface{}
-	IsPublic  bool
-}
-
-type ActionFieldsForRead struct {
-	Common
-	Settings interface{}
-}
-
-type ActionFieldsForUpdate struct {
-	Name      string
-	IsEnabled bool
-	IsPublic  bool
+	Core
+	Settings interface{} `json:"settings"` // CR
 }
 
 //---------------------------------------------------------------------
@@ -41,7 +21,7 @@ func (action *Action) GetMappingProperties() map[string]esorm.MappingPropertyFie
 		"settings": esorm.MappingPropertyFields{Type: "object", Dynamic: "true"},
 	}
 
-	for k, v := range action.Common.GetCommonMappingProperties() {
+	for k, v := range action.Core.GetCoreMappingProperties() {
 		properties[k] = v
 	}
 
@@ -52,37 +32,41 @@ func (action *Action) GetMappingProperties() map[string]esorm.MappingPropertyFie
 
 func (action *Action) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) error {
 
-	fields := ifields.(*ActionFieldsForCreate)
+	fields := ifields.(*Action)
 
-	action.Name = fields.Name
-	action.IsEnabled = fields.IsEnabled
+	err := action.Core.SetFieldsForCreate(ownerId, &fields.Core)
+	if err != nil {
+		return err
+	}
+
 	action.Settings = fields.Settings
-	action.OwnerId = ownerId
-	action.IsPublic = fields.IsPublic
 
 	return nil
 }
 
 func (action *Action) GetFieldsForRead() (interface{}, error) {
 
-	read := &ActionFieldsForRead{
+	core, err := action.Core.GetFieldsForRead()
+	if err != nil {
+		return nil, err
+	}
+
+	fields := &Action{
+		Core:     core,
 		Settings: action.Settings,
 	}
-	read.Common = action.Common
 
-	return read, nil
+	return fields, nil
 }
 
 func (action *Action) SetFieldsForUpdate(ifields interface{}) error {
 
-	fields := ifields.(*ActionFieldsForUpdate)
+	fields := ifields.(*Action)
 
-	if fields.Name != "" {
-		action.Name = fields.Name
+	err := action.Core.SetFieldsForUpdate(&fields.Core)
+	if err != nil {
+		return nil
 	}
-
-	action.IsEnabled = fields.IsEnabled
-	action.IsPublic = fields.IsPublic
 
 	return nil
 }

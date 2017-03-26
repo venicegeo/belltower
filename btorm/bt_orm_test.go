@@ -14,7 +14,8 @@ func TestActionCRUD(t *testing.T) {
 	assert.NotNil(orm)
 
 	// does create work?
-	c := &ActionFieldsForCreate{Name: "one"}
+	c := &Action{}
+	c.Name = "one"
 	id, err := orm.CreateAction("u", c)
 	assert.NoError(err)
 	assert.NotEmpty(id)
@@ -27,7 +28,8 @@ func TestActionCRUD(t *testing.T) {
 	assert.EqualValues("one", r.Name)
 
 	// update it
-	u := &ActionFieldsForUpdate{Name: "two"}
+	u := &Action{}
+	u.Name = "two"
 	err = orm.UpdateAction(id, u)
 	assert.NoError(err)
 
@@ -55,7 +57,8 @@ func TestFeedCRUD(t *testing.T) {
 	assert.NotNil(orm)
 
 	// does create work?
-	c := &FeedFieldsForCreate{Name: "one"}
+	c := &Feed{}
+	c.Name = "one"
 	id, err := orm.CreateFeed("u", c)
 	assert.NoError(err)
 	assert.NotEmpty(id)
@@ -68,7 +71,8 @@ func TestFeedCRUD(t *testing.T) {
 	assert.EqualValues("one", r.Name)
 
 	// update it
-	u := &FeedFieldsForUpdate{Name: "two"}
+	u := &Feed{}
+	u.Name = "two"
 	err = orm.UpdateFeed(id, u)
 	assert.NoError(err)
 
@@ -96,7 +100,8 @@ func TestRuleCRUD(t *testing.T) {
 	assert.NotNil(orm)
 
 	// does create work?
-	c := &RuleFieldsForCreate{Name: "one"}
+	c := &Rule{}
+	c.Name = "one"
 	id, err := orm.CreateRule("u", c)
 	assert.NoError(err)
 	assert.NotEmpty(id)
@@ -109,7 +114,8 @@ func TestRuleCRUD(t *testing.T) {
 	assert.EqualValues("one", r.Name)
 
 	// update it
-	u := &RuleFieldsForUpdate{Name: "two"}
+	u := &Rule{}
+	u.Name = "two"
 	err = orm.UpdateRule(id, u)
 	assert.NoError(err)
 
@@ -137,7 +143,8 @@ func TestUserCRUD(t *testing.T) {
 	assert.NotNil(orm)
 
 	// does create work?
-	c := &UserFieldsForCreate{Name: "one"}
+	c := &User{}
+	c.Name = "one"
 	id, err := orm.CreateUser("u", c)
 	assert.NoError(err)
 	assert.NotEmpty(id)
@@ -150,7 +157,8 @@ func TestUserCRUD(t *testing.T) {
 	assert.EqualValues("one", r.Name)
 
 	// update it
-	u := &UserFieldsForUpdate{Name: "two"}
+	u := &User{}
+	u.Name = "two"
 	err = orm.UpdateUser(id, u)
 	assert.NoError(err)
 
