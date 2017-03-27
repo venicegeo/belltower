@@ -52,6 +52,14 @@ func NewBtOrm() (*BtOrm, error) {
 	return btOrm, nil
 }
 
+func (orm *BtOrm) Close() error {
+	return orm.Orm.Close()
+}
+
+func (orm *BtOrm) GetAdminID() common.Ident {
+	panic("getadminid")
+}
+
 //---------------------------------------------------------------------
 
 func (orm *BtOrm) CreateAction(requestorID common.Ident, fields *Action) (common.Ident, error) {

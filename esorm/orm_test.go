@@ -59,17 +59,17 @@ func TestMappingGeneration(t *testing.T) {
 	assert := assert.New(t)
 
 	xyzMapping := `{
-		"settings":{
+		"settings":{ 
 		},
 		"mappings":{
 			"xyz_type":{
 				"dynamic":"strict",
 				"properties":{
 					"id":{
-						"type":"string"
+						"type":"keyword"
 					},
 					"name":{
-						"type":"string"
+						"type":"keyword"
 					}
 				}
 			}
@@ -84,10 +84,10 @@ func TestMappingGeneration(t *testing.T) {
 				"dynamic":"strict",
 				"properties":{
 					"id":{
-						"type":"string"
+						"type":"keyword"
 					},
 					"name":{
-						"type":"string"
+						"type":"keyword"
 					},
 					"time":{
 						"type":"date"
@@ -170,6 +170,7 @@ func TestDocumentCRUD(t *testing.T) {
 	assert.NotNil(orm)
 
 	orig := &Demo{Name: "Alice"}
+	orig2 := &Demo{Name: "Zed"}
 
 	err = orm.CreateIndex(orig)
 	assert.NoError(err)
@@ -209,6 +210,65 @@ func TestDocumentCRUD(t *testing.T) {
 	tmp = &Demo{Id: "99999"}
 	_, err = orm.ReadDocument(tmp)
 	assert.Error(err)
+
+	// make a second one
+	id2, err := orm.CreateDocument(orig2)
+	assert.NoError(err)
+	assert.NotEmpty(id2)
+
+	// does read still work?
+	tmp = &Demo{Id: id2}
+	dup, err = orm.ReadDocument(tmp)
+	assert.NoError(err)
+	assert.NotNil(dup)
+	assert.EqualValues(id2, dup.GetId())
+	assert.EqualValues(orig2.Name, dup.(*Demo).Name)
+
+	//	time.Sleep(5 * time.Second)
+
+	// read all
+	tmp = &Demo{}
+	{
+		// quick side trip to test pagination
+		ary, tot, err := orm.ReadAllDocuments(tmp, 0, 1)
+		assert.NoError(err)
+		assert.NotNil(ary)
+		assert.Equal(int64(2), tot)
+		assert.Len(ary, 1)
+
+		ary, tot, err = orm.ReadAllDocuments(tmp, 1, 1)
+		assert.NoError(err)
+		assert.NotNil(ary)
+		assert.Equal(int64(2), tot)
+		assert.Len(ary, 1)
+
+		ary, tot, err = orm.ReadAllDocuments(tmp, 0, 10)
+		assert.NoError(err)
+		assert.NotNil(ary)
+		assert.Equal(int64(2), tot)
+		assert.Len(ary, 2)
+
+		ary, tot, err = orm.ReadAllDocuments(tmp, 10, 10)
+		assert.NoError(err)
+		assert.NotNil(ary)
+		assert.Equal(int64(2), tot)
+		assert.Len(ary, 0)
+	}
+	ary, tot, err := orm.ReadAllDocuments(tmp, 0, 10)
+	assert.NoError(err)
+	assert.NotNil(ary)
+	assert.Equal(int64(2), tot)
+	assert.Len(ary, 2)
+	ary2 := make([]*Demo, len(ary))
+	for i, v := range ary {
+		tmp := &Demo{}
+		err = json.Unmarshal(v, tmp)
+		ary2[i] = tmp
+		assert.NoError(err)
+	}
+	ok1 := (id == ary2[0].GetId() && "Bob" == ary2[0].Name && id2 == ary2[1].GetId() && "Zed" == ary2[1].Name)
+	ok2 := (id2 == ary2[0].GetId() && "Zed" == ary2[0].Name && id == ary2[1].GetId() && "Bob" == ary2[1].Name)
+	assert.True(ok1 || ok2)
 
 	// try delete
 	tmp = &Demo{Id: id}
@@ -371,8 +431,8 @@ func (f *Demo) GetTypeName() string    { return "demo_type" }
 func (f *Demo) GetMappingProperties() map[string]MappingPropertyFields {
 
 	data := map[string]MappingPropertyFields{
-		"id":        MappingPropertyFields{Type: "string"},
-		"name":      MappingPropertyFields{Type: "string"},
+		"id":        MappingPropertyFields{Type: "keyword"},
+		"name":      MappingPropertyFields{Type: "keyword"},
 		"time":      MappingPropertyFields{Type: "date"},
 		"bool":      MappingPropertyFields{Type: "boolean"},
 		"int":       MappingPropertyFields{Type: "integer"},
@@ -470,8 +530,8 @@ func (f *Xyz) GetTypeName() string    { return "xyz_type" }
 func (f *Xyz) GetMappingProperties() map[string]MappingPropertyFields {
 
 	data := map[string]MappingPropertyFields{
-		"id":   MappingPropertyFields{Type: "string"},
-		"name": MappingPropertyFields{Type: "string"},
+		"id":   MappingPropertyFields{Type: "keyword"},
+		"name": MappingPropertyFields{Type: "keyword"},
 	}
 
 	return data

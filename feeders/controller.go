@@ -18,10 +18,10 @@ type Controller struct {
 
 func (c *Controller) Execute() error {
 
-	feederFactory := NewFeederFactory(&RandomFeeder{}, &FileSysFeeder{}}
+	feederFactory := NewFeederFactory(&RandomFeeder{}, &FileSysFeeder{})
 
 	// read feed instances from DB
-	orm := btorm.NewOrm()
+	orm := btorm.NewBtOrm()
 	var currentFeeds []*btorm.Feed := orm.getallfeeds()
 
 	// for each feed in the DB, make an instance of the correct feeder type

@@ -47,6 +47,10 @@ func NewOrm() (*Orm, error) {
 	return orm, nil
 }
 
+func (orm *Orm) Close() error {
+	return nil
+}
+
 func (orm *Orm) CreateDocument(obj Elasticable) (common.Ident, error) {
 
 	if obj.GetId() != "" {
@@ -89,6 +93,32 @@ func (orm *Orm) ReadDocument(obj Elasticable) (Elasticable, error) {
 	}
 
 	return obj, nil
+}
+
+// TODO: this should return something better than a RawMessage, e.g. something Elasticable
+// TODO: for now, always return sorted by id (ascending)
+func (orm *Orm) ReadAllDocuments(obj Elasticable, from int, size int) ([]json.RawMessage, int64, error) {
+
+	result, err := orm.esClient.Search().
+		Index(GetIndexName(obj)).
+		Type(GetTypeName(obj)).
+		Query(elastic.NewMatchAllQuery()).
+		From(from).Size(size).
+		Sort("id", true).
+		Do(orm.ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if result.Hits.TotalHits <= 0 {
+		return nil, 0, nil
+	}
+
+	objs := make([]json.RawMessage, len(result.Hits.Hits))
+	for i, hit := range result.Hits.Hits {
+		objs[i] = *hit.Source
+	}
+	return objs, result.Hits.TotalHits, nil
 }
 
 func (orm *Orm) UpdateDocument(obj Elasticable) error {

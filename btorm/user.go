@@ -19,10 +19,10 @@ type User struct {
 func (user *User) GetLoweredName() string { return "user" }
 
 func (user *User) GetMappingProperties() map[string]esorm.MappingPropertyFields {
-	properties := map[string]esorm.MappingPropertyFields{
-		"role":          esorm.MappingPropertyFields{Type: "string"},
-		"last_login_at": esorm.MappingPropertyFields{Type: "date"},
-	}
+	properties := map[string]esorm.MappingPropertyFields{}
+
+	properties["role"] = esorm.MappingPropertyFields{Type: "string"}
+	properties["last_login_at"] = esorm.MappingPropertyFields{Type: "date"}
 
 	for k, v := range user.Core.GetCoreMappingProperties() {
 		properties[k] = v

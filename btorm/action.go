@@ -17,9 +17,9 @@ type Action struct {
 func (action *Action) GetLoweredName() string { return "action" }
 
 func (action *Action) GetMappingProperties() map[string]esorm.MappingPropertyFields {
-	properties := map[string]esorm.MappingPropertyFields{
-		"settings": esorm.MappingPropertyFields{Type: "object", Dynamic: "true"},
-	}
+	properties := map[string]esorm.MappingPropertyFields{}
+
+	properties["settings"] = esorm.MappingPropertyFields{Type: "object", Dynamic: "true"}
 
 	for k, v := range action.Core.GetCoreMappingProperties() {
 		properties[k] = v

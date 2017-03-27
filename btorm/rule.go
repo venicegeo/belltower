@@ -15,9 +15,9 @@ type Rule struct {
 func (rule *Rule) GetLoweredName() string { return "rule" }
 
 func (rule *Rule) GetMappingProperties() map[string]esorm.MappingPropertyFields {
-	properties := map[string]esorm.MappingPropertyFields{
-		"expression": esorm.MappingPropertyFields{Type: "string"},
-	}
+	properties := map[string]esorm.MappingPropertyFields{}
+
+	properties["expression"] = esorm.MappingPropertyFields{Type: "string"}
 
 	for k, v := range rule.Core.GetCoreMappingProperties() {
 		properties[k] = v
