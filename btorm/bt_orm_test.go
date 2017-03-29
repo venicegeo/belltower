@@ -6,10 +6,101 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestDatabaseOpen(t *testing.T) {
+	assert := assert.New(t)
+
+	exists := func(orm *BtOrm) {
+		exists, err := orm.databaseExists()
+		assert.NoError(err)
+		assert.True(exists)
+	}
+
+	delete := func(orm *BtOrm) {
+		err := orm.deleteDatabase()
+		assert.NoError(err)
+	}
+
+	create := func() *BtOrm {
+		orm, err := NewBtOrm("", OrmOptionCreate)
+		if err != nil {
+			return nil
+		}
+		return orm
+	}
+
+	open := func() *BtOrm {
+		orm, err := NewBtOrm("", OrmOptionOpen)
+		if err != nil {
+			return nil
+		}
+		return orm
+	}
+
+	openOrCreate := func() *BtOrm {
+		orm, err := NewBtOrm("", OrmOptionOpenOrCreate)
+		if err != nil {
+			return nil
+		}
+		return orm
+	}
+
+	close := func(orm *BtOrm) {
+		err := orm.Close()
+		assert.NoError(err)
+	}
+
+	forceClean := func() {
+		orm := openOrCreate()
+		assert.NotNil(orm)
+		delete(orm)
+		close(orm)
+	}
+
+	var orm *BtOrm
+
+	forceClean()
+
+	// db doesn't exist: open() should fail
+	orm = open()
+	assert.Nil(orm)
+
+	// db doesn't exist, create should succeed
+	orm = create()
+	assert.NotNil(orm)
+	exists(orm)
+	close(orm)
+
+	// db does exist: create() should succeed (by overwriting)
+	orm = create()
+	assert.NotNil(orm)
+	close(orm)
+
+	// db does exist: open() should succeed
+	orm = open()
+	assert.NotNil(orm)
+	exists(orm)
+	close(orm)
+
+	forceClean()
+
+	// db doesn't exist, create() should succeed
+	orm = openOrCreate()
+	assert.NotNil(orm)
+	exists(orm)
+	close(orm)
+
+	// db does exist, open() should succeed
+	orm = openOrCreate()
+	assert.NotNil(orm)
+	exists(orm)
+	delete(orm)
+	close(orm)
+}
+
 func TestActionCRUD(t *testing.T) {
 	assert := assert.New(t)
 
-	orm, err := NewBtOrm()
+	orm, err := NewBtOrm("", OrmOptionCreate)
 	assert.NoError(err)
 	assert.NotNil(orm)
 
@@ -52,7 +143,7 @@ func TestActionCRUD(t *testing.T) {
 func TestFeedCRUD(t *testing.T) {
 	assert := assert.New(t)
 
-	orm, err := NewBtOrm()
+	orm, err := NewBtOrm("", OrmOptionCreate)
 	assert.NoError(err)
 	assert.NotNil(orm)
 
@@ -95,7 +186,7 @@ func TestFeedCRUD(t *testing.T) {
 func TestRuleCRUD(t *testing.T) {
 	assert := assert.New(t)
 
-	orm, err := NewBtOrm()
+	orm, err := NewBtOrm("", OrmOptionCreate)
 	assert.NoError(err)
 	assert.NotNil(orm)
 
@@ -138,7 +229,7 @@ func TestRuleCRUD(t *testing.T) {
 func TestUserCRUD(t *testing.T) {
 	assert := assert.New(t)
 
-	orm, err := NewBtOrm()
+	orm, err := NewBtOrm("", OrmOptionCreate)
 	assert.NoError(err)
 	assert.NotNil(orm)
 

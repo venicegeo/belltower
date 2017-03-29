@@ -1,6 +1,8 @@
 package btorm
 
 import (
+	"fmt"
+
 	"github.com/venicegeo/belltower/common"
 	"github.com/venicegeo/belltower/esorm"
 )
@@ -8,19 +10,25 @@ import (
 //---------------------------------------------------------------------
 
 type BtOrm struct {
-	Orm *esorm.Orm
+	Orm         *esorm.Orm
+	prefix      string
+	objectTypes []esorm.Elasticable
 }
+
+type OrmOption int
+
+const (
+	OrmOptionCreate       OrmOption = iota // removes old db if present, then creates
+	OrmOptionOpen                          // fails if not already exists
+	OrmOptionOpenOrCreate                  // if exists then open, else create
+)
 
 //---------------------------------------------------------------------
 
-func NewBtOrm() (*BtOrm, error) {
+func NewBtOrm(prefix string, ormOption OrmOption) (*BtOrm, error) {
 	orm, err := esorm.NewOrm()
 	if err != nil {
 		return nil, err
-	}
-
-	btOrm := &BtOrm{
-		Orm: orm,
 	}
 
 	types := []esorm.Elasticable{
@@ -30,26 +38,108 @@ func NewBtOrm() (*BtOrm, error) {
 		&User{},
 	}
 
-	for _, t := range types {
-		exists, err := orm.IndexExists(t)
+	btOrm := &BtOrm{
+		Orm:         orm,
+		prefix:      prefix,
+		objectTypes: types,
+	}
+
+	switch ormOption {
+	case OrmOptionCreate:
+		err = btOrm.createDatabase()
 		if err != nil {
 			return nil, err
 		}
-
+	case OrmOptionOpen:
+		err = btOrm.openDatabase()
+		if err != nil {
+			return nil, err
+		}
+	case OrmOptionOpenOrCreate:
+		exists, err := btOrm.databaseExists()
 		if exists {
-			err = orm.DeleteIndex(t)
+			err = btOrm.createDatabase()
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			err = btOrm.createDatabase()
 			if err != nil {
 				return nil, err
 			}
 		}
-
-		err = orm.CreateIndex(t)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return btOrm, nil
+}
+
+func (btOrm *BtOrm) databaseExists() (bool, error) {
+
+	for _, t := range btOrm.objectTypes {
+		exists, err := btOrm.Orm.IndexExists(t)
+		if err != nil {
+			return false, err
+		}
+
+		if !exists {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func (btOrm *BtOrm) createDatabase() error {
+
+	err := btOrm.deleteDatabase()
+	if err != nil {
+		return err
+	}
+
+	for _, t := range btOrm.objectTypes {
+		err = btOrm.Orm.CreateIndex(t)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (btOrm *BtOrm) openDatabase() error {
+
+	exists, err := btOrm.databaseExists()
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return fmt.Errorf("database does not exist")
+	}
+
+	// nothing to actually do here
+
+	return nil
+}
+
+func (btOrm *BtOrm) deleteDatabase() error {
+
+	// try to delete all the indexes
+
+	for _, t := range btOrm.objectTypes {
+		exists, err := btOrm.Orm.IndexExists(t)
+		if err != nil {
+			return err
+		}
+
+		if exists {
+			err = btOrm.Orm.DeleteIndex(t)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (orm *BtOrm) Close() error {
