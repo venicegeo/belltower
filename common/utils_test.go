@@ -67,3 +67,36 @@ func TestGetMapValue(t *testing.T) {
 	_, err = GetMapValueAsDuration(m, "dd")
 	assert.Error(err)
 }
+
+func TestObjectEquality(t *testing.T) {
+	assert := assert.New(t)
+
+	a := map[string]string{
+		"A": "a",
+		"B": "b",
+	}
+	b := map[string]string{
+		"B": "b",
+		"A": "a",
+	}
+	c := map[string]string{
+		"A": "a",
+	}
+	d := map[string]string{
+		"B": "b",
+	}
+	var bb interface{} = b
+
+	assert.True(ObjectsAreEqual(a, b))
+	assert.True(ObjectsAreEqualValues(a, b))
+
+	assert.False(ObjectsAreEqual(a, c))
+	assert.False(ObjectsAreEqualValues(a, c))
+	assert.False(ObjectsAreEqual(a, d))
+	assert.False(ObjectsAreEqualValues(a, d))
+
+	assert.True(ObjectsAreEqual(b, bb))
+	assert.True(ObjectsAreEqual(a, bb))
+	assert.True(ObjectsAreEqualValues(b, bb))
+	assert.True(ObjectsAreEqualValues(a, bb))
+}

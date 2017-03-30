@@ -1,7 +1,12 @@
 package common
 
-import "fmt"
-import "time"
+import (
+	"fmt"
+	"reflect"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func GetMapValueAsInt(m map[string]interface{}, key string) (int, error) {
 	value, ok := m[key]
@@ -66,4 +71,56 @@ func GetMapValueAsDuration(m map[string]interface{}, key string) (time.Duration,
 	//	}
 	//	return ret, nil
 	return t, nil
+}
+
+// ObjectsAreEqual determines if two objects are considered equal.
+//
+// taken from testify's assertions.go
+func ObjectsAreEqual(expected, actual interface{}) bool {
+
+	if expected == nil || actual == nil {
+		return expected == actual
+	}
+
+	return reflect.DeepEqual(expected, actual)
+
+}
+
+// ObjectsAreEqualValues gets whether two objects are equal, or if their
+// values are equal.
+//
+// taken from testify's assertions.go
+func ObjectsAreEqualValues(expected, actual interface{}) bool {
+	if ObjectsAreEqual(expected, actual) {
+		return true
+	}
+
+	actualType := reflect.TypeOf(actual)
+	if actualType == nil {
+		return false
+	}
+	expectedValue := reflect.ValueOf(expected)
+	if expectedValue.IsValid() && expectedValue.Type().ConvertibleTo(actualType) {
+		// Attempt comparison after type conversion
+		return reflect.DeepEqual(expectedValue.Convert(actualType).Interface(), actual)
+	}
+
+	return false
+}
+
+func AreMapsEqual(a map[string]interface{}, b map[string]interface{}, eq func(interface{}, interface{}) bool) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for k, v := range a {
+		vv, ok := b[k]
+		if !ok {
+			return false
+		}
+		if !assert.ObjectsAreEqualValues(v, vv) {
+			return false
+		}
+	}
+	return true
 }

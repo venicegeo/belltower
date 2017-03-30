@@ -10,16 +10,6 @@ import (
 	"github.com/venicegeo/belltower/common"
 )
 
-func mapsEqual(assert *assert.Assertions, a map[string]interface{}, b map[string]interface{}) {
-	assert.Equal(len(a), len(b))
-
-	for k, v := range a {
-		vv, ok := b[k]
-		assert.True(ok)
-		assert.EqualValues(v, vv)
-	}
-}
-
 func TestIndexOperations(t *testing.T) {
 	assert := assert.New(t)
 
@@ -332,7 +322,7 @@ func TestDemoMappings(t *testing.T) {
 	assert.EqualValues(feed.Int, g.(*Demo).Int)
 	assert.EqualValues(feed.Float, g.(*Demo).Float)
 	assert.EqualValues(feed.IntArray, g.(*Demo).IntArray)
-	mapsEqual(assert, feed.Object.(map[string]interface{}), g.(*Demo).Object.(map[string]interface{}))
+	assert.True(common.ObjectsAreEqual(feed.Object.(map[string]interface{}), g.(*Demo).Object.(map[string]interface{})))
 	assert.EqualValues(feed.Core, g.(*Demo).Core)
 	assert.EqualValues(feed.Nested, g.(*Demo).Nested)
 	assert.EqualValues(feed.Nested[1].B1, g.(*Demo).Nested[1].B1)
