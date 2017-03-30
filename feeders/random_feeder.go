@@ -11,8 +11,10 @@ import (
 // it will give the server a message. It sleeps for the given number of seconds between
 // checks.
 
+const RandomFeederId common.Ident = "73c9b03e-5455-4aa6-8c64-b1abeddf3763"
+
 func init() {
-	registerFeed("100", &RandomFeeder{})
+	feederFactory.register(&RandomFeeder{})
 }
 
 type RandomEventData struct {
@@ -20,19 +22,40 @@ type RandomEventData struct {
 }
 
 type RandomSettings struct {
-	Target int // value in range [0..100], 20 means will hit 20% of the time
+	Target int   // value in range [0..100], 20 means will hit 20% of the time
+	Seed   int64 // to allow for debugging; if zero, will use system default
 }
 
 type RandomFeeder struct {
+	feed     Feed
+	settings RandomSettings
+	random   *rand.Rand
+}
+
+func (_ *RandomFeeder) Create(feed Feed) (Feeder, error) {
+	settings := feed.SettingsValues.(RandomSettings)
+	seed := settings.Seed
+	if seed == 0 {
+		seed = time.Now().UnixNano()
+	}
+
+	f := &RandomFeeder{
+		feed:     feed,
+		settings: settings,
+		random:   rand.New(rand.NewSource(seed)),
+	}
+
+	return f, nil
 }
 
 func (r *RandomFeeder) GetName() string { return "RandomFeeder" }
 
-func (r *RandomFeeder) Id() common.Ident { return "100" }
+func (r *RandomFeeder) Id() common.Ident { return RandomFeederId }
 
 func (r *RandomFeeder) SettingsSchema() map[string]string {
 	return map[string]string{
 		"Target": "integer",
+		"Seed":   "integer",
 	}
 }
 
@@ -42,19 +65,18 @@ func (r *RandomFeeder) EventSchema() map[string]string {
 	}
 }
 
-func (r *RandomFeeder) Poll(feedId common.Ident, isettings interface{}) (*Event, error) {
-	settings := isettings.(RandomSettings)
+func (r *RandomFeeder) Poll() (interface{}, error) {
+	settings := r.feed.SettingsValues.(RandomSettings)
 
-	x := rand.Intn(100)
+	x := r.random.Intn(100)
 	if x > settings.Target {
 		// not a hit
 		return nil, nil
 	}
 
-	e := &Event{
-		TimeStamp: time.Now(),
-		FeedId:    feedId,
-		Data:      &RandomEventData{Value: x},
+	e := &RandomEventData{
+		Value: x,
 	}
+
 	return e, nil
 }
