@@ -90,6 +90,10 @@ func (f *FeederFactory) register(feeder Feeder) {
 	if f.factories == nil {
 		f.factories = map[common.Ident]FeederFactoryFunc{}
 	}
+	_, ok := f.factories[feeder.Id()]
+	if ok {
+		panic("factory already registered: " + feeder.Id())
+	}
 	f.factories[feeder.Id()] = feeder.Create
 }
 
