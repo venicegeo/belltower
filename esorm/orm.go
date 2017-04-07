@@ -97,7 +97,7 @@ func (orm *Orm) ReadDocument(obj Elasticable) (Elasticable, error) {
 
 // TODO: the passed-in array should be sufficient, ought not return it too
 // TODO: for now, always return sorted by id (ascending)
-func (orm *Orm) ReadAllDocuments(objs []Elasticable, from int, size int) ([]Elasticable, int64, error) {
+func (orm *Orm) ReadDocuments(objs []Elasticable, from int, size int) ([]Elasticable, int64, error) {
 
 	if len(objs) < size {
 		return nil, 0, fmt.Errorf("array not long enough")
@@ -223,60 +223,6 @@ func (orm *Orm) CreateIndex(e Elasticable) error {
 
 	if !result.Acknowledged {
 		return fmt.Errorf("CreateIndex() not acknowledged")
-	}
-
-	return nil
-}
-
-//---------------------------------------------------------------------
-
-func (orm *Orm) CreateThing(requestorID common.Ident, thing Elasticable, fields interface{}) (common.Ident, error) {
-
-	err := thing.SetFieldsForCreate(requestorID, fields)
-	if err != nil {
-		return "", err
-	}
-	id, err := orm.CreateDocument(thing)
-	if err != nil {
-		return "", err
-	}
-	return id, nil
-}
-
-func (orm *Orm) ReadThing(thing Elasticable) (interface{}, error) {
-	thing, err := orm.ReadDocument(thing)
-	if err != nil {
-		return nil, err
-	}
-
-	fields, err := thing.GetFieldsForRead()
-	if err != nil {
-		return nil, err
-	}
-
-	return fields, nil
-}
-
-func (orm *Orm) UpdateThing(thing Elasticable, fields interface{}) error {
-
-	err := thing.SetFieldsForUpdate(fields)
-	if err != nil {
-		return err
-	}
-
-	err = orm.UpdateDocument(thing)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (orm *Orm) DeleteThing(thing Elasticable) error {
-
-	err := orm.DeleteDocument(thing)
-	if err != nil {
-		return err
 	}
 
 	return nil
