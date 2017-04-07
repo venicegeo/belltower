@@ -217,47 +217,59 @@ func TestDocumentCRUD(t *testing.T) {
 	//	time.Sleep(5 * time.Second)
 
 	// read all
-	tmp = &Demo{}
+	makearay := func() []Elasticable {
+		ary := make([]Elasticable, 10)
+		for i := range ary {
+			ary[i] = &Demo{}
+		}
+		return ary
+	}
 	{
 		// quick side trip to test pagination
-		ary, tot, err := orm.ReadAllDocuments(tmp, 0, 1)
+		ary0 := makearay()
+		ary1, tot, err := orm.ReadAllDocuments(ary0, 0, 1)
 		assert.NoError(err)
-		assert.NotNil(ary)
+		assert.NotNil(ary1)
 		assert.Equal(int64(2), tot)
-		assert.Len(ary, 1)
+		assert.Len(ary1, 1)
 
-		ary, tot, err = orm.ReadAllDocuments(tmp, 1, 1)
+		ary2 := makearay()
+		ary3, tot, err := orm.ReadAllDocuments(ary2, 1, 1)
 		assert.NoError(err)
-		assert.NotNil(ary)
+		assert.NotNil(ary3)
 		assert.Equal(int64(2), tot)
-		assert.Len(ary, 1)
+		assert.Len(ary3, 1)
 
-		ary, tot, err = orm.ReadAllDocuments(tmp, 0, 10)
+		ary4 := makearay()
+		ary5, tot, err := orm.ReadAllDocuments(ary4, 0, 10)
 		assert.NoError(err)
-		assert.NotNil(ary)
+		assert.NotNil(ary5)
 		assert.Equal(int64(2), tot)
-		assert.Len(ary, 2)
+		assert.Len(ary5, 2)
 
-		ary, tot, err = orm.ReadAllDocuments(tmp, 10, 10)
+		ary6 := makearay()
+		ary7, tot, err := orm.ReadAllDocuments(ary6, 10, 10)
 		assert.NoError(err)
-		assert.NotNil(ary)
+		assert.NotNil(ary7)
 		assert.Equal(int64(2), tot)
-		assert.Len(ary, 0)
+		assert.Len(ary7, 0)
 	}
-	ary, tot, err := orm.ReadAllDocuments(tmp, 0, 10)
+	ary8 := makearay()
+	ary9, tot, err := orm.ReadAllDocuments(ary8, 0, 10)
 	assert.NoError(err)
-	assert.NotNil(ary)
+	assert.NotNil(ary9)
 	assert.Equal(int64(2), tot)
-	assert.Len(ary, 2)
-	ary2 := make([]*Demo, len(ary))
+	assert.Len(ary9, 2)
+	/*ary2 := make([]*Demo, len(ary))
 	for i, v := range ary {
 		tmp := &Demo{}
 		err = json.Unmarshal(v, tmp)
 		ary2[i] = tmp
 		assert.NoError(err)
-	}
-	ok1 := (id == ary2[0].GetId() && "Bob" == ary2[0].Name && id2 == ary2[1].GetId() && "Zed" == ary2[1].Name)
-	ok2 := (id2 == ary2[0].GetId() && "Zed" == ary2[0].Name && id == ary2[1].GetId() && "Bob" == ary2[1].Name)
+	}*/
+
+	ok1 := (id == ary9[0].GetId() /*&& "Bob" == ary2[0].Name*/ && id2 == ary9[1].GetId() /*&& "Zed" == ary2[1].Name*/)
+	ok2 := (id2 == ary9[0].GetId() /*&& "Zed" == ary2[0].Name*/ && id == ary9[1].GetId() /*&& "Bob" == ary2[1].Name*/)
 	assert.True(ok1 || ok2)
 
 	// try delete
@@ -322,7 +334,7 @@ func TestDemoMappings(t *testing.T) {
 	assert.EqualValues(feed.Int, g.(*Demo).Int)
 	assert.EqualValues(feed.Float, g.(*Demo).Float)
 	assert.EqualValues(feed.IntArray, g.(*Demo).IntArray)
-	assert.True(common.ObjectsAreEqual(feed.Object.(map[string]interface{}), g.(*Demo).Object.(map[string]interface{})))
+	assert.True(common.MapsAreEqualValues(feed.Object.(map[string]interface{}), g.(*Demo).Object.(map[string]interface{})))
 	assert.EqualValues(feed.Core, g.(*Demo).Core)
 	assert.EqualValues(feed.Nested, g.(*Demo).Nested)
 	assert.EqualValues(feed.Nested[1].B1, g.(*Demo).Nested[1].B1)

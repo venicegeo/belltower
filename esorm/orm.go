@@ -95,13 +95,17 @@ func (orm *Orm) ReadDocument(obj Elasticable) (Elasticable, error) {
 	return obj, nil
 }
 
-// TODO: this should return something better than a RawMessage, e.g. something Elasticable
+// TODO: the passed-in array should be sufficient, ought not return it too
 // TODO: for now, always return sorted by id (ascending)
-func (orm *Orm) ReadAllDocuments(obj Elasticable, from int, size int) ([]json.RawMessage, int64, error) {
+func (orm *Orm) ReadAllDocuments(objs []Elasticable, from int, size int) ([]Elasticable, int64, error) {
+
+	if len(objs) < size {
+		return nil, 0, fmt.Errorf("array not long enough")
+	}
 
 	result, err := orm.esClient.Search().
-		Index(GetIndexName(obj)).
-		Type(GetTypeName(obj)).
+		Index(GetIndexName(objs[0])).
+		Type(GetTypeName(objs[0])).
 		Query(elastic.NewMatchAllQuery()).
 		From(from).Size(size).
 		Sort("id", true).
@@ -114,10 +118,17 @@ func (orm *Orm) ReadAllDocuments(obj Elasticable, from int, size int) ([]json.Ra
 		return nil, 0, nil
 	}
 
-	objs := make([]json.RawMessage, len(result.Hits.Hits))
-	for i, hit := range result.Hits.Hits {
-		objs[i] = *hit.Source
+	i := 0
+	for _, hit := range result.Hits.Hits {
+		err = json.Unmarshal(*hit.Source, objs[i])
+		if err != nil {
+			return nil, 0, err
+		}
+		i++
 	}
+
+	objs = objs[0:i]
+
 	return objs, result.Hits.TotalHits, nil
 }
 
