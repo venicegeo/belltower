@@ -14,8 +14,6 @@ type Action struct {
 
 //---------------------------------------------------------------------
 
-func (action *Action) GetLoweredName() string { return "action" }
-
 func (action *Action) GetMappingProperties() map[string]esorm.MappingPropertyFields {
 	properties := map[string]esorm.MappingPropertyFields{}
 

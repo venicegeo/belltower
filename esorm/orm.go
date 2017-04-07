@@ -210,11 +210,15 @@ func (orm *Orm) CreateIndex(e Elasticable) error {
 
 	mapping := NewMapping(e)
 	byts, err := json.Marshal(mapping)
-	//log.Printf("%s", string(byts))
+
 	if err != nil {
 		return err
 	}
 	mappingString := string(byts)
+
+	if strings.Contains(mappingString, "string") {
+		panic("obselete datatype \"string\" in mapping for index " + index)
+	}
 
 	result, err := orm.esClient.CreateIndex(index).BodyString(mappingString).Do(orm.ctx)
 	if err != nil {

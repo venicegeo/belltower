@@ -21,12 +21,10 @@ type Feed struct {
 
 //---------------------------------------------------------------------
 
-func (feed *Feed) GetLoweredName() string { return "feed" }
-
 func (feed *Feed) GetMappingProperties() map[string]esorm.MappingPropertyFields {
 	properties := map[string]esorm.MappingPropertyFields{}
 
-	properties["feeder_id"] = esorm.MappingPropertyFields{Type: "string"}
+	properties["feeder_id"] = esorm.MappingPropertyFields{Type: "keyword"}
 	properties["message_count"] = esorm.MappingPropertyFields{Type: "integer"}
 	properties["polling_interval"] = esorm.MappingPropertyFields{Type: "integer"}
 	properties["polling_end_at"] = esorm.MappingPropertyFields{Type: "date"}

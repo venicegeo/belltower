@@ -29,13 +29,13 @@ func (c Core) String() string { return fmt.Sprintf("a.%s: %s", c.Id, c.Name) }
 
 func (c *Core) GetCoreMappingProperties() map[string]esorm.MappingPropertyFields {
 	properties := map[string]esorm.MappingPropertyFields{
-		"id":         esorm.MappingPropertyFields{Type: "string"},
-		"name":       esorm.MappingPropertyFields{Type: "string"},
+		"id":         esorm.MappingPropertyFields{Type: "keyword"},
+		"name":       esorm.MappingPropertyFields{Type: "keyword"},
 		"created_at": esorm.MappingPropertyFields{Type: "date"},
 		"updated_at": esorm.MappingPropertyFields{Type: "date"},
 		"is_enabled": esorm.MappingPropertyFields{Type: "boolean"},
 		"is_public":  esorm.MappingPropertyFields{Type: "boolean"},
-		"owner_id":   esorm.MappingPropertyFields{Type: "string"},
+		"owner_id":   esorm.MappingPropertyFields{Type: "keyword"},
 	}
 
 	return properties
