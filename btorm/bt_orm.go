@@ -153,14 +153,14 @@ func (orm *BtOrm) GetAdminID() common.Ident {
 //---------------------------------------------------------------------
 
 func (orm *BtOrm) CreateAction(requestorID common.Ident, fields *Action) (common.Ident, error) {
-	action := &Action{}
-	return orm.Orm.CreateThing(requestorID, action, fields)
+	fields.OwnerId = requestorID
+	return orm.Orm.CreateDocument(fields)
 }
 
 func (orm *BtOrm) ReadAction(id common.Ident) (*Action, error) {
 	action := &Action{}
 	action.Id = id
-	fields, err := orm.Orm.ReadThing(action)
+	fields, err := orm.Orm.ReadDocument(action)
 	if err != nil {
 		return nil, err
 	}
@@ -168,28 +168,37 @@ func (orm *BtOrm) ReadAction(id common.Ident) (*Action, error) {
 }
 
 func (orm *BtOrm) UpdateAction(id common.Ident, fields *Action) error {
-	action := &Action{}
-	action.Id = id
-	return orm.Orm.UpdateThing(action, fields)
+	fields.Id = id
+	return orm.Orm.UpdateDocument(fields)
 }
 
 func (orm *BtOrm) DeleteAction(id common.Ident) error {
 	action := &Action{}
 	action.Id = id
-	return orm.Orm.DeleteThing(action)
+	return orm.Orm.DeleteDocument(action)
 }
 
 //---------------------------------------------------------------------
 
 func (orm *BtOrm) CreateFeed(requestorID common.Ident, fields *Feed) (common.Ident, error) {
-	feed := &Feed{}
-	return orm.Orm.CreateThing(requestorID, feed, fields)
+	fields.OwnerId = requestorID
+	return orm.Orm.CreateDocument(fields)
 }
 
 func (orm *BtOrm) ReadFeed(id common.Ident) (*Feed, error) {
 	feed := &Feed{}
 	feed.Id = id
-	fields, err := orm.Orm.ReadThing(feed)
+	fields, err := orm.Orm.ReadDocument(feed)
+	if err != nil {
+		return nil, err
+	}
+	return fields.(*Feed), nil
+}
+
+func (orm *BtOrm) ReadAllFeeds(id common.Ident) (*Feed, error) {
+	feed := &Feed{}
+	feed.Id = id
+	fields, err := orm.Orm.ReadDocument(feed)
 	if err != nil {
 		return nil, err
 	}
@@ -197,28 +206,27 @@ func (orm *BtOrm) ReadFeed(id common.Ident) (*Feed, error) {
 }
 
 func (orm *BtOrm) UpdateFeed(id common.Ident, fields *Feed) error {
-	feed := &Feed{}
-	feed.Id = id
-	return orm.Orm.UpdateThing(feed, fields)
+	fields.Id = id
+	return orm.Orm.UpdateDocument(fields)
 }
 
 func (orm *BtOrm) DeleteFeed(id common.Ident) error {
 	feed := &Feed{}
 	feed.Id = id
-	return orm.Orm.DeleteThing(feed)
+	return orm.Orm.DeleteDocument(feed)
 }
 
 //---------------------------------------------------------------------
 
 func (orm *BtOrm) CreateRule(requestorID common.Ident, fields *Rule) (common.Ident, error) {
-	rule := &Rule{}
-	return orm.Orm.CreateThing(requestorID, rule, fields)
+	fields.OwnerId = requestorID
+	return orm.Orm.CreateDocument(fields)
 }
 
 func (orm *BtOrm) ReadRule(id common.Ident) (*Rule, error) {
 	rule := &Rule{}
 	rule.Id = id
-	fields, err := orm.Orm.ReadThing(rule)
+	fields, err := orm.Orm.ReadDocument(rule)
 	if err != nil {
 		return nil, err
 	}
@@ -226,28 +234,27 @@ func (orm *BtOrm) ReadRule(id common.Ident) (*Rule, error) {
 }
 
 func (orm *BtOrm) UpdateRule(id common.Ident, fields *Rule) error {
-	rule := &Rule{}
-	rule.Id = id
-	return orm.Orm.UpdateThing(rule, fields)
+	fields.Id = id
+	return orm.Orm.UpdateDocument(fields)
 }
 
 func (orm *BtOrm) DeleteRule(id common.Ident) error {
 	rule := &Rule{}
 	rule.Id = id
-	return orm.Orm.DeleteThing(rule)
+	return orm.Orm.DeleteDocument(rule)
 }
 
 //---------------------------------------------------------------------
 
 func (orm *BtOrm) CreateUser(requestorID common.Ident, fields *User) (common.Ident, error) {
-	user := &User{}
-	return orm.Orm.CreateThing(requestorID, user, fields)
+	fields.OwnerId = requestorID
+	return orm.Orm.CreateDocument(fields)
 }
 
 func (orm *BtOrm) ReadUser(id common.Ident) (*User, error) {
 	user := &User{}
 	user.Id = id
-	fields, err := orm.Orm.ReadThing(user)
+	fields, err := orm.Orm.ReadDocument(user)
 	if err != nil {
 		return nil, err
 	}
@@ -255,13 +262,12 @@ func (orm *BtOrm) ReadUser(id common.Ident) (*User, error) {
 }
 
 func (orm *BtOrm) UpdateUser(id common.Ident, fields *User) error {
-	user := &User{}
-	user.Id = id
-	return orm.Orm.UpdateThing(user, fields)
+	fields.Id = id
+	return orm.Orm.UpdateDocument(fields)
 }
 
 func (orm *BtOrm) DeleteUser(id common.Ident) error {
 	user := &User{}
 	user.Id = id
-	return orm.Orm.DeleteThing(user)
+	return orm.Orm.DeleteDocument(user)
 }

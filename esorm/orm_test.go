@@ -48,24 +48,6 @@ func TestIndexOperations(t *testing.T) {
 func TestMappingGeneration(t *testing.T) {
 	assert := assert.New(t)
 
-	xyzMapping := `{
-		"settings":{ 
-		},
-		"mappings":{
-			"xyz_type":{
-				"dynamic":"strict",
-				"properties":{
-					"id":{
-						"type":"keyword"
-					},
-					"name":{
-						"type":"keyword"
-					}
-				}
-			}
-		}
-	}`
-
 	demoMapping := `{
 		"settings":{
 		},
@@ -136,7 +118,6 @@ func TestMappingGeneration(t *testing.T) {
 		expected string
 	}
 	data := []Data{
-		Data{&Xyz{}, xyzMapping},
 		Data{&Demo{}, demoMapping},
 	}
 
@@ -227,35 +208,35 @@ func TestDocumentCRUD(t *testing.T) {
 	{
 		// quick side trip to test pagination
 		ary0 := makearay()
-		ary1, tot, err := orm.ReadAllDocuments(ary0, 0, 1)
+		ary1, tot, err := orm.ReadDocuments(ary0, 0, 1)
 		assert.NoError(err)
 		assert.NotNil(ary1)
 		assert.Equal(int64(2), tot)
 		assert.Len(ary1, 1)
 
 		ary2 := makearay()
-		ary3, tot, err := orm.ReadAllDocuments(ary2, 1, 1)
+		ary3, tot, err := orm.ReadDocuments(ary2, 1, 1)
 		assert.NoError(err)
 		assert.NotNil(ary3)
 		assert.Equal(int64(2), tot)
 		assert.Len(ary3, 1)
 
 		ary4 := makearay()
-		ary5, tot, err := orm.ReadAllDocuments(ary4, 0, 10)
+		ary5, tot, err := orm.ReadDocuments(ary4, 0, 10)
 		assert.NoError(err)
 		assert.NotNil(ary5)
 		assert.Equal(int64(2), tot)
 		assert.Len(ary5, 2)
 
 		ary6 := makearay()
-		ary7, tot, err := orm.ReadAllDocuments(ary6, 10, 10)
+		ary7, tot, err := orm.ReadDocuments(ary6, 10, 10)
 		assert.NoError(err)
 		assert.NotNil(ary7)
 		assert.Equal(int64(2), tot)
 		assert.Len(ary7, 0)
 	}
 	ary8 := makearay()
-	ary9, tot, err := orm.ReadAllDocuments(ary8, 0, 10)
+	ary9, tot, err := orm.ReadDocuments(ary8, 0, 10)
 	assert.NoError(err)
 	assert.NotNil(ary9)
 	assert.Equal(int64(2), tot)
@@ -338,61 +319,6 @@ func TestDemoMappings(t *testing.T) {
 	assert.EqualValues(feed.Core, g.(*Demo).Core)
 	assert.EqualValues(feed.Nested, g.(*Demo).Nested)
 	assert.EqualValues(feed.Nested[1].B1, g.(*Demo).Nested[1].B1)
-}
-
-func TestThingCRUD(t *testing.T) {
-	assert := assert.New(t)
-
-	orm, err := NewOrm()
-	assert.NoError(err)
-	assert.NotNil(orm)
-
-	e := &Xyz{}
-
-	exists, err := orm.IndexExists(e)
-	assert.NoError(err)
-	if exists {
-		err = orm.DeleteIndex(e)
-		assert.NoError(err)
-	}
-
-	err = orm.CreateIndex(e)
-	assert.NoError(err)
-
-	// does create work?
-	c := &XyzCreateFields{Name: "one"}
-	id, err := orm.CreateThing("u", e, c)
-	assert.NoError(err)
-	assert.NotEmpty(id)
-
-	tmp := &Xyz{Id: id}
-
-	// does read work?
-	r, err := orm.ReadThing(tmp)
-	assert.NoError(err)
-	assert.NotNil(r)
-	assert.EqualValues(id, r.(*XyzReadFields).Id)
-	assert.EqualValues("one", r.(*XyzReadFields).Name)
-
-	// update it
-	u := &XyzUpdateFields{Name: "two"}
-	err = orm.UpdateThing(tmp, u)
-	assert.NoError(err)
-
-	// read again, to check
-	r, err = orm.ReadThing(tmp)
-	assert.NoError(err)
-	assert.NotNil(r)
-	assert.EqualValues(id, r.(*XyzReadFields).Id)
-	assert.EqualValues("two", r.(*XyzReadFields).Name)
-
-	// try delete
-	err = orm.DeleteThing(tmp)
-	assert.NoError(err)
-
-	// read again, to make sure got deleted
-	_, err = orm.ReadThing(tmp)
-	assert.Error(err)
 }
 
 //---------------------------------------------------------------------
@@ -482,68 +408,6 @@ func (f *Demo) GetId() common.Ident {
 }
 
 func (f *Demo) SetId() common.Ident {
-	f.Id = common.NewId()
-	return f.Id
-}
-
-//---------------------------------------------------------------------
-
-type Xyz struct {
-	Id   common.Ident `json:"id"`
-	Name string       `json:"name"`
-}
-
-type XyzCreateFields struct {
-	Name string
-}
-
-type XyzReadFields struct {
-	Id   common.Ident
-	Name string
-}
-
-type XyzUpdateFields struct {
-	Name string
-}
-
-func (xyz *Xyz) SetFieldsForCreate(ownerId common.Ident, fields interface{}) error {
-	xyz.Name = fields.(*XyzCreateFields).Name
-	return nil
-}
-
-func (xyz *Xyz) GetFieldsForRead() (interface{}, error) {
-	fields := &XyzReadFields{}
-	fields.Id = xyz.Id
-	fields.Name = xyz.Name
-	return fields, nil
-}
-
-func (xyz *Xyz) SetFieldsForUpdate(fields interface{}) error {
-	xyz.Name = fields.(*XyzUpdateFields).Name
-	return nil
-}
-
-func (F *Xyz) String() string { panic(1) }
-
-func (f *Xyz) GetLoweredName() string { return "xyz" }
-func (f *Xyz) GetIndexName() string   { return "xyz_index" }
-func (f *Xyz) GetTypeName() string    { return "xyz_type" }
-
-func (f *Xyz) GetMappingProperties() map[string]MappingPropertyFields {
-
-	data := map[string]MappingPropertyFields{
-		"id":   MappingPropertyFields{Type: "keyword"},
-		"name": MappingPropertyFields{Type: "keyword"},
-	}
-
-	return data
-}
-
-func (f *Xyz) GetId() common.Ident {
-	return f.Id
-}
-
-func (f *Xyz) SetId() common.Ident {
 	f.Id = common.NewId()
 	return f.Id
 }
