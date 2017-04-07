@@ -131,6 +131,29 @@ func TestActionCRUD(t *testing.T) {
 	assert.EqualValues(id, r.Id)
 	assert.EqualValues("two", r.Name)
 
+	{
+		// does create work again?
+		c2 := &Action{}
+		c2.Name = "oneone"
+		id2, err := orm.CreateAction("uu", c2)
+		assert.NoError(err)
+		assert.NotEmpty(id2)
+
+		// read again, to check
+		r, err = orm.ReadAction(id2)
+		assert.NoError(err)
+		assert.NotNil(r)
+		assert.EqualValues(id2, r.Id)
+		assert.EqualValues("oneone", r.Name)
+
+		// check bulk read
+		ary, cnt, err := orm.ReadActions(0, 2)
+		assert.NoError(err)
+		assert.EqualValues(2, cnt)
+		assert.Len(ary, 2)
+		assert.EqualValues("two", ary[0].Name)
+	}
+
 	// try delete
 	err = orm.DeleteAction(id)
 	assert.NoError(err)
@@ -188,14 +211,14 @@ func TestFeedCRUD(t *testing.T) {
 		assert.NotNil(r)
 		assert.EqualValues(id2, r.Id)
 		assert.EqualValues("oneone", r.Name)
-	}
 
-	// check bulk read
-	ary, cnt, err := orm.ReadFeeds(0, 2)
-	assert.NoError(err)
-	assert.EqualValues(2, cnt)
-	assert.Len(ary, 2)
-	assert.EqualValues("two", ary[0].Name)
+		// check bulk read
+		ary, cnt, err := orm.ReadFeeds(0, 2)
+		assert.NoError(err)
+		assert.EqualValues(2, cnt)
+		assert.Len(ary, 2)
+		assert.EqualValues("two", ary[0].Name)
+	}
 
 	// try delete
 	err = orm.DeleteFeed(id)
@@ -240,6 +263,29 @@ func TestRuleCRUD(t *testing.T) {
 	assert.EqualValues(id, r.Id)
 	assert.EqualValues("two", r.Name)
 
+	{
+		// does create work again?
+		c2 := &Rule{}
+		c2.Name = "oneone"
+		id2, err := orm.CreateRule("uu", c2)
+		assert.NoError(err)
+		assert.NotEmpty(id2)
+
+		// read again, to check
+		r, err = orm.ReadRule(id2)
+		assert.NoError(err)
+		assert.NotNil(r)
+		assert.EqualValues(id2, r.Id)
+		assert.EqualValues("oneone", r.Name)
+
+		// check bulk read
+		ary, cnt, err := orm.ReadRules(0, 2)
+		assert.NoError(err)
+		assert.EqualValues(2, cnt)
+		assert.Len(ary, 2)
+		assert.EqualValues("two", ary[0].Name)
+	}
+
 	// try delete
 	err = orm.DeleteRule(id)
 	assert.NoError(err)
@@ -282,6 +328,29 @@ func TestUserCRUD(t *testing.T) {
 	assert.NotNil(r)
 	assert.EqualValues(id, r.Id)
 	assert.EqualValues("two", r.Name)
+
+	{
+		// does create work again?
+		c2 := &User{}
+		c2.Name = "oneone"
+		id2, err := orm.CreateUser("uu", c2)
+		assert.NoError(err)
+		assert.NotEmpty(id2)
+
+		// read again, to check
+		r, err = orm.ReadUser(id2)
+		assert.NoError(err)
+		assert.NotNil(r)
+		assert.EqualValues(id2, r.Id)
+		assert.EqualValues("oneone", r.Name)
+
+		// check bulk read
+		ary, cnt, err := orm.ReadUsers(0, 2)
+		assert.NoError(err)
+		assert.EqualValues(2, cnt)
+		assert.Len(ary, 2)
+		assert.EqualValues("two", ary[0].Name)
+	}
 
 	// try delete
 	err = orm.DeleteUser(id)

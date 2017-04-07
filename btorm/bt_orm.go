@@ -171,6 +171,23 @@ func (orm *BtOrm) ReadAction(id common.Ident) (*Action, error) {
 	return fields.(*Action), nil
 }
 
+func (orm *BtOrm) ReadActions(from int, size int) ([]*Action, int64, error) {
+	ary := make([]esorm.Elasticable, size)
+	for i := range ary {
+		ary[i] = &Action{}
+	}
+	ary2, count, err := orm.Orm.ReadDocuments(ary, from, size)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	ret := make([]*Action, count)
+	for i, v := range ary2 {
+		ret[i] = v.(*Action)
+	}
+	return ret, count, nil
+}
+
 func (orm *BtOrm) UpdateAction(id common.Ident, fields *Action) error {
 	fields.Id = id
 	return orm.Orm.UpdateDocument(fields)
@@ -244,6 +261,23 @@ func (orm *BtOrm) ReadRule(id common.Ident) (*Rule, error) {
 	return fields.(*Rule), nil
 }
 
+func (orm *BtOrm) ReadRules(from int, size int) ([]*Rule, int64, error) {
+	ary := make([]esorm.Elasticable, size)
+	for i := range ary {
+		ary[i] = &Rule{}
+	}
+	ary2, count, err := orm.Orm.ReadDocuments(ary, from, size)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	ret := make([]*Rule, count)
+	for i, v := range ary2 {
+		ret[i] = v.(*Rule)
+	}
+	return ret, count, nil
+}
+
 func (orm *BtOrm) UpdateRule(id common.Ident, fields *Rule) error {
 	fields.Id = id
 	return orm.Orm.UpdateDocument(fields)
@@ -270,6 +304,23 @@ func (orm *BtOrm) ReadUser(id common.Ident) (*User, error) {
 		return nil, err
 	}
 	return fields.(*User), nil
+}
+
+func (orm *BtOrm) ReadUsers(from int, size int) ([]*User, int64, error) {
+	ary := make([]esorm.Elasticable, size)
+	for i := range ary {
+		ary[i] = &User{}
+	}
+	ary2, count, err := orm.Orm.ReadDocuments(ary, from, size)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	ret := make([]*User, count)
+	for i, v := range ary2 {
+		ret[i] = v.(*User)
+	}
+	return ret, count, nil
 }
 
 func (orm *BtOrm) UpdateUser(id common.Ident, fields *User) error {
