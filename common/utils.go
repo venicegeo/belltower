@@ -83,7 +83,32 @@ func ObjectsAreEqual(expected, actual interface{}) bool {
 	}
 
 	return reflect.DeepEqual(expected, actual)
+}
 
+func MapsAreEqualValues(expected, actual interface{}) bool {
+
+	e, eok := expected.(map[string]interface{})
+	a, aok := actual.(map[string]interface{})
+	if !eok || !aok {
+		return false
+	}
+
+	if len(e) != len(a) {
+		return false
+	}
+
+	for ek, ev := range e {
+		av, ok := a[ek]
+		if !ok {
+			return false
+		}
+		ok = ObjectsAreEqualValues(ev, av)
+		if !ok {
+			return false
+		}
+	}
+
+	return true
 }
 
 // ObjectsAreEqualValues gets whether two objects are equal, or if their

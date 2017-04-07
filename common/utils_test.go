@@ -71,6 +71,8 @@ func TestGetMapValue(t *testing.T) {
 func TestObjectEquality(t *testing.T) {
 	assert := assert.New(t)
 
+	// TODO: ObjectsAreEqual is broken, and probably nondeterministic
+
 	a := map[string]string{
 		"A": "a",
 		"B": "b",
@@ -89,14 +91,42 @@ func TestObjectEquality(t *testing.T) {
 
 	assert.True(ObjectsAreEqual(a, b))
 	assert.True(ObjectsAreEqualValues(a, b))
-
 	assert.False(ObjectsAreEqual(a, c))
 	assert.False(ObjectsAreEqualValues(a, c))
 	assert.False(ObjectsAreEqual(a, d))
 	assert.False(ObjectsAreEqualValues(a, d))
-
 	assert.True(ObjectsAreEqual(b, bb))
 	assert.True(ObjectsAreEqual(a, bb))
 	assert.True(ObjectsAreEqualValues(b, bb))
 	assert.True(ObjectsAreEqualValues(a, bb))
+}
+
+func TestMapObjectEquality(t *testing.T) {
+	assert := assert.New(t)
+	x := map[string]interface{}{
+		"A": "a",
+		"B": "b",
+	}
+	y := map[string]interface{}{
+		"B": "b",
+		"A": "a",
+	}
+	z1 := map[string]interface{}{
+		"Z": "a",
+		"B": "b",
+	}
+	z2 := map[string]interface{}{
+		"A": "z",
+		"B": "b",
+	}
+
+	assert.True(MapsAreEqualValues(x, x))
+	assert.True(MapsAreEqualValues(x, y))
+	assert.True(MapsAreEqualValues(y, x))
+	assert.True(MapsAreEqualValues(y, y))
+
+	assert.False(MapsAreEqualValues(x, z1))
+	assert.False(MapsAreEqualValues(x, z2))
+	assert.False(MapsAreEqualValues(z1, z2))
+
 }
