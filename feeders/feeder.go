@@ -6,6 +6,7 @@ import (
 
 	"fmt"
 
+	"github.com/venicegeo/belltower/btorm"
 	"github.com/venicegeo/belltower/common"
 )
 
@@ -19,7 +20,7 @@ type Event struct {
 }
 
 type Feeder interface {
-	Create(Feed) (Feeder, error) // factory for this given feeder type
+	Create(btorm.Feed) (Feeder, error) // factory for this given feeder type
 	Id() common.Ident
 	GetName() string
 	Poll() (interface{}, error)
@@ -29,7 +30,7 @@ type Feeder interface {
 
 type EventPosterFunc func(*Event) error
 
-func RunFeed(feed Feed, post EventPosterFunc) error {
+func RunFeed(feed btorm.Feed, post EventPosterFunc) error {
 	feeder, err := feederFactory.create(feed)
 	if err != nil {
 		return err
@@ -39,7 +40,7 @@ func RunFeed(feed Feed, post EventPosterFunc) error {
 
 	for {
 		now := time.Now()
-		if !feed.EndDate.IsZero() && now.After(feed.EndDate) {
+		if !feed.PollingEndAt.IsZero() && now.After(feed.PollingEndAt) {
 			return fmt.Errorf("end date reached")
 		}
 
@@ -70,7 +71,8 @@ func RunFeed(feed Feed, post EventPosterFunc) error {
 			}
 		}
 
-		time.Sleep(feed.Interval)
+		d := time.Duration(feed.PollingInterval)
+		time.Sleep(d * time.Second)
 	}
 
 	// not reached
@@ -78,7 +80,7 @@ func RunFeed(feed Feed, post EventPosterFunc) error {
 
 //---------------------------------------------------------------------
 
-type FeederFactoryFunc func(Feed) (Feeder, error)
+type FeederFactoryFunc func(btorm.Feed) (Feeder, error)
 
 type FeederFactory struct {
 	factories map[common.Ident]FeederFactoryFunc
@@ -97,7 +99,7 @@ func (f *FeederFactory) register(feeder Feeder) {
 	f.factories[feeder.Id()] = feeder.Create
 }
 
-func (f *FeederFactory) create(feed Feed) (Feeder, error) {
+func (f *FeederFactory) create(feed btorm.Feed) (Feeder, error) {
 	factory := f.factories[feed.FeederId]
 
 	if factory == nil {
@@ -112,12 +114,3 @@ func (f *FeederFactory) create(feed Feed) (Feeder, error) {
 }
 
 //---------------------------------------------------------------------
-
-type Feed struct {
-	Id             common.Ident
-	Name           string
-	FeederId       common.Ident
-	Interval       time.Duration
-	EndDate        time.Time
-	SettingsValues interface{}
-}

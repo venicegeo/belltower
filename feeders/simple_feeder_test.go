@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/venicegeo/belltower/btorm"
 )
 
 func TestSimpleFeeder(t *testing.T) {
@@ -13,15 +14,14 @@ func TestSimpleFeeder(t *testing.T) {
 
 	// make a Feed (a feeder instance), call the runloop w/ the post-event function
 	value := 7
-	feed := Feed{
-		Id:       "10",
-		Name:     "mysimplefeed",
-		FeederId: SimpleFeederId,
-		Interval: 500 * time.Millisecond,
-		EndDate:  time.Now().Add(3 * time.Second),
-		SettingsValues: SimpleSettings{
-			Value: value,
-		},
+	feed := btorm.Feed{}
+	feed.Id = "10"
+	feed.Name = "mysimplefeed"
+	feed.FeederId = SimpleFeederId
+	feed.PollingInterval = 1
+	feed.PollingEndAt = time.Now().Add(3 * time.Second)
+	feed.Settings = SimpleSettings{
+		Value: value,
 	}
 
 	// check the SimpleFeeder (a feeder type)
@@ -45,5 +45,5 @@ func TestSimpleFeeder(t *testing.T) {
 	assert.Error(err)
 
 	// verify the event was posted
-	assert.Equal(6, hits)
+	assert.Equal(3, hits)
 }

@@ -1,6 +1,7 @@
 package feeders
 
 import (
+	"github.com/venicegeo/belltower/btorm"
 	"github.com/venicegeo/belltower/common"
 )
 
@@ -22,15 +23,15 @@ type SimpleSettings struct {
 }
 
 type SimpleFeeder struct {
-	feed     Feed
+	feed     btorm.Feed
 	settings SimpleSettings
 	hits     int
 }
 
-func (_ *SimpleFeeder) Create(feed Feed) (Feeder, error) {
+func (_ *SimpleFeeder) Create(feed btorm.Feed) (Feeder, error) {
 	f := &SimpleFeeder{
 		feed:     feed,
-		settings: feed.SettingsValues.(SimpleSettings),
+		settings: feed.Settings.(SimpleSettings),
 		hits:     0,
 	}
 	return f, nil

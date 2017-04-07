@@ -6,21 +6,21 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/venicegeo/belltower/btorm"
 )
 
 func TestRandomFeeder(t *testing.T) {
 	assert := assert.New(t)
 
-	feed := Feed{
-		Id:       "20",
-		Name:     "myrandomfeed",
-		FeederId: RandomFeederId,
-		Interval: 500 * time.Millisecond,
-		EndDate:  time.Now().Add(3 * time.Second),
-		SettingsValues: RandomSettings{
-			Target: 50,
-			Seed:   19, // 61, 52, 88, 23, 30, 70
-		},
+	feed := btorm.Feed{}
+	feed.Id = "20"
+	feed.Name = "myrandomfeed"
+	feed.FeederId = RandomFeederId
+	feed.PollingInterval = 1
+	feed.PollingEndAt = time.Now().Add(5 * time.Second)
+	feed.Settings = RandomSettings{
+		Target: 50,
+		Seed:   19, // 61, 52, 88, 23, 30, 70
 	}
 
 	feeder, err := feederFactory.create(feed)

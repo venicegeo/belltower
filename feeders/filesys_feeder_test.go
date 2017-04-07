@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/venicegeo/belltower/btorm"
 )
 
 func touchFile(t *testing.T, nam string) {
@@ -32,15 +33,14 @@ func TestFileSysFeeder(t *testing.T) {
 
 	const root = "/tmp"
 
-	feed := Feed{
-		Id:       "30",
-		Name:     "myfilesysfeed",
-		FeederId: FileSysFeederId,
-		Interval: 500 * time.Millisecond,
-		EndDate:  time.Now().Add(3 * time.Second),
-		SettingsValues: FileSysSettings{
-			Path: root,
-		},
+	feed := btorm.Feed{}
+	feed.Id = "30"
+	feed.Name = "myfilesysfeed"
+	feed.FeederId = FileSysFeederId
+	feed.PollingInterval = 1
+	feed.PollingEndAt = time.Now().Add(3 * time.Second)
+	feed.Settings = FileSysSettings{
+		Path: root,
 	}
 
 	feeder, err := feederFactory.create(feed)

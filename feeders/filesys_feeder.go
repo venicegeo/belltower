@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/venicegeo/belltower/btorm"
 	"github.com/venicegeo/belltower/common"
 )
 
@@ -23,14 +24,14 @@ type FileSysSettings struct {
 }
 
 type FileSysFeeder struct {
-	feed     Feed
+	feed     btorm.Feed
 	settings FileSysSettings
 	path     string
 	files    map[string]bool
 }
 
-func (_ *FileSysFeeder) Create(feed Feed) (Feeder, error) {
-	settings := feed.SettingsValues.(FileSysSettings)
+func (_ *FileSysFeeder) Create(feed btorm.Feed) (Feeder, error) {
+	settings := feed.Settings.(FileSysSettings)
 	path := settings.Path
 
 	f := &FileSysFeeder{

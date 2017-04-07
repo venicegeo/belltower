@@ -9,15 +9,14 @@ import (
 
 //---------------------------------------------------------------------
 
-type FeedType string
-
 type Feed struct {
 	Core
-	FeedType        FeedType      `json:"feed_type"`        // CR
-	PollingInterval time.Duration `json:"polling_interval"` // CR
-	MessageCount    uint          `json:"message_count"`    // R
-	LastMessageAt   time.Time     `json:"last_message_at"`  // R
-	Settings        interface{}   `json:"settings"`         // CR
+	FeederId        common.Ident `json:"feeder_id"`        // CR
+	PollingInterval uint         `json:"polling_interval"` // CR // in seconds
+	PollingEndAt    time.Time    `json:"polling_end_at"`   // CR
+	MessageCount    uint         `json:"message_count"`    // R
+	LastMessageAt   time.Time    `json:"last_message_at"`  // R
+	Settings        interface{}  `json:"settings"`         // CR
 }
 
 //---------------------------------------------------------------------
@@ -27,9 +26,10 @@ func (feed *Feed) GetLoweredName() string { return "feed" }
 func (feed *Feed) GetMappingProperties() map[string]esorm.MappingPropertyFields {
 	properties := map[string]esorm.MappingPropertyFields{}
 
-	properties["feed_type"] = esorm.MappingPropertyFields{Type: "string"}
+	properties["feeder_id"] = esorm.MappingPropertyFields{Type: "string"}
 	properties["message_count"] = esorm.MappingPropertyFields{Type: "integer"}
 	properties["polling_interval"] = esorm.MappingPropertyFields{Type: "integer"}
+	properties["polling_end_at"] = esorm.MappingPropertyFields{Type: "date"}
 	properties["last_message_at"] = esorm.MappingPropertyFields{Type: "date"}
 	properties["settings"] = esorm.MappingPropertyFields{Type: "object", Dynamic: "true"}
 
@@ -52,8 +52,9 @@ func (feed *Feed) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) 
 	}
 
 	feed.PollingInterval = fields.PollingInterval
+	feed.PollingEndAt = fields.PollingEndAt
 	feed.Settings = fields.Settings
-	feed.FeedType = fields.FeedType
+	feed.FeederId = fields.FeederId
 
 	return nil
 }
@@ -67,7 +68,7 @@ func (feed *Feed) GetFieldsForRead() (interface{}, error) {
 
 	fields := &Feed{
 		Core:          core,
-		FeedType:      feed.FeedType,
+		FeederId:      feed.FeederId,
 		Settings:      feed.Settings,
 		MessageCount:  feed.MessageCount,
 		LastMessageAt: feed.LastMessageAt,

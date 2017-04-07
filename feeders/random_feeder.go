@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/venicegeo/belltower/btorm"
 	"github.com/venicegeo/belltower/common"
 )
 
@@ -27,13 +28,13 @@ type RandomSettings struct {
 }
 
 type RandomFeeder struct {
-	feed     Feed
+	feed     btorm.Feed
 	settings RandomSettings
 	random   *rand.Rand
 }
 
-func (_ *RandomFeeder) Create(feed Feed) (Feeder, error) {
-	settings := feed.SettingsValues.(RandomSettings)
+func (_ *RandomFeeder) Create(feed btorm.Feed) (Feeder, error) {
+	settings := feed.Settings.(RandomSettings)
 	seed := settings.Seed
 	if seed == 0 {
 		seed = time.Now().UnixNano()
@@ -66,7 +67,7 @@ func (r *RandomFeeder) EventSchema() map[string]string {
 }
 
 func (r *RandomFeeder) Poll() (interface{}, error) {
-	settings := r.feed.SettingsValues.(RandomSettings)
+	settings := r.feed.Settings.(RandomSettings)
 
 	x := r.random.Intn(100)
 	if x > settings.Target {
