@@ -152,6 +152,10 @@ func (orm *BtOrm) GetAdminID() common.Ident {
 
 //---------------------------------------------------------------------
 
+// THE BELOW FUNCTIONS ARE LARGELY TO PROMOTE TYPE-SAFETY
+
+//---------------------------------------------------------------------
+
 func (orm *BtOrm) CreateAction(requestorID common.Ident, fields *Action) (common.Ident, error) {
 	fields.OwnerId = requestorID
 	return orm.Orm.CreateDocument(fields)
@@ -195,14 +199,21 @@ func (orm *BtOrm) ReadFeed(id common.Ident) (*Feed, error) {
 	return fields.(*Feed), nil
 }
 
-func (orm *BtOrm) ReadAllFeeds(id common.Ident) (*Feed, error) {
-	feed := &Feed{}
-	feed.Id = id
-	fields, err := orm.Orm.ReadDocument(feed)
-	if err != nil {
-		return nil, err
+func (orm *BtOrm) ReadFeeds(from int, size int) ([]*Feed, int64, error) {
+	ary := make([]esorm.Elasticable, size)
+	for i := range ary {
+		ary[i] = &Feed{}
 	}
-	return fields.(*Feed), nil
+	ary2, count, err := orm.Orm.ReadDocuments(ary, from, size)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	ret := make([]*Feed, count)
+	for i, v := range ary2 {
+		ret[i] = v.(*Feed)
+	}
+	return ret, count, nil
 }
 
 func (orm *BtOrm) UpdateFeed(id common.Ident, fields *Feed) error {

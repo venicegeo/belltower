@@ -174,6 +174,29 @@ func TestFeedCRUD(t *testing.T) {
 	assert.EqualValues(id, r.Id)
 	assert.EqualValues("two", r.Name)
 
+	{
+		// does create work again?
+		c2 := &Feed{}
+		c2.Name = "oneone"
+		id2, err := orm.CreateFeed("uu", c2)
+		assert.NoError(err)
+		assert.NotEmpty(id2)
+
+		// read again, to check
+		r, err = orm.ReadFeed(id2)
+		assert.NoError(err)
+		assert.NotNil(r)
+		assert.EqualValues(id2, r.Id)
+		assert.EqualValues("oneone", r.Name)
+	}
+
+	// check bulk read
+	ary, cnt, err := orm.ReadFeeds(0, 2)
+	assert.NoError(err)
+	assert.EqualValues(2, cnt)
+	assert.Len(ary, 2)
+	assert.EqualValues("two", ary[0].Name)
+
 	// try delete
 	err = orm.DeleteFeed(id)
 	assert.NoError(err)
