@@ -18,30 +18,32 @@ type SimpleEventData struct {
 	Value int // the square of the value passed in via Settings
 }
 
-type SimpleSettings struct {
-	Value int
-}
-
 type SimpleFeeder struct {
-	feed     btorm.Feed
-	settings SimpleSettings
+	feed     *btorm.Feed
+	settings map[string]interface{}
 	hits     int
 }
 
-func (_ *SimpleFeeder) Create(feed btorm.Feed) (Feeder, error) {
-	f := &SimpleFeeder{
+func (f *SimpleFeeder) Create(feed *btorm.Feed) (Feeder, error) {
+
+	err := checkSchema(f.SettingsSchema(), feed.Settings)
+	if err != nil {
+		return nil, err
+	}
+
+	feeder := &SimpleFeeder{
 		feed:     feed,
-		settings: feed.Settings.(SimpleSettings),
+		settings: feed.Settings,
 		hits:     0,
 	}
-	return f, nil
+	return feeder, nil
 }
 
 func (f *SimpleFeeder) GetName() string { return "SimpleFeeder" }
 
 func (f *SimpleFeeder) Id() common.Ident { return SimpleFeederId }
 
-func (f *SimpleFeeder) SettingsSchema() map[string]string {
+func (_ *SimpleFeeder) SettingsSchema() map[string]string {
 	return map[string]string{
 		"Value": "integer",
 	}
@@ -57,9 +59,11 @@ func (f *SimpleFeeder) EventSchema() map[string]string {
 func (f *SimpleFeeder) Poll() (interface{}, error) {
 	f.hits++
 
+	x := f.settings["Value"].(float64)
+
 	e := &SimpleEventData{
 		Hits:  f.hits,
-		Value: f.settings.Value * f.settings.Value,
+		Value: int(x * x),
 	}
 
 	return e, nil

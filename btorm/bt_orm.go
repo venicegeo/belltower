@@ -157,6 +157,7 @@ func (orm *BtOrm) GetAdminID() common.Ident {
 //---------------------------------------------------------------------
 
 func (orm *BtOrm) CreateAction(requestorID common.Ident, fields *Action) (common.Ident, error) {
+	fields.Id = ""
 	fields.OwnerId = requestorID
 	return orm.Orm.CreateDocument(fields)
 }
@@ -202,6 +203,7 @@ func (orm *BtOrm) DeleteAction(id common.Ident) error {
 //---------------------------------------------------------------------
 
 func (orm *BtOrm) CreateFeed(requestorID common.Ident, fields *Feed) (common.Ident, error) {
+	fields.Id = ""
 	fields.OwnerId = requestorID
 	return orm.Orm.CreateDocument(fields)
 }
@@ -247,6 +249,7 @@ func (orm *BtOrm) DeleteFeed(id common.Ident) error {
 //---------------------------------------------------------------------
 
 func (orm *BtOrm) CreateRule(requestorID common.Ident, fields *Rule) (common.Ident, error) {
+	fields.Id = ""
 	fields.OwnerId = requestorID
 	return orm.Orm.CreateDocument(fields)
 }
@@ -292,6 +295,7 @@ func (orm *BtOrm) DeleteRule(id common.Ident) error {
 //---------------------------------------------------------------------
 
 func (orm *BtOrm) CreateUser(requestorID common.Ident, fields *User) (common.Ident, error) {
+	fields.Id = ""
 	fields.OwnerId = requestorID
 	return orm.Orm.CreateDocument(fields)
 }

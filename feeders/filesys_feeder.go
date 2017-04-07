@@ -19,20 +19,16 @@ type FileSysEventData struct {
 	Deleted string
 }
 
-type FileSysSettings struct {
-	Path string
-}
-
 type FileSysFeeder struct {
-	feed     btorm.Feed
-	settings FileSysSettings
+	feed     *btorm.Feed
+	settings map[string]interface{}
 	path     string
 	files    map[string]bool
 }
 
-func (_ *FileSysFeeder) Create(feed btorm.Feed) (Feeder, error) {
-	settings := feed.Settings.(FileSysSettings)
-	path := settings.Path
+func (_ *FileSysFeeder) Create(feed *btorm.Feed) (Feeder, error) {
+	settings := feed.Settings
+	path := settings["Path"].(string)
 
 	f := &FileSysFeeder{
 		feed:     feed,

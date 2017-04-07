@@ -12,15 +12,15 @@ import (
 func TestRandomFeeder(t *testing.T) {
 	assert := assert.New(t)
 
-	feed := btorm.Feed{}
+	feed := &btorm.Feed{}
 	feed.Id = "20"
 	feed.Name = "myrandomfeed"
 	feed.FeederId = RandomFeederId
 	feed.PollingInterval = 1
 	feed.PollingEndAt = time.Now().Add(5 * time.Second)
-	feed.Settings = RandomSettings{
-		Target: 50,
-		Seed:   19, // 61, 52, 88, 23, 30, 70
+	feed.Settings = map[string]interface{}{
+		"Target": 50,
+		"Seed":   19, // 61, 52, 88, 23, 30, 70
 	}
 
 	feeder, err := feederFactory.create(feed)
@@ -37,7 +37,7 @@ func TestRandomFeeder(t *testing.T) {
 		return nil
 	}
 
-	err = RunFeed(feed, poster)
+	err = RunFeed(feed, feeder, poster)
 	assert.Error(err)
 
 	// verify the event was posted

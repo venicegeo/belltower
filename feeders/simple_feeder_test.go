@@ -14,14 +14,14 @@ func TestSimpleFeeder(t *testing.T) {
 
 	// make a Feed (a feeder instance), call the runloop w/ the post-event function
 	value := 7
-	feed := btorm.Feed{}
+	feed := &btorm.Feed{}
 	feed.Id = "10"
 	feed.Name = "mysimplefeed"
 	feed.FeederId = SimpleFeederId
 	feed.PollingInterval = 1
 	feed.PollingEndAt = time.Now().Add(3 * time.Second)
-	feed.Settings = SimpleSettings{
-		Value: value,
+	feed.Settings = map[string]interface{}{
+		"Value": value,
 	}
 
 	// check the SimpleFeeder (a feeder type)
@@ -41,7 +41,7 @@ func TestSimpleFeeder(t *testing.T) {
 		return nil
 	}
 
-	err = RunFeed(feed, poster)
+	err = RunFeed(feed, feeder, poster)
 	assert.Error(err)
 
 	// verify the event was posted

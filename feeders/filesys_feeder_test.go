@@ -33,14 +33,14 @@ func TestFileSysFeeder(t *testing.T) {
 
 	const root = "/tmp"
 
-	feed := btorm.Feed{}
+	feed := &btorm.Feed{}
 	feed.Id = "30"
 	feed.Name = "myfilesysfeed"
 	feed.FeederId = FileSysFeederId
 	feed.PollingInterval = 1
 	feed.PollingEndAt = time.Now().Add(3 * time.Second)
-	feed.Settings = FileSysSettings{
-		Path: root,
+	feed.Settings = map[string]interface{}{
+		"Path": root,
 	}
 
 	feeder, err := feederFactory.create(feed)
@@ -82,7 +82,7 @@ func TestFileSysFeeder(t *testing.T) {
 		return nil
 	}
 
-	err = RunFeed(feed, poster)
+	err = RunFeed(feed, feeder, poster)
 	assert.Error(err)
 
 	// verify the event was posted

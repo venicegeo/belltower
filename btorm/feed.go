@@ -11,12 +11,12 @@ import (
 
 type Feed struct {
 	Core
-	FeederId        common.Ident `json:"feeder_id"`        // CR
-	PollingInterval uint         `json:"polling_interval"` // CR // in seconds
-	PollingEndAt    time.Time    `json:"polling_end_at"`   // CR
-	MessageCount    uint         `json:"message_count"`    // R
-	LastMessageAt   time.Time    `json:"last_message_at"`  // R
-	Settings        interface{}  `json:"settings"`         // CR
+	FeederId        common.Ident           `json:"feeder_id"`        // CR
+	PollingInterval uint                   `json:"polling_interval"` // CR // in seconds
+	PollingEndAt    time.Time              `json:"polling_end_at"`   // CR
+	MessageCount    uint                   `json:"message_count"`    // R
+	LastMessageAt   time.Time              `json:"last_message_at"`  // R
+	Settings        map[string]interface{} `json:"settings"`         // CR
 }
 
 //---------------------------------------------------------------------

@@ -20,7 +20,7 @@ type Event struct {
 }
 
 type Feeder interface {
-	Create(btorm.Feed) (Feeder, error) // factory for this given feeder type
+	Create(*btorm.Feed) (Feeder, error) // factory for this given feeder type (static function)
 	Id() common.Ident
 	GetName() string
 	Poll() (interface{}, error)
@@ -30,12 +30,7 @@ type Feeder interface {
 
 type EventPosterFunc func(*Event) error
 
-func RunFeed(feed btorm.Feed, post EventPosterFunc) error {
-	feeder, err := feederFactory.create(feed)
-	if err != nil {
-		return err
-	}
-
+func RunFeed(feed *btorm.Feed, feeder Feeder, post EventPosterFunc) error {
 	errCount := 0
 
 	for {
@@ -78,9 +73,30 @@ func RunFeed(feed btorm.Feed, post EventPosterFunc) error {
 	// not reached
 }
 
+func checkSchema(schema map[string]string, data map[string]interface{}) error {
+	for key, typ := range schema {
+		v, ok := data[key]
+		if !ok {
+			return fmt.Errorf("Settings field '%s' not present", key)
+		}
+
+		log.Printf("VVV %T", v)
+		switch typ {
+		case "integer":
+			_, ok := v.(int)
+			if !ok {
+				return fmt.Errorf("Settings field '%s' is not value of type '%s'", key, typ)
+			}
+		default:
+			return fmt.Errorf("Settings field '%s' has unknown type '%s'", key, typ)
+		}
+	}
+	return nil
+}
+
 //---------------------------------------------------------------------
 
-type FeederFactoryFunc func(btorm.Feed) (Feeder, error)
+type FeederFactoryFunc func(*btorm.Feed) (Feeder, error)
 
 type FeederFactory struct {
 	factories map[common.Ident]FeederFactoryFunc
@@ -99,14 +115,14 @@ func (f *FeederFactory) register(feeder Feeder) {
 	f.factories[feeder.Id()] = feeder.Create
 }
 
-func (f *FeederFactory) create(feed btorm.Feed) (Feeder, error) {
-	factory := f.factories[feed.FeederId]
+func (f *FeederFactory) create(feed *btorm.Feed) (Feeder, error) {
+	factoryFunc := f.factories[feed.FeederId]
 
-	if factory == nil {
+	if factoryFunc == nil {
 		return nil, fmt.Errorf("no such factory: %s", feed.FeederId)
 	}
 
-	feeder, err := factory(feed)
+	feeder, err := factoryFunc(feed)
 	if err != nil {
 		return nil, err
 	}

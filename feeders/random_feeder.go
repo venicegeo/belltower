@@ -22,20 +22,15 @@ type RandomEventData struct {
 	Value int
 }
 
-type RandomSettings struct {
-	Target int   // value in range [0..100], 20 means will hit 20% of the time
-	Seed   int64 // to allow for debugging; if zero, will use system default
-}
-
 type RandomFeeder struct {
-	feed     btorm.Feed
-	settings RandomSettings
+	feed     *btorm.Feed
+	settings map[string]interface{}
 	random   *rand.Rand
 }
 
-func (_ *RandomFeeder) Create(feed btorm.Feed) (Feeder, error) {
-	settings := feed.Settings.(RandomSettings)
-	seed := settings.Seed
+func (_ *RandomFeeder) Create(feed *btorm.Feed) (Feeder, error) {
+	settings := feed.Settings
+	seed := int64(settings["Seed"].(int))
 	if seed == 0 {
 		seed = time.Now().UnixNano()
 	}
@@ -67,10 +62,10 @@ func (r *RandomFeeder) EventSchema() map[string]string {
 }
 
 func (r *RandomFeeder) Poll() (interface{}, error) {
-	settings := r.feed.Settings.(RandomSettings)
+	settings := r.feed.Settings
 
 	x := r.random.Intn(100)
-	if x > settings.Target {
+	if x > settings["Target"].(int) {
 		// not a hit
 		return nil, nil
 	}
