@@ -31,6 +31,12 @@ func IsCrudField(obj interface{}, fieldName string, fieldMode CrudFieldMode) (bo
 
 	srcPtrToStruct := reflect.ValueOf(obj)
 	srcStruct := srcPtrToStruct.Elem()
+
+	return isCrudField(srcStruct, fieldName, fieldMode)
+}
+
+func isCrudField(srcStruct reflect.Value, fieldName string, fieldMode CrudFieldMode) (bool, error) {
+
 	// bad type
 	if srcStruct.Kind() != reflect.Struct {
 		return false, fmt.Errorf("Type is not a valid struct: %s", srcStruct.Kind())
@@ -77,6 +83,11 @@ func CrudMerge(src interface{}, dest interface{}, mode CrudFieldMode) error {
 		return fmt.Errorf("incorrect types")
 	}
 
+	return crudMerge(srcStruct, destStruct, mode)
+}
+
+func crudMerge(srcStruct reflect.Value, destStruct reflect.Value, mode CrudFieldMode) error {
+
 	numField := srcStruct.NumField()
 	for i := 0; i < numField; i++ {
 		field := srcStruct.Type().Field(i)
@@ -84,6 +95,15 @@ func CrudMerge(src interface{}, dest interface{}, mode CrudFieldMode) error {
 		fieldValue := srcStruct.Field(i)
 
 		xfieldValue := destStruct.Field(i)
+
+		// drill into an embedded struct
+		if field.Anonymous || field.Type.Kind() == reflect.Struct {
+			err := crudMerge(fieldValue, xfieldValue, mode)
+			if err != nil {
+				return err
+			}
+			continue
+		}
 
 		if !fieldValue.IsValid() {
 			return fmt.Errorf("invalid")
@@ -93,7 +113,7 @@ func CrudMerge(src interface{}, dest interface{}, mode CrudFieldMode) error {
 			return fmt.Errorf("can't set")
 		}
 
-		ok, err := IsCrudField(src, fieldName, mode)
+		ok, err := isCrudField(srcStruct, fieldName, mode)
 		if err != nil {
 			return err
 		}

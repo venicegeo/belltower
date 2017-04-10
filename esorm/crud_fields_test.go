@@ -122,3 +122,48 @@ func TestCrudMerge(t *testing.T) {
 		assert.Equal(e.f4, d.F4)
 	}
 }
+
+func TestCrudMerge2(t *testing.T) {
+	assert := assert.New(t)
+
+	type A struct {
+		A1 int `crud:"c"`
+		A2 int
+	}
+	type B struct {
+		B1 int `crud:"c"`
+		B2 int
+	}
+	type T struct {
+		A
+		B  B
+		F1 int `crud:"c"`
+		F2 int
+	}
+
+	src := T{}
+	src.A1 = 1
+	src.A2 = 2
+	src.B.B1 = 3
+	src.B.B2 = 4
+	src.F1 = 5
+	src.F2 = 6
+
+	dest := T{}
+	dest.A1 = 10
+	dest.A2 = 20
+	dest.B.B1 = 30
+	dest.B.B2 = 40
+	dest.F1 = 50
+	dest.F2 = 60
+
+	err := CrudMerge(&src, &dest, CrudFieldCreate)
+	assert.NoError(err)
+
+	assert.Equal(1, dest.A1)
+	assert.Equal(20, dest.A2)
+	assert.Equal(3, dest.B.B1)
+	assert.Equal(40, dest.B.B2)
+	assert.Equal(5, dest.F1)
+	assert.Equal(60, dest.F2)
+}
