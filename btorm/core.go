@@ -11,13 +11,13 @@ import (
 //---------------------------------------------------------------------
 
 type Core struct {
-	Id        common.Ident `json:"id"`         // R
-	Name      string       `json:"name"`       // CRU
-	CreatedAt time.Time    `json:"created_at"` // R
-	UpdatedAt time.Time    `json:"updated_at"` // R
-	IsEnabled bool         `json:"is_enabled"` // CRU
-	IsPublic  bool         `json:"is_public"`  // CRU
-	OwnerId   common.Ident `json:"owner_id"`   // CR
+	Id        common.Ident `json:"id"         crud:"r"`
+	Name      string       `json:"name"       crud:"cru"`
+	CreatedAt time.Time    `json:"created_at" crud:"r"`
+	UpdatedAt time.Time    `json:"updated_at" crud:"r"`
+	IsEnabled bool         `json:"is_enabled" crud:"cru"`
+	IsPublic  bool         `json:"is_public"  crud:"cru"`
+	OwnerId   common.Ident `json:"owner_id"   crud:"cr"`
 }
 
 func (c *Core) GetId() common.Ident      { return c.Id }
@@ -39,35 +39,4 @@ func (c *Core) GetCoreMappingProperties() map[string]esorm.MappingPropertyFields
 	}
 
 	return properties
-}
-
-// c is set from fields, no return
-func (c *Core) SetFieldsForCreate(ownerId common.Ident, fields *Core) error {
-	c.Name = fields.Name
-	c.IsEnabled = fields.IsEnabled
-	c.IsPublic = fields.IsPublic
-	c.OwnerId = ownerId
-	return nil
-}
-
-// fields is set from c and returned
-func (c *Core) GetFieldsForRead() (Core, error) {
-	fields := Core{
-		Id:        c.Id,
-		Name:      c.Name,
-		CreatedAt: c.CreatedAt,
-		UpdatedAt: c.UpdatedAt,
-		IsEnabled: c.IsEnabled,
-		IsPublic:  c.IsPublic,
-		OwnerId:   c.OwnerId,
-	}
-	return fields, nil
-}
-
-// c is set from fields, no return
-func (c *Core) SetFieldsForUpdate(fields *Core) error {
-	c.Name = fields.Name
-	c.IsEnabled = fields.IsEnabled
-	c.IsPublic = fields.IsPublic
-	return nil
 }

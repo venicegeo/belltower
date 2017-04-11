@@ -165,11 +165,11 @@ func (orm *BtOrm) CreateAction(requestorID common.Ident, fields *Action) (common
 func (orm *BtOrm) ReadAction(id common.Ident) (*Action, error) {
 	action := &Action{}
 	action.Id = id
-	fields, err := orm.Orm.ReadDocument(action)
+	action2, err := orm.Orm.ReadDocument(action)
 	if err != nil {
 		return nil, err
 	}
-	return fields.(*Action), nil
+	return action2.(*Action), nil
 }
 
 func (orm *BtOrm) ReadActions(from int, size int) ([]*Action, int64, error) {
@@ -190,8 +190,9 @@ func (orm *BtOrm) ReadActions(from int, size int) ([]*Action, int64, error) {
 }
 
 func (orm *BtOrm) UpdateAction(id common.Ident, fields *Action) error {
-	fields.Id = id
-	return orm.Orm.UpdateDocument(fields)
+	action := &Action{}
+	action.Id = id
+	return orm.Orm.UpdateDocument(action, fields, &Action{})
 }
 
 func (orm *BtOrm) DeleteAction(id common.Ident) error {
@@ -211,11 +212,11 @@ func (orm *BtOrm) CreateFeed(requestorID common.Ident, fields *Feed) (common.Ide
 func (orm *BtOrm) ReadFeed(id common.Ident) (*Feed, error) {
 	feed := &Feed{}
 	feed.Id = id
-	fields, err := orm.Orm.ReadDocument(feed)
+	feed2, err := orm.Orm.ReadDocument(feed)
 	if err != nil {
 		return nil, err
 	}
-	return fields.(*Feed), nil
+	return feed2.(*Feed), nil
 }
 
 func (orm *BtOrm) ReadFeeds(from int, size int) ([]*Feed, int64, error) {
@@ -236,8 +237,9 @@ func (orm *BtOrm) ReadFeeds(from int, size int) ([]*Feed, int64, error) {
 }
 
 func (orm *BtOrm) UpdateFeed(id common.Ident, fields *Feed) error {
-	fields.Id = id
-	return orm.Orm.UpdateDocument(fields)
+	feed := &Feed{}
+	feed.Id = id
+	return orm.Orm.UpdateDocument(feed, fields, &Feed{})
 }
 
 func (orm *BtOrm) DeleteFeed(id common.Ident) error {
@@ -257,11 +259,11 @@ func (orm *BtOrm) CreateRule(requestorID common.Ident, fields *Rule) (common.Ide
 func (orm *BtOrm) ReadRule(id common.Ident) (*Rule, error) {
 	rule := &Rule{}
 	rule.Id = id
-	fields, err := orm.Orm.ReadDocument(rule)
+	rule2, err := orm.Orm.ReadDocument(rule)
 	if err != nil {
 		return nil, err
 	}
-	return fields.(*Rule), nil
+	return rule2.(*Rule), nil
 }
 
 func (orm *BtOrm) ReadRules(from int, size int) ([]*Rule, int64, error) {
@@ -282,8 +284,9 @@ func (orm *BtOrm) ReadRules(from int, size int) ([]*Rule, int64, error) {
 }
 
 func (orm *BtOrm) UpdateRule(id common.Ident, fields *Rule) error {
-	fields.Id = id
-	return orm.Orm.UpdateDocument(fields)
+	rule := &Rule{}
+	rule.Id = id
+	return orm.Orm.UpdateDocument(rule, fields, &Rule{})
 }
 
 func (orm *BtOrm) DeleteRule(id common.Ident) error {
@@ -303,11 +306,11 @@ func (orm *BtOrm) CreateUser(requestorID common.Ident, fields *User) (common.Ide
 func (orm *BtOrm) ReadUser(id common.Ident) (*User, error) {
 	user := &User{}
 	user.Id = id
-	fields, err := orm.Orm.ReadDocument(user)
+	user2, err := orm.Orm.ReadDocument(user)
 	if err != nil {
 		return nil, err
 	}
-	return fields.(*User), nil
+	return user2.(*User), nil
 }
 
 func (orm *BtOrm) ReadUsers(from int, size int) ([]*User, int64, error) {
@@ -328,8 +331,9 @@ func (orm *BtOrm) ReadUsers(from int, size int) ([]*User, int64, error) {
 }
 
 func (orm *BtOrm) UpdateUser(id common.Ident, fields *User) error {
-	fields.Id = id
-	return orm.Orm.UpdateDocument(fields)
+	user := &User{}
+	user.Id = id
+	return orm.Orm.UpdateDocument(user, fields, &User{})
 }
 
 func (orm *BtOrm) DeleteUser(id common.Ident) error {

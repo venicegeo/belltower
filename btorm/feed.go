@@ -11,12 +11,12 @@ import (
 
 type Feed struct {
 	Core
-	FeederId        common.Ident           `json:"feeder_id"`        // CR
-	PollingInterval uint                   `json:"polling_interval"` // CR // in seconds
-	PollingEndAt    time.Time              `json:"polling_end_at"`   // CR
-	MessageCount    uint                   `json:"message_count"`    // R
-	LastMessageAt   time.Time              `json:"last_message_at"`  // R
-	Settings        map[string]interface{} `json:"settings"`         // CR
+	FeederId        common.Ident           `json:"feeder_id"        crud:"cr"`
+	PollingInterval uint                   `json:"polling_interval" crud:"cr"` // in seconds
+	PollingEndAt    time.Time              `json:"polling_end_at"   crud:"cr"`
+	MessageCount    uint                   `json:"message_count"    crud:"r"`
+	LastMessageAt   time.Time              `json:"last_message_at"  crud:"r"`
+	Settings        map[string]interface{} `json:"settings"         crud:"cr"`
 }
 
 //---------------------------------------------------------------------
@@ -39,50 +39,3 @@ func (feed *Feed) GetMappingProperties() map[string]esorm.MappingPropertyFields 
 }
 
 //---------------------------------------------------------------------
-
-func (feed *Feed) SetFieldsForCreate(ownerId common.Ident, ifields interface{}) error {
-
-	fields := ifields.(*Feed)
-
-	err := feed.Core.SetFieldsForCreate(ownerId, &fields.Core)
-	if err != nil {
-		return err
-	}
-
-	feed.PollingInterval = fields.PollingInterval
-	feed.PollingEndAt = fields.PollingEndAt
-	feed.Settings = fields.Settings
-	feed.FeederId = fields.FeederId
-
-	return nil
-}
-
-func (feed *Feed) GetFieldsForRead() (interface{}, error) {
-
-	core, err := feed.Core.GetFieldsForRead()
-	if err != nil {
-		return nil, err
-	}
-
-	fields := &Feed{
-		Core:          core,
-		FeederId:      feed.FeederId,
-		Settings:      feed.Settings,
-		MessageCount:  feed.MessageCount,
-		LastMessageAt: feed.LastMessageAt,
-	}
-
-	return fields, nil
-}
-
-func (feed *Feed) SetFieldsForUpdate(ifields interface{}) error {
-
-	fields := ifields.(*Feed)
-
-	err := feed.Core.SetFieldsForUpdate(&fields.Core)
-	if err != nil {
-		return nil
-	}
-
-	return nil
-}
