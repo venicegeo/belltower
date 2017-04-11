@@ -173,11 +173,7 @@ func (orm *BtOrm) ReadAction(id common.Ident) (*Action, error) {
 }
 
 func (orm *BtOrm) ReadActions(from int, size int) ([]*Action, int64, error) {
-	ary := make([]esorm.Elasticable, size)
-	for i := range ary {
-		ary[i] = &Action{}
-	}
-	ary2, count, err := orm.Orm.ReadDocuments(ary, from, size)
+	ary2, count, err := orm.Orm.ReadDocuments(&Action{}, from, size)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -190,9 +186,8 @@ func (orm *BtOrm) ReadActions(from int, size int) ([]*Action, int64, error) {
 }
 
 func (orm *BtOrm) UpdateAction(id common.Ident, fields *Action) error {
-	action := &Action{}
-	action.Id = id
-	return orm.Orm.UpdateDocument(action, fields, &Action{})
+	fields.Id = id
+	return orm.Orm.UpdateDocument(fields)
 }
 
 func (orm *BtOrm) DeleteAction(id common.Ident) error {
@@ -220,11 +215,7 @@ func (orm *BtOrm) ReadFeed(id common.Ident) (*Feed, error) {
 }
 
 func (orm *BtOrm) ReadFeeds(from int, size int) ([]*Feed, int64, error) {
-	ary := make([]esorm.Elasticable, size)
-	for i := range ary {
-		ary[i] = &Feed{}
-	}
-	ary2, count, err := orm.Orm.ReadDocuments(ary, from, size)
+	ary2, count, err := orm.Orm.ReadDocuments(&Feed{}, from, size)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -237,9 +228,8 @@ func (orm *BtOrm) ReadFeeds(from int, size int) ([]*Feed, int64, error) {
 }
 
 func (orm *BtOrm) UpdateFeed(id common.Ident, fields *Feed) error {
-	feed := &Feed{}
-	feed.Id = id
-	return orm.Orm.UpdateDocument(feed, fields, &Feed{})
+	fields.Id = id
+	return orm.Orm.UpdateDocument(fields)
 }
 
 func (orm *BtOrm) DeleteFeed(id common.Ident) error {
@@ -267,11 +257,7 @@ func (orm *BtOrm) ReadRule(id common.Ident) (*Rule, error) {
 }
 
 func (orm *BtOrm) ReadRules(from int, size int) ([]*Rule, int64, error) {
-	ary := make([]esorm.Elasticable, size)
-	for i := range ary {
-		ary[i] = &Rule{}
-	}
-	ary2, count, err := orm.Orm.ReadDocuments(ary, from, size)
+	ary2, count, err := orm.Orm.ReadDocuments(&Rule{}, from, size)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -284,9 +270,8 @@ func (orm *BtOrm) ReadRules(from int, size int) ([]*Rule, int64, error) {
 }
 
 func (orm *BtOrm) UpdateRule(id common.Ident, fields *Rule) error {
-	rule := &Rule{}
-	rule.Id = id
-	return orm.Orm.UpdateDocument(rule, fields, &Rule{})
+	fields.Id = id
+	return orm.Orm.UpdateDocument(fields)
 }
 
 func (orm *BtOrm) DeleteRule(id common.Ident) error {
@@ -314,11 +299,7 @@ func (orm *BtOrm) ReadUser(id common.Ident) (*User, error) {
 }
 
 func (orm *BtOrm) ReadUsers(from int, size int) ([]*User, int64, error) {
-	ary := make([]esorm.Elasticable, size)
-	for i := range ary {
-		ary[i] = &User{}
-	}
-	ary2, count, err := orm.Orm.ReadDocuments(ary, from, size)
+	ary2, count, err := orm.Orm.ReadDocuments(&User{}, from, size)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -331,9 +312,8 @@ func (orm *BtOrm) ReadUsers(from int, size int) ([]*User, int64, error) {
 }
 
 func (orm *BtOrm) UpdateUser(id common.Ident, fields *User) error {
-	user := &User{}
-	user.Id = id
-	return orm.Orm.UpdateDocument(user, fields, &User{})
+	fields.Id = id
+	return orm.Orm.UpdateDocument(fields)
 }
 
 func (orm *BtOrm) DeleteUser(id common.Ident) error {

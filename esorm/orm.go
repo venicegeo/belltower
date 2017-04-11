@@ -101,15 +101,11 @@ func (orm *Orm) ReadDocument(typ Elasticable) (interface{}, error) {
 
 // TODO: the passed-in array should be sufficient, ought not return it too
 // TODO: for now, always return sorted by id (ascending)
-func (orm *Orm) ReadDocuments(objs []Elasticable, from int, size int) ([]Elasticable, int64, error) {
-
-	if len(objs) < size {
-		return nil, 0, fmt.Errorf("array not long enough")
-	}
+func (orm *Orm) ReadDocuments(typ Elasticable, from int, size int) ([]Elasticable, int64, error) {
 
 	result, err := orm.esClient.Search().
-		Index(GetIndexName(objs[0])).
-		Type(GetTypeName(objs[0])).
+		Index(GetIndexName(typ)).
+		Type(GetTypeName(typ)).
 		Query(elastic.NewMatchAllQuery()).
 		From(from).Size(size).
 		Sort("id", true).
@@ -122,36 +118,39 @@ func (orm *Orm) ReadDocuments(objs []Elasticable, from int, size int) ([]Elastic
 		return nil, 0, nil
 	}
 
+	ary := []Elasticable{}
+
 	i := 0
 	for _, hit := range result.Hits.Hits {
-		err = json.Unmarshal(*hit.Source, objs[i])
+		tmp := common.NewViaReflection(typ)
+
+		err = json.Unmarshal(*hit.Source, tmp)
 		if err != nil {
 			return nil, 0, err
 		}
+		ary = append(ary, tmp.(Elasticable))
 		i++
 	}
 
-	objs = objs[0:i]
-
-	return objs, result.Hits.TotalHits, nil
+	return ary, result.Hits.TotalHits, nil
 }
 
-func (orm *Orm) UpdateDocument(typ Elasticable, src Elasticable, zzztmp Elasticable) error {
-	tmp, err := orm.ReadDocument(typ)
+func (orm *Orm) UpdateDocument(src Elasticable) error {
+	dest, err := orm.ReadDocument(src)
 	if err != nil {
 		return err
 	}
 
-	err = CrudMerge(src, tmp, CrudFieldUpdate)
+	err = CrudMerge(src, dest, CrudFieldUpdate)
 	if err != nil {
 		return err
 	}
 
 	_, err = orm.esClient.Update().
-		Index(GetIndexName(typ)).
-		Type(GetTypeName(typ)).
-		Id(typ.GetId().String()).
-		Doc(tmp).
+		Index(GetIndexName(src)).
+		Type(GetTypeName(src)).
+		Id(src.GetId().String()).
+		Doc(dest).
 		Do(orm.ctx)
 	if err != nil {
 		return err

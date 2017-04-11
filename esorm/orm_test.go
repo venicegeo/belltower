@@ -160,13 +160,11 @@ func TestDocumentCRUD(t *testing.T) {
 	assert.EqualValues(orig.Name, dup.(*Demo).Name)
 
 	// update it
-	tmp := &Demo{}
 	src := &Demo{Id: id, Name: "Bob"}
-	err = orm.UpdateDocument(&Demo{Id: id}, src, tmp)
+	err = orm.UpdateDocument(src)
 	assert.NoError(err)
 
 	// read again, to check
-	tmp = &Demo{Id: id}
 	dup, err = orm.ReadDocument(&Demo{Id: id})
 	assert.NoError(err)
 	assert.NotNil(dup)
@@ -175,8 +173,7 @@ func TestDocumentCRUD(t *testing.T) {
 
 	// not allowed to update for invalid id
 	src = &Demo{Id: "3241234124", Name: "Bob"}
-	tmp = &Demo{}
-	err = orm.UpdateDocument(&Demo{Id: "3241234124"}, src, tmp)
+	err = orm.UpdateDocument(src)
 	assert.Error(err)
 
 	// not allowed to read from an invalid id
@@ -189,7 +186,6 @@ func TestDocumentCRUD(t *testing.T) {
 	assert.NotEmpty(id2)
 
 	// does read still work?
-	tmp = &Demo{Id: id2}
 	dup, err = orm.ReadDocument(&Demo{Id: id2})
 	assert.NoError(err)
 	assert.NotNil(dup)
@@ -199,45 +195,36 @@ func TestDocumentCRUD(t *testing.T) {
 	//	time.Sleep(5 * time.Second)
 
 	// read all
-	makearay := func() []Elasticable {
-		ary := make([]Elasticable, 10)
-		for i := range ary {
-			ary[i] = &Demo{}
-		}
-		return ary
-	}
 	{
+		tmp := &Demo{}
+
 		// quick side trip to test pagination
-		ary0 := makearay()
-		ary1, tot, err := orm.ReadDocuments(ary0, 0, 1)
+		ary1, tot, err := orm.ReadDocuments(tmp, 0, 1)
 		assert.NoError(err)
 		assert.NotNil(ary1)
 		assert.Equal(int64(2), tot)
 		assert.Len(ary1, 1)
 
-		ary2 := makearay()
-		ary3, tot, err := orm.ReadDocuments(ary2, 1, 1)
+		ary3, tot, err := orm.ReadDocuments(tmp, 1, 1)
 		assert.NoError(err)
 		assert.NotNil(ary3)
 		assert.Equal(int64(2), tot)
 		assert.Len(ary3, 1)
 
-		ary4 := makearay()
-		ary5, tot, err := orm.ReadDocuments(ary4, 0, 10)
+		ary5, tot, err := orm.ReadDocuments(tmp, 0, 10)
 		assert.NoError(err)
 		assert.NotNil(ary5)
 		assert.Equal(int64(2), tot)
 		assert.Len(ary5, 2)
 
-		ary6 := makearay()
-		ary7, tot, err := orm.ReadDocuments(ary6, 10, 10)
+		ary7, tot, err := orm.ReadDocuments(tmp, 10, 10)
 		assert.NoError(err)
 		assert.NotNil(ary7)
 		assert.Equal(int64(2), tot)
 		assert.Len(ary7, 0)
 	}
-	ary8 := makearay()
-	ary9, tot, err := orm.ReadDocuments(ary8, 0, 10)
+
+	ary9, tot, err := orm.ReadDocuments(&Demo{}, 0, 10)
 	assert.NoError(err)
 	assert.NotNil(ary9)
 	assert.Equal(int64(2), tot)
@@ -255,7 +242,7 @@ func TestDocumentCRUD(t *testing.T) {
 	assert.True(ok1 || ok2)
 
 	// try delete
-	tmp = &Demo{Id: id}
+	tmp := &Demo{Id: id}
 	err = orm.DeleteDocument(tmp)
 	assert.NoError(err)
 
