@@ -141,7 +141,7 @@ func TestCrudMerge2(t *testing.T) {
 		F1 int `crud:"c"`
 		F2 int
 		T1 time.Time `crud:"c"`
-		//T2 time.Time
+		//TODO: T2 time.Time
 	}
 
 	now := time.Now()
