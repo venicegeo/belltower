@@ -20,7 +20,7 @@ func TestIndexOperations(t *testing.T) {
 	e := &Demo{}
 
 	// to set things up correctly (ignore errors)
-	orm.DeleteIndex(e)
+	_ = orm.DeleteIndex(e)
 
 	err = orm.CreateIndex(e)
 	assert.NoError(err)
@@ -177,7 +177,7 @@ func TestDocumentCRUD(t *testing.T) {
 	assert.Error(err)
 
 	// not allowed to read from an invalid id
-	dup, err = orm.ReadDocument(&Demo{Id: "99999"})
+	_, err = orm.ReadDocument(&Demo{Id: "99999"})
 	assert.Error(err)
 
 	// make a second one
@@ -259,7 +259,7 @@ func TestDemoMappings(t *testing.T) {
 	assert.NotNil(orm)
 
 	// to set things up correctly (ignore errors)
-	orm.DeleteIndex(&Demo{})
+	_ = orm.DeleteIndex(&Demo{})
 
 	err = orm.CreateIndex(&Demo{})
 	assert.NoError(err)
@@ -336,7 +336,7 @@ type Demo struct {
 func (f *Demo) SetFieldsForCreate(ownerId common.Ident, fields interface{}) error { panic(1) }
 func (f *Demo) GetFieldsForRead() (interface{}, error)                            { panic(1) }
 func (f *Demo) SetFieldsForUpdate(fields interface{}) error                       { panic(1) }
-func (F *Demo) String() string                                                    { panic(1) }
+func (f *Demo) String() string                                                    { panic(1) }
 
 func (f *Demo) GetLoweredName() string { return "demo" }
 func (f *Demo) GetIndexName() string   { return "demo_index" }

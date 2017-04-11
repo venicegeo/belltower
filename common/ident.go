@@ -2,7 +2,7 @@ package common
 
 import "strconv"
 
-var globalId int = 0
+var globalId int
 
 type Ident string
 

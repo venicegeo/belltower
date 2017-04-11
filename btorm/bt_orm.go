@@ -57,6 +57,9 @@ func NewBtOrm(prefix string, ormOption OrmOption) (*BtOrm, error) {
 		}
 	case OrmOptionOpenOrCreate:
 		exists, err := btOrm.databaseExists()
+		if err != nil {
+			return nil, err
+		}
 		if exists {
 			err = btOrm.createDatabase()
 			if err != nil {
@@ -73,10 +76,10 @@ func NewBtOrm(prefix string, ormOption OrmOption) (*BtOrm, error) {
 	return btOrm, nil
 }
 
-func (btOrm *BtOrm) databaseExists() (bool, error) {
+func (orm *BtOrm) databaseExists() (bool, error) {
 
-	for _, t := range btOrm.objectTypes {
-		exists, err := btOrm.Orm.IndexExists(t)
+	for _, t := range orm.objectTypes {
+		exists, err := orm.Orm.IndexExists(t)
 		if err != nil {
 			return false, err
 		}
@@ -88,15 +91,15 @@ func (btOrm *BtOrm) databaseExists() (bool, error) {
 	return true, nil
 }
 
-func (btOrm *BtOrm) createDatabase() error {
+func (orm *BtOrm) createDatabase() error {
 
-	err := btOrm.deleteDatabase()
+	err := orm.deleteDatabase()
 	if err != nil {
 		return err
 	}
 
-	for _, t := range btOrm.objectTypes {
-		err = btOrm.Orm.CreateIndex(t)
+	for _, t := range orm.objectTypes {
+		err = orm.Orm.CreateIndex(t)
 		if err != nil {
 			return err
 		}
@@ -105,9 +108,9 @@ func (btOrm *BtOrm) createDatabase() error {
 	return nil
 }
 
-func (btOrm *BtOrm) openDatabase() error {
+func (orm *BtOrm) openDatabase() error {
 
-	exists, err := btOrm.databaseExists()
+	exists, err := orm.databaseExists()
 	if err != nil {
 		return err
 	}
@@ -121,18 +124,18 @@ func (btOrm *BtOrm) openDatabase() error {
 	return nil
 }
 
-func (btOrm *BtOrm) deleteDatabase() error {
+func (orm *BtOrm) deleteDatabase() error {
 
 	// try to delete all the indexes
 
-	for _, t := range btOrm.objectTypes {
-		exists, err := btOrm.Orm.IndexExists(t)
+	for _, t := range orm.objectTypes {
+		exists, err := orm.Orm.IndexExists(t)
 		if err != nil {
 			return err
 		}
 
 		if exists {
-			err = btOrm.Orm.DeleteIndex(t)
+			err = orm.Orm.DeleteIndex(t)
 			if err != nil {
 				return err
 			}

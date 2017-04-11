@@ -96,38 +96,47 @@ func crudMerge(srcStruct reflect.Value, destStruct reflect.Value, mode CrudField
 
 	numField := srcStruct.NumField()
 	for i := 0; i < numField; i++ {
-		field := srcStruct.Type().Field(i)
-		fieldName := field.Name
-		fieldValue := srcStruct.Field(i)
-
-		xfieldValue := destStruct.Field(i)
-
-		if !fieldValue.IsValid() {
-			return fmt.Errorf("invalid")
-		}
-
-		if !fieldValue.CanSet() {
-			return fmt.Errorf("can't set: %s", fieldName)
-		}
-
-		ok, err := isCrudField(srcStruct, fieldName, mode)
+		err := crudMergeField(srcStruct, destStruct, mode, i)
 		if err != nil {
 			return err
 		}
-		if ok {
-			xfieldValue.Set(fieldValue)
-		} else {
-			// drill into an embedded struct
-			tagVal, tagOk := field.Tag.Lookup(CrudTag)
-			if field.Anonymous ||
-				(field.Type.Kind() == reflect.Struct && tagOk && tagVal == "") {
-				err := crudMerge(fieldValue, xfieldValue, mode)
-				if err != nil {
-					return err
-				}
-				continue
-			}
+	}
+	return nil
+}
+
+func crudMergeField(srcStruct reflect.Value, destStruct reflect.Value, mode CrudFieldMode, i int) error {
+	field := srcStruct.Type().Field(i)
+	fieldName := field.Name
+	fieldValue := srcStruct.Field(i)
+
+	xfieldValue := destStruct.Field(i)
+
+	if !fieldValue.IsValid() {
+		return fmt.Errorf("invalid")
+	}
+
+	if !fieldValue.CanSet() {
+		return fmt.Errorf("can't set: %s", fieldName)
+	}
+
+	ok, err := isCrudField(srcStruct, fieldName, mode)
+	if err != nil {
+		return err
+	}
+	if ok {
+		xfieldValue.Set(fieldValue)
+		return nil
+	}
+
+	// drill into an embedded struct
+	tagVal, tagOk := field.Tag.Lookup(CrudTag)
+	if field.Anonymous ||
+		(field.Type.Kind() == reflect.Struct && tagOk && tagVal == "") {
+		err := crudMerge(fieldValue, xfieldValue, mode)
+		if err != nil {
+			return err
 		}
 	}
+
 	return nil
 }

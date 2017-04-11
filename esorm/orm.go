@@ -152,11 +152,7 @@ func (orm *Orm) UpdateDocument(src Elasticable) error {
 		Id(src.GetId().String()).
 		Doc(dest).
 		Do(orm.ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (orm *Orm) DeleteDocument(obj Elasticable) error {
