@@ -16,14 +16,11 @@ type Elasticable interface {
 	GetId() common.Ident
 	SetId() common.Ident
 
-	SetFieldsForCreate(ownerId common.Ident, fields interface{}) error
-	GetFieldsForRead() (interface{}, error)
-	SetFieldsForUpdate(fields interface{}) error
-
 	String() string
 }
 
 func getLoweredName(x interface{}) string {
+	// TODO: reimplement via reflection
 	s := fmt.Sprintf("%T", x)
 	dot := strings.Index(s, ".")
 	t := strings.ToLower(s[dot+1:])

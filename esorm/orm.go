@@ -73,12 +73,15 @@ func (orm *Orm) CreateDocument(obj Elasticable) (common.Ident, error) {
 	return common.ToIdent(resp.Id), nil
 }
 
-func (orm *Orm) ReadDocument(obj Elasticable) (Elasticable, error) {
+func (orm *Orm) ReadDocument(typ Elasticable) (interface{}, error) {
+	if typ.GetId() == common.NoIdent {
+		return nil, fmt.Errorf("object does not have Id set")
+	}
 
 	result, err := orm.esClient.Get().
-		Index(GetIndexName(obj)).
-		Type(GetTypeName(obj)).
-		Id(obj.GetId().String()).
+		Index(GetIndexName(typ)).
+		Type(GetTypeName(typ)).
+		Id(typ.GetId().String()).
 		Do(orm.ctx)
 	if err != nil {
 		return nil, err
@@ -87,12 +90,13 @@ func (orm *Orm) ReadDocument(obj Elasticable) (Elasticable, error) {
 		return nil, fmt.Errorf("document not found")
 	}
 
-	err = json.Unmarshal(*result.Source, &obj)
+	typ2 := common.NewViaReflection(typ)
+	err = json.Unmarshal(*result.Source, typ2)
 	if err != nil {
 		return nil, err
 	}
 
-	return obj, nil
+	return typ2, nil
 }
 
 // TODO: the passed-in array should be sufficient, ought not return it too
@@ -132,12 +136,22 @@ func (orm *Orm) ReadDocuments(objs []Elasticable, from int, size int) ([]Elastic
 	return objs, result.Hits.TotalHits, nil
 }
 
-func (orm *Orm) UpdateDocument(obj Elasticable) error {
-	_, err := orm.esClient.Update().
-		Index(GetIndexName(obj)).
-		Type(GetTypeName(obj)).
-		Id(obj.GetId().String()).
-		Doc(obj).
+func (orm *Orm) UpdateDocument(typ Elasticable, src Elasticable, zzztmp Elasticable) error {
+	tmp, err := orm.ReadDocument(typ)
+	if err != nil {
+		return err
+	}
+
+	err = CrudMerge(src, tmp, CrudFieldUpdate)
+	if err != nil {
+		return err
+	}
+
+	_, err = orm.esClient.Update().
+		Index(GetIndexName(typ)).
+		Type(GetTypeName(typ)).
+		Id(typ.GetId().String()).
+		Doc(tmp).
 		Do(orm.ctx)
 	if err != nil {
 		return err

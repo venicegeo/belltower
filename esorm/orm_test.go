@@ -152,34 +152,35 @@ func TestDocumentCRUD(t *testing.T) {
 	assert.NotEmpty(id)
 
 	// does read work?
-	tmp := &Demo{Id: id}
-	dup, err := orm.ReadDocument(tmp)
+	//	dup := &Demo{}
+	dup, err := orm.ReadDocument(&Demo{Id: id})
 	assert.NoError(err)
 	assert.NotNil(dup)
-	assert.EqualValues(id, dup.GetId())
+	assert.EqualValues(id, dup.(*Demo).GetId())
 	assert.EqualValues(orig.Name, dup.(*Demo).Name)
 
 	// update it
-	tmp = &Demo{Id: id, Name: "Bob"}
-	err = orm.UpdateDocument(tmp)
+	tmp := &Demo{}
+	src := &Demo{Id: id, Name: "Bob"}
+	err = orm.UpdateDocument(&Demo{Id: id}, src, tmp)
 	assert.NoError(err)
 
 	// read again, to check
 	tmp = &Demo{Id: id}
-	dup, err = orm.ReadDocument(tmp)
+	dup, err = orm.ReadDocument(&Demo{Id: id})
 	assert.NoError(err)
 	assert.NotNil(dup)
-	assert.EqualValues(id, dup.GetId())
+	assert.EqualValues(id, dup.(*Demo).GetId())
 	assert.EqualValues("Bob", dup.(*Demo).Name)
 
 	// not allowed to update for invalid id
-	tmp = &Demo{Id: "3241234124", Name: "Bob"}
-	err = orm.UpdateDocument(tmp)
+	src = &Demo{Id: "3241234124", Name: "Bob"}
+	tmp = &Demo{}
+	err = orm.UpdateDocument(&Demo{Id: "3241234124"}, src, tmp)
 	assert.Error(err)
 
 	// not allowed to read from an invalid id
-	tmp = &Demo{Id: "99999"}
-	_, err = orm.ReadDocument(tmp)
+	dup, err = orm.ReadDocument(&Demo{Id: "99999"})
 	assert.Error(err)
 
 	// make a second one
@@ -189,10 +190,10 @@ func TestDocumentCRUD(t *testing.T) {
 
 	// does read still work?
 	tmp = &Demo{Id: id2}
-	dup, err = orm.ReadDocument(tmp)
+	dup, err = orm.ReadDocument(&Demo{Id: id2})
 	assert.NoError(err)
 	assert.NotNil(dup)
-	assert.EqualValues(id2, dup.GetId())
+	assert.EqualValues(id2, dup.(*Demo).GetId())
 	assert.EqualValues(orig2.Name, dup.(*Demo).Name)
 
 	//	time.Sleep(5 * time.Second)
@@ -301,12 +302,10 @@ func TestDemoMappings(t *testing.T) {
 	assert.NoError(err)
 	assert.NotEmpty(id)
 
-	f := &Demo{Id: id}
-	g, err := orm.ReadDocument(f)
+	g, err := orm.ReadDocument(&Demo{Id: id})
 	assert.NoError(err)
 	assert.NotNil(g)
-	//log.Printf("%#v", g)
-	assert.EqualValues(id, g.GetId())
+	assert.EqualValues(id, g.(*Demo).GetId())
 
 	assert.EqualValues("Bob", feed.Name)
 	assert.EqualValues(feed.Name, g.(*Demo).Name)
@@ -334,10 +333,10 @@ type DemoCore struct {
 }
 
 type Demo struct {
-	Id       common.Ident `json:"id"`
-	Name     string       `json:"name"`
-	Time     time.Time    `json:"time"`
-	Bool     bool         `json:"bool"`
+	Id       common.Ident `json:"id"        crud:"r"`
+	Name     string       `json:"name"      crud:"cru"`
+	Time     time.Time    `json:"time"      crud:"cru"`
+	Bool     bool         `json:"bool"      crud:"r"`
 	Int      int          `json:"int"`
 	Float    float64      `json:"float"`
 	IntArray []int        `json:"int_array"`
