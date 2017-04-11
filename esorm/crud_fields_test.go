@@ -2,6 +2,7 @@ package esorm
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -139,7 +140,11 @@ func TestCrudMerge2(t *testing.T) {
 		B  B
 		F1 int `crud:"c"`
 		F2 int
+		T1 time.Time `crud:"c"`
+		//T2 time.Time
 	}
+
+	now := time.Now()
 
 	src := T{}
 	src.A1 = 1
@@ -148,6 +153,8 @@ func TestCrudMerge2(t *testing.T) {
 	src.B.B2 = 4
 	src.F1 = 5
 	src.F2 = 6
+	src.T1 = now
+	//src.T2 = now
 
 	dest := T{}
 	dest.A1 = 10
@@ -156,6 +163,8 @@ func TestCrudMerge2(t *testing.T) {
 	dest.B.B2 = 40
 	dest.F1 = 50
 	dest.F2 = 60
+	dest.T1 = time.Time{}
+	//dest.T2 = time.Time{}
 
 	err := CrudMerge(&src, &dest, CrudFieldCreate)
 	assert.NoError(err)
@@ -166,4 +175,6 @@ func TestCrudMerge2(t *testing.T) {
 	assert.Equal(40, dest.B.B2)
 	assert.Equal(5, dest.F1)
 	assert.Equal(60, dest.F2)
+	assert.Equal(now, dest.T1)
+	//assert.True(dest.T2.IsZero())
 }
