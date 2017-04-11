@@ -137,11 +137,11 @@ func TestCrudMerge2(t *testing.T) {
 	}
 	type T struct {
 		A
-		B  B
+		B  B   `crud:""` // tag value "" means "descend into this embedded struct"
 		F1 int `crud:"c"`
 		F2 int
 		T1 time.Time `crud:"c"`
-		//TODO: T2 time.Time
+		T2 time.Time // no tag means "don't descend into this embedded struct"
 	}
 
 	now := time.Now()
@@ -154,7 +154,7 @@ func TestCrudMerge2(t *testing.T) {
 	src.F1 = 5
 	src.F2 = 6
 	src.T1 = now
-	//src.T2 = now
+	src.T2 = now
 
 	dest := T{}
 	dest.A1 = 10
@@ -164,7 +164,7 @@ func TestCrudMerge2(t *testing.T) {
 	dest.F1 = 50
 	dest.F2 = 60
 	dest.T1 = time.Time{}
-	//dest.T2 = time.Time{}
+	dest.T2 = time.Time{}
 
 	err := CrudMerge(&src, &dest, CrudFieldCreate)
 	assert.NoError(err)
@@ -176,5 +176,5 @@ func TestCrudMerge2(t *testing.T) {
 	assert.Equal(5, dest.F1)
 	assert.Equal(60, dest.F2)
 	assert.Equal(now, dest.T1)
-	//assert.True(dest.T2.IsZero())
+	assert.True(dest.T2.IsZero())
 }

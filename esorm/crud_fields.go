@@ -118,7 +118,9 @@ func crudMerge(srcStruct reflect.Value, destStruct reflect.Value, mode CrudField
 			xfieldValue.Set(fieldValue)
 		} else {
 			// drill into an embedded struct
-			if field.Anonymous || field.Type.Kind() == reflect.Struct {
+			tagVal, tagOk := field.Tag.Lookup(CrudTag)
+			if field.Anonymous ||
+				(field.Type.Kind() == reflect.Struct && tagOk && tagVal == "") {
 				err := crudMerge(fieldValue, xfieldValue, mode)
 				if err != nil {
 					return err
