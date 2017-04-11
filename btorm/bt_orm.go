@@ -150,7 +150,7 @@ func (orm *BtOrm) Close() error {
 }
 
 func (orm *BtOrm) GetAdminID() common.Ident {
-	panic("getadminid")
+	panic("internal error")
 }
 
 //---------------------------------------------------------------------

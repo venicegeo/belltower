@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func GetMapValueAsInt(m map[string]interface{}, key string) (int, error) {
@@ -131,21 +129,4 @@ func ObjectsAreEqualValues(expected, actual interface{}) bool {
 	}
 
 	return false
-}
-
-func AreMapsEqual(a map[string]interface{}, b map[string]interface{}, eq func(interface{}, interface{}) bool) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	for k, v := range a {
-		vv, ok := b[k]
-		if !ok {
-			return false
-		}
-		if !assert.ObjectsAreEqualValues(v, vv) {
-			return false
-		}
-	}
-	return true
 }

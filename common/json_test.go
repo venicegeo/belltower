@@ -37,3 +37,13 @@ func TestJson(t *testing.T) {
 	assert.NoError(err)
 	check(j3)
 }
+
+func TestValidateJson(t *testing.T) {
+	assert := assert.New(t)
+
+	assert.NoError(ValidateJsonString("{}"))
+	assert.NoError(ValidateJsonString(`{"a":1}`))
+
+	assert.Error(ValidateJsonString("{"))
+	assert.Error(ValidateJsonString(`{a:1}`))
+}

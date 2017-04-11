@@ -56,6 +56,7 @@ func (j *Json) ToObject(obj interface{}) error {
 	return json.Unmarshal(j.bytes, obj)
 }
 
+// note only works for maps
 func ValidateJsonString(s string) error {
 	//log.Printf("== %s ==", s)
 

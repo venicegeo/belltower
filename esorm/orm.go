@@ -99,7 +99,6 @@ func (orm *Orm) ReadDocument(typ Elasticable) (interface{}, error) {
 	return typ2, nil
 }
 
-// TODO: the passed-in array should be sufficient, ought not return it too
 // TODO: for now, always return sorted by id (ascending)
 func (orm *Orm) ReadDocuments(typ Elasticable, from int, size int) ([]Elasticable, int64, error) {
 
@@ -170,23 +169,12 @@ func (orm *Orm) DeleteDocument(obj Elasticable) error {
 	return nil
 }
 
-func (orm *Orm) listIndexes(delete bool) {
+func (orm *Orm) GetIndexes() ([]string, error) {
 	names, err := orm.esClient.IndexNames()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	for _, name := range names {
-		fmt.Printf("%s\n", name)
-		if delete && strings.HasPrefix(name, "f") {
-			resp, err := orm.esClient.DeleteIndex(name).Do(orm.ctx)
-			if err != nil {
-				panic(err)
-			}
-			if !resp.Acknowledged {
-				panic("DeleteIndex() not acknowledged")
-			}
-		}
-	}
+	return names, nil
 }
 
 func (orm *Orm) IndexExists(e Elasticable) (bool, error) {
@@ -226,7 +214,7 @@ func (orm *Orm) CreateIndex(e Elasticable) error {
 	mappingString := string(byts)
 
 	if strings.Contains(mappingString, "string") {
-		panic("obselete datatype \"string\" in mapping for index " + index)
+		panic("internal error: obselete datatype \"string\" in mapping for index " + index)
 	}
 
 	result, err := orm.esClient.CreateIndex(index).BodyString(mappingString).Do(orm.ctx)

@@ -6,6 +6,8 @@ import (
 
 	"encoding/json"
 
+	"fmt"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/venicegeo/belltower/common"
 )
@@ -18,6 +20,7 @@ func TestIndexOperations(t *testing.T) {
 	assert.NotNil(orm)
 
 	e := &Demo{}
+	assert.Equal("demo_index", GetIndexName(e))
 
 	// to set things up correctly (ignore errors)
 	_ = orm.DeleteIndex(e)
@@ -28,6 +31,11 @@ func TestIndexOperations(t *testing.T) {
 	exists, err := orm.IndexExists(e)
 	assert.NoError(err)
 	assert.True(exists)
+
+	names, err := orm.GetIndexes()
+	assert.NoError(err)
+	assert.True(len(names) >= 1)
+	assert.Contains(names, GetIndexName(e))
 
 	// not allowed to create an index that already exists
 	err = orm.CreateIndex(e)
@@ -43,6 +51,9 @@ func TestIndexOperations(t *testing.T) {
 	// not allowed to delete an index that doesn't exist
 	err = orm.DeleteIndex(e)
 	assert.Error(err)
+
+	err = orm.Close()
+	assert.NoError(err)
 }
 
 func TestMappingGeneration(t *testing.T) {
@@ -333,16 +344,9 @@ type Demo struct {
 	Nested   []DemoCoreX  `json:"nested"`
 }
 
-func (f *Demo) SetFieldsForCreate(ownerId common.Ident, fields interface{}) error { panic(1) }
-func (f *Demo) GetFieldsForRead() (interface{}, error)                            { panic(1) }
-func (f *Demo) SetFieldsForUpdate(fields interface{}) error                       { panic(1) }
-func (f *Demo) String() string                                                    { panic(1) }
+func (d *Demo) String() string { return fmt.Sprintf("%#v", d) }
 
-func (f *Demo) GetLoweredName() string { return "demo" }
-func (f *Demo) GetIndexName() string   { return "demo_index" }
-func (f *Demo) GetTypeName() string    { return "demo_type" }
-
-func (f *Demo) GetMappingProperties() map[string]MappingPropertyFields {
+func (d *Demo) GetMappingProperties() map[string]MappingPropertyFields {
 
 	data := map[string]MappingPropertyFields{
 		"id":        MappingPropertyFields{Type: "keyword"},
@@ -389,11 +393,11 @@ func (f *Demo) GetMappingProperties() map[string]MappingPropertyFields {
 	return data
 }
 
-func (f *Demo) GetId() common.Ident {
-	return f.Id
+func (d *Demo) GetId() common.Ident {
+	return d.Id
 }
 
-func (f *Demo) SetId() common.Ident {
-	f.Id = common.NewId()
-	return f.Id
+func (d *Demo) SetId() common.Ident {
+	d.Id = common.NewId()
+	return d.Id
 }
