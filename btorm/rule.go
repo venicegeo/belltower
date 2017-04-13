@@ -11,10 +11,10 @@ type Rule struct {
 
 //---------------------------------------------------------------------
 
-func (rule *Rule) GetMappingProperties() map[string]esorm.MappingPropertyFields {
-	properties := map[string]esorm.MappingPropertyFields{}
+func (rule *Rule) GetMappingProperties() map[string]esorm.MappingProperty {
+	properties := map[string]esorm.MappingProperty{}
 
-	properties["expression"] = esorm.MappingPropertyFields{Type: "text"}
+	properties["expression"] = esorm.MappingProperty{Type: "text"}
 
 	for k, v := range rule.Core.GetCoreMappingProperties() {
 		properties[k] = v

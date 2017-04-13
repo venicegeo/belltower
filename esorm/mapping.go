@@ -3,32 +3,25 @@ package esorm
 //---------------------------------------------------------------------
 
 type Mapping struct {
-	Settings MappingSettings            `json:"settings"`
-	Mappings map[string]MappingTypeName `json:"mappings"`
+	Settings map[string]interface{}     `json:"settings"`
+	Mappings map[string]MappingProperty `json:"mappings"`
 }
 
-type MappingSettings map[string]interface{}
-
-type MappingTypeName struct {
-	Dynamic    string                           `json:"dynamic,omitempty"`
-	Properties map[string]MappingPropertyFields `json:"properties,omitempty"`
-}
-
-type MappingPropertyFields struct {
-	Type       string                           `json:"type"`
-	Dynamic    string                           `json:"dynamic,omitempty"`
-	Properties map[string]MappingPropertyFields `json:"properties,omitempty"`
+type MappingProperty struct {
+	Type       string                     `json:"type,omitempty"`
+	Dynamic    string                     `json:"dynamic,omitempty"`
+	Properties map[string]MappingProperty `json:"properties,omitempty"`
 }
 
 func NewMapping(e Elasticable) *Mapping {
-	mt := MappingTypeName{
+	mt := MappingProperty{
 		Dynamic:    "strict",
 		Properties: e.GetMappingProperties(),
 	}
 
 	m := &Mapping{
-		Settings: MappingSettings{},
-		Mappings: map[string]MappingTypeName{GetTypeName(e): mt},
+		Settings: map[string]interface{}{},
+		Mappings: map[string]MappingProperty{GetTypeName(e): mt},
 	}
 
 	return m

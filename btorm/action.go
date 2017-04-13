@@ -13,10 +13,10 @@ type Action struct {
 
 //---------------------------------------------------------------------
 
-func (action *Action) GetMappingProperties() map[string]esorm.MappingPropertyFields {
-	properties := map[string]esorm.MappingPropertyFields{}
+func (action *Action) GetMappingProperties() map[string]esorm.MappingProperty {
+	properties := map[string]esorm.MappingProperty{}
 
-	properties["settings"] = esorm.MappingPropertyFields{Type: "object", Dynamic: "true"}
+	properties["settings"] = esorm.MappingProperty{Type: "object", Dynamic: "true"}
 
 	for k, v := range action.Core.GetCoreMappingProperties() {
 		properties[k] = v

@@ -11,7 +11,7 @@ import (
 
 // every object type wil be stored in its own type in its own index
 type Elasticable interface {
-	GetMappingProperties() map[string]MappingPropertyFields
+	GetMappingProperties() map[string]MappingProperty
 
 	GetId() common.Ident
 	SetId() common.Ident

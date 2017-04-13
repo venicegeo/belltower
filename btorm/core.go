@@ -27,15 +27,15 @@ func (c *Core) GetIsPublic() bool        { return c.IsPublic }
 
 func (c Core) String() string { return fmt.Sprintf("a.%s: %s", c.Id, c.Name) }
 
-func (c *Core) GetCoreMappingProperties() map[string]esorm.MappingPropertyFields {
-	properties := map[string]esorm.MappingPropertyFields{
-		"id":         esorm.MappingPropertyFields{Type: "keyword"},
-		"name":       esorm.MappingPropertyFields{Type: "keyword"},
-		"created_at": esorm.MappingPropertyFields{Type: "date"},
-		"updated_at": esorm.MappingPropertyFields{Type: "date"},
-		"is_enabled": esorm.MappingPropertyFields{Type: "boolean"},
-		"is_public":  esorm.MappingPropertyFields{Type: "boolean"},
-		"owner_id":   esorm.MappingPropertyFields{Type: "keyword"},
+func (c *Core) GetCoreMappingProperties() map[string]esorm.MappingProperty {
+	properties := map[string]esorm.MappingProperty{
+		"id":         esorm.MappingProperty{Type: "keyword"},
+		"name":       esorm.MappingProperty{Type: "keyword"},
+		"created_at": esorm.MappingProperty{Type: "date"},
+		"updated_at": esorm.MappingProperty{Type: "date"},
+		"is_enabled": esorm.MappingProperty{Type: "boolean"},
+		"is_public":  esorm.MappingProperty{Type: "boolean"},
+		"owner_id":   esorm.MappingProperty{Type: "keyword"},
 	}
 
 	return properties

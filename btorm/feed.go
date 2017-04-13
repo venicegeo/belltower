@@ -21,15 +21,15 @@ type Feed struct {
 
 //---------------------------------------------------------------------
 
-func (feed *Feed) GetMappingProperties() map[string]esorm.MappingPropertyFields {
-	properties := map[string]esorm.MappingPropertyFields{}
+func (feed *Feed) GetMappingProperties() map[string]esorm.MappingProperty {
+	properties := map[string]esorm.MappingProperty{}
 
-	properties["feeder_id"] = esorm.MappingPropertyFields{Type: "keyword"}
-	properties["message_count"] = esorm.MappingPropertyFields{Type: "integer"}
-	properties["polling_interval"] = esorm.MappingPropertyFields{Type: "integer"}
-	properties["polling_end_at"] = esorm.MappingPropertyFields{Type: "date"}
-	properties["last_message_at"] = esorm.MappingPropertyFields{Type: "date"}
-	properties["settings"] = esorm.MappingPropertyFields{Type: "object", Dynamic: "true"}
+	properties["feeder_id"] = esorm.MappingProperty{Type: "keyword"}
+	properties["message_count"] = esorm.MappingProperty{Type: "integer"}
+	properties["polling_interval"] = esorm.MappingProperty{Type: "integer"}
+	properties["polling_end_at"] = esorm.MappingProperty{Type: "date"}
+	properties["last_message_at"] = esorm.MappingProperty{Type: "date"}
+	properties["settings"] = esorm.MappingProperty{Type: "object", Dynamic: "true"}
 
 	for k, v := range feed.Core.GetCoreMappingProperties() {
 		properties[k] = v

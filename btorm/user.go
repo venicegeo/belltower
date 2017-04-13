@@ -15,11 +15,11 @@ type User struct {
 
 //---------------------------------------------------------------------
 
-func (user *User) GetMappingProperties() map[string]esorm.MappingPropertyFields {
-	properties := map[string]esorm.MappingPropertyFields{}
+func (user *User) GetMappingProperties() map[string]esorm.MappingProperty {
+	properties := map[string]esorm.MappingProperty{}
 
-	properties["role"] = esorm.MappingPropertyFields{Type: "keyword"}
-	properties["last_login_at"] = esorm.MappingPropertyFields{Type: "date"}
+	properties["role"] = esorm.MappingProperty{Type: "keyword"}
+	properties["last_login_at"] = esorm.MappingProperty{Type: "date"}
 
 	for k, v := range user.Core.GetCoreMappingProperties() {
 		properties[k] = v

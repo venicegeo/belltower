@@ -346,46 +346,46 @@ type Demo struct {
 
 func (d *Demo) String() string { return fmt.Sprintf("%#v", d) }
 
-func (d *Demo) GetMappingProperties() map[string]MappingPropertyFields {
+func (d *Demo) GetMappingProperties() map[string]MappingProperty {
 
-	data := map[string]MappingPropertyFields{
-		"id":        MappingPropertyFields{Type: "keyword"},
-		"name":      MappingPropertyFields{Type: "keyword"},
-		"time":      MappingPropertyFields{Type: "date"},
-		"bool":      MappingPropertyFields{Type: "boolean"},
-		"int":       MappingPropertyFields{Type: "integer"},
-		"float":     MappingPropertyFields{Type: "double"},
-		"int_array": MappingPropertyFields{Type: "integer"},
-		"object":    MappingPropertyFields{Type: "object", Dynamic: "true"},
+	data := map[string]MappingProperty{
+		"id":        MappingProperty{Type: "keyword"},
+		"name":      MappingProperty{Type: "keyword"},
+		"time":      MappingProperty{Type: "date"},
+		"bool":      MappingProperty{Type: "boolean"},
+		"int":       MappingProperty{Type: "integer"},
+		"float":     MappingProperty{Type: "double"},
+		"int_array": MappingProperty{Type: "integer"},
+		"object":    MappingProperty{Type: "object", Dynamic: "true"},
 
-		"core": MappingPropertyFields{
+		"core": MappingProperty{
 			Type: "object",
-			Properties: map[string]MappingPropertyFields{
-				"a2": MappingPropertyFields{Type: "integer"},
-				"b2": MappingPropertyFields{Type: "double"},
-				"c2": MappingPropertyFields{
+			Properties: map[string]MappingProperty{
+				"a2": MappingProperty{Type: "integer"},
+				"b2": MappingProperty{Type: "double"},
+				"c2": MappingProperty{
 					Type: "object",
-					Properties: map[string]MappingPropertyFields{
-						"a1": MappingPropertyFields{Type: "integer"},
-						"b1": MappingPropertyFields{Type: "double"},
+					Properties: map[string]MappingProperty{
+						"a1": MappingProperty{Type: "integer"},
+						"b1": MappingProperty{Type: "double"},
 					},
 				},
 			},
 		},
 
-		"corex": MappingPropertyFields{
+		"corex": MappingProperty{
 			Type: "object",
-			Properties: map[string]MappingPropertyFields{
-				"a1": MappingPropertyFields{Type: "integer"},
-				"b1": MappingPropertyFields{Type: "double"},
+			Properties: map[string]MappingProperty{
+				"a1": MappingProperty{Type: "integer"},
+				"b1": MappingProperty{Type: "double"},
 			},
 		},
 
-		"nested": MappingPropertyFields{
+		"nested": MappingProperty{
 			Type: "nested",
-			Properties: map[string]MappingPropertyFields{
-				"a1": MappingPropertyFields{Type: "integer"},
-				"b1": MappingPropertyFields{Type: "double"},
+			Properties: map[string]MappingProperty{
+				"a1": MappingProperty{Type: "integer"},
+				"b1": MappingProperty{Type: "double"},
 			},
 		},
 	}
