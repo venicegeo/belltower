@@ -94,7 +94,7 @@ func (f *FileSysFeeder) Poll() (interface{}, error) {
 }
 
 func (f *FileSysFeeder) checkFileSys(path string) (added []string, deleted []string, err error) {
-	for k, _ := range f.files {
+	for k := range f.files {
 		f.files[k] = false // not yet visited
 	}
 

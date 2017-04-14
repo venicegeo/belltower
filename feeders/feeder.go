@@ -100,26 +100,3 @@ func RunFeed(feed *btorm.Feed, feeder Feeder, post EventPosterFunc) error {
 
 	// not reached
 }
-
-func checkSchema(schema map[string]string, data map[string]interface{}) error {
-	for key, typ := range schema {
-		v, ok := data[key]
-		if !ok {
-			return fmt.Errorf("Settings field '%s' not present", key)
-		}
-
-		log.Printf("VVV %T", v)
-		switch typ {
-		case "integer":
-			_, ok := v.(int)
-			if !ok {
-				return fmt.Errorf("Settings field '%s' is not value of type '%s'", key, typ)
-			}
-		default:
-			return fmt.Errorf("Settings field '%s' has unknown type '%s'", key, typ)
-		}
-	}
-	return nil
-}
-
-//---------------------------------------------------------------------
