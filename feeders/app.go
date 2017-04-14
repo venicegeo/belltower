@@ -4,6 +4,8 @@ import (
 	"log"
 	"time"
 
+	"fmt"
+
 	"github.com/venicegeo/belltower/btorm"
 )
 
@@ -53,6 +55,9 @@ func (app *App) Run() error {
 	for _, feed := range app.feeds {
 
 		feederInfo := feederRegistry.data[feed.FeederId]
+		if feederInfo == nil {
+			return fmt.Errorf("feed's feeder not registered")
+		}
 
 		feeder, err := feederInfo.Create(feed)
 		if err != nil {

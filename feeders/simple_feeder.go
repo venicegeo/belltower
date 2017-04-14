@@ -45,6 +45,15 @@ func (f *SimpleFeeder) GetEventSchema() map[string]string {
 
 //---------------------------------------------------------------------
 
+func init() {
+	info := &FeederInfo{
+		FeederId:    SimpleFeederId,
+		Description: "simple feeder",
+		Create:      SimpleFeederCreate,
+	}
+	feederRegistry.register(info)
+}
+
 func SimpleFeederCreate(feed *btorm.Feed) (Feeder, error) {
 
 	feeder := &SimpleFeeder{
