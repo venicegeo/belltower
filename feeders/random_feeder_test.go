@@ -18,17 +18,17 @@ func TestRandomFeeder(t *testing.T) {
 	feed.FeederId = RandomFeederId
 	feed.PollingInterval = 1
 	feed.PollingEndAt = time.Now().Add(5 * time.Second)
-	feed.Settings = map[string]interface{}{
-		"Target": 50,
-		"Seed":   19, // 61, 52, 88, 23, 30, 70
+	feed.Settings = map[string]string{
+		"Target": "50",
+		"Seed":   "19", // 61, 52, 88, 23, 30, 70
 	}
 
-	feeder, err := feederFactory.create(feed)
+	feeder, err := feederRegistry.data[feed.FeederId].Create(feed)
 	assert.NoError(err)
 
-	assert.Equal("integer", feeder.SettingsSchema()["Target"])
-	assert.Equal("integer", feeder.SettingsSchema()["Seed"])
-	assert.Equal("integer", feeder.EventSchema()["Value"])
+	assert.Equal("integer", feeder.GetSettingsSchema()["Target"])
+	assert.Equal("integer", feeder.GetSettingsSchema()["Seed"])
+	assert.Equal("integer", feeder.GetEventSchema()["Value"])
 
 	// define the post-event function, which takes a Feeder's event object
 	hits := 0

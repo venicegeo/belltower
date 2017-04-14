@@ -10,5 +10,5 @@ func TestRegistry(t *testing.T) {
 	assert := assert.New(t)
 
 	// check registry
-	assert.True(len(feederFactory.factories) > 0)
+	assert.True(len(feederRegistry.data) > 0)
 }

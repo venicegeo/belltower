@@ -87,6 +87,10 @@ func TestMappingGeneration(t *testing.T) {
 					"int_array":{
 						"type":"integer"
 					},
+					"str_map":{
+						"dynamic":"true",
+						"type":"object"
+					},
 					"object":{
 						"dynamic":"true",
 						"type":"object"
@@ -284,6 +288,7 @@ func TestDemoMappings(t *testing.T) {
 		Int:      17,
 		Float:    17.19,
 		IntArray: []int{2, 4, 8},
+		StrMap:   map[string]string{"a": "b", "c": "d", "e": "f"},
 		Object:   map[string]interface{}{"x5": 5, "x10": false},
 		Core: DemoCore{
 			A2: 5,
@@ -312,6 +317,9 @@ func TestDemoMappings(t *testing.T) {
 	assert.EqualValues(feed.Int, g.(*Demo).Int)
 	assert.EqualValues(feed.Float, g.(*Demo).Float)
 	assert.EqualValues(feed.IntArray, g.(*Demo).IntArray)
+	//log.Printf("%#v   %#v", feed.StrMap, g.(*Demo).StrMap)
+	assert.EqualValues(feed.StrMap, g.(*Demo).StrMap)
+	//assert.True(common.MapsAreEqualValues(feed.StrMap, g.(*Demo).StrMap))
 	assert.True(common.MapsAreEqualValues(feed.Object.(map[string]interface{}), g.(*Demo).Object.(map[string]interface{})))
 	assert.EqualValues(feed.Core, g.(*Demo).Core)
 	assert.EqualValues(feed.Nested, g.(*Demo).Nested)
@@ -331,17 +339,18 @@ type DemoCore struct {
 }
 
 type Demo struct {
-	Id       common.Ident `json:"id"        crud:"r"`
-	Name     string       `json:"name"      crud:"cru"`
-	Time     time.Time    `json:"time"      crud:"cru"`
-	Bool     bool         `json:"bool"      crud:"r"`
-	Int      int          `json:"int"`
-	Float    float64      `json:"float"`
-	IntArray []int        `json:"int_array"`
-	Object   interface{}  `json:"object"`
-	Core     DemoCore     `json:"core"`
-	CoreX    DemoCoreX    `json:"corex"`
-	Nested   []DemoCoreX  `json:"nested"`
+	Id       common.Ident      `json:"id"        crud:"r"`
+	Name     string            `json:"name"      crud:"cru"`
+	Time     time.Time         `json:"time"      crud:"cru"`
+	Bool     bool              `json:"bool"      crud:"r"`
+	Int      int               `json:"int"`
+	Float    float64           `json:"float"`
+	IntArray []int             `json:"int_array"`
+	StrMap   map[string]string `json:"str_map"`
+	Object   interface{}       `json:"object"`
+	Core     DemoCore          `json:"core"`
+	CoreX    DemoCoreX         `json:"corex"`
+	Nested   []DemoCoreX       `json:"nested"`
 }
 
 func (d *Demo) String() string { return fmt.Sprintf("%#v", d) }
@@ -356,6 +365,7 @@ func (d *Demo) GetMappingProperties() map[string]MappingProperty {
 		"int":       MappingProperty{Type: "integer"},
 		"float":     MappingProperty{Type: "double"},
 		"int_array": MappingProperty{Type: "integer"},
+		"str_map":   MappingProperty{Type: "object", Dynamic: "true"},
 		"object":    MappingProperty{Type: "object", Dynamic: "true"},
 
 		"core": MappingProperty{

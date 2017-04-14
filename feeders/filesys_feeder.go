@@ -8,10 +8,15 @@ import (
 	"github.com/venicegeo/belltower/common"
 )
 
+//---------------------------------------------------------------------
+
 const FileSysFeederId common.Ident = "fce4cb70-11f0-4c70-98ed-5ec0d5273fda"
 
-func init() {
-	feederFactory.register(&FileSysFeeder{})
+// implements Feeder
+type FileSysFeeder struct {
+	settings map[string]string
+	path     string
+	files    map[string]bool
 }
 
 type FileSysEventData struct {
@@ -19,20 +24,43 @@ type FileSysEventData struct {
 	Deleted string
 }
 
-type FileSysFeeder struct {
-	feed     *btorm.Feed
-	settings map[string]interface{}
-	path     string
-	files    map[string]bool
+func (f *FileSysFeeder) GetId() common.Ident {
+	return FileSysFeederId
 }
 
-func (_ *FileSysFeeder) Create(feed *btorm.Feed) (Feeder, error) {
-	settings := feed.Settings
-	path := settings["Path"].(string)
+func (f *FileSysFeeder) GetName() string {
+	return "FileSysFeeder"
+}
+
+func (f *FileSysFeeder) GetSettingsSchema() map[string]string {
+	return map[string]string{
+		"Path": "string",
+	}
+}
+
+func (f *FileSysFeeder) GetEventSchema() map[string]string {
+	return map[string]string{
+		"Added":   "string",
+		"Deleted": "string",
+	}
+}
+
+//---------------------------------------------------------------------
+
+func init() {
+	info := &FeederInfo{
+		FeederId:    FileSysFeederId,
+		Description: "file system feeder",
+		Create:      FileSysFeederCreate,
+	}
+	feederRegistry.register(info)
+}
+
+func FileSysFeederCreate(feed *btorm.Feed) (Feeder, error) {
+	path := feed.Settings["Path"]
 
 	f := &FileSysFeeder{
-		feed:     feed,
-		settings: settings,
+		settings: feed.Settings,
 		path:     path,
 		files:    nil,
 	}
@@ -48,23 +76,6 @@ func (_ *FileSysFeeder) Create(feed *btorm.Feed) (Feeder, error) {
 	}
 
 	return f, nil
-}
-
-func (f *FileSysFeeder) GetName() string { return "FileSysFeeder" }
-
-func (f *FileSysFeeder) Id() common.Ident { return FileSysFeederId }
-
-func (f *FileSysFeeder) SettingsSchema() map[string]string {
-	return map[string]string{
-		"Path": "string",
-	}
-}
-
-func (f *FileSysFeeder) EventSchema() map[string]string {
-	return map[string]string{
-		"Added":   "string",
-		"Deleted": "string",
-	}
 }
 
 func (f *FileSysFeeder) Poll() (interface{}, error) {

@@ -52,7 +52,9 @@ func (app *App) Run() error {
 
 	for _, feed := range app.feeds {
 
-		feeder, err := feederFactory.create(feed)
+		feederInfo := feederRegistry.data[feed.FeederId]
+
+		feeder, err := feederInfo.Create(feed)
 		if err != nil {
 			return err
 		}

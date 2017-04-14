@@ -21,8 +21,8 @@ func TestApp(t *testing.T) {
 		feed.FeederId = SimpleFeederId
 		feed.PollingInterval = 1
 		feed.PollingEndAt = time.Now().Add(3 * time.Second)
-		feed.Settings = map[string]interface{}{
-			"Value": 7,
+		feed.Settings = map[string]string{
+			"Value": "7",
 		}
 
 		id, err := orm.CreateFeed("root", feed)

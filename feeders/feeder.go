@@ -12,6 +12,41 @@ import (
 
 //---------------------------------------------------------------------
 
+type Feeder interface {
+	GetId() common.Ident
+	GetName() string
+	GetSettingsSchema() map[string]string
+	GetEventSchema() map[string]string
+	Poll() (interface{}, error)
+}
+
+type CreateFunc func(*btorm.Feed) (Feeder, error)
+
+type FeederInfo struct {
+	FeederId    common.Ident
+	Description string
+	Create      CreateFunc
+}
+
+//---------------------------------------------------------------------
+
+type FeederRegistry struct {
+	data map[common.Ident]*FeederInfo
+}
+
+var feederRegistry = FeederRegistry{}
+
+func (f *FeederRegistry) register(info *FeederInfo) {
+	if f.data == nil {
+		f.data = map[common.Ident]*FeederInfo{}
+	} else if _, ok := f.data[info.FeederId]; ok {
+		panic("feeder already registered: " + info.FeederId)
+	}
+	f.data[info.FeederId] = info
+}
+
+//---------------------------------------------------------------------
+
 type Event struct {
 	TimeStamp time.Time
 	FeedId    common.Ident
@@ -19,16 +54,9 @@ type Event struct {
 	Data      interface{}
 }
 
-type Feeder interface {
-	Create(*btorm.Feed) (Feeder, error) // factory for this given feeder type (static function)
-	Id() common.Ident
-	GetName() string
-	Poll() (interface{}, error)
-	SettingsSchema() map[string]string
-	EventSchema() map[string]string
-}
-
 type EventPosterFunc func(*Event) error
+
+//---------------------------------------------------------------------
 
 func RunFeed(feed *btorm.Feed, feeder Feeder, post EventPosterFunc) error {
 	errCount := 0
@@ -92,41 +120,6 @@ func checkSchema(schema map[string]string, data map[string]interface{}) error {
 		}
 	}
 	return nil
-}
-
-//---------------------------------------------------------------------
-
-type FeederFactoryFunc func(*btorm.Feed) (Feeder, error)
-
-type FeederFactory struct {
-	factories map[common.Ident]FeederFactoryFunc
-}
-
-var feederFactory = FeederFactory{}
-
-func (f *FeederFactory) register(feeder Feeder) {
-	if f.factories == nil {
-		f.factories = map[common.Ident]FeederFactoryFunc{}
-	}
-	_, ok := f.factories[feeder.Id()]
-	if ok {
-		panic("factory already registered: " + feeder.Id())
-	}
-	f.factories[feeder.Id()] = feeder.Create
-}
-
-func (f *FeederFactory) create(feed *btorm.Feed) (Feeder, error) {
-	factoryFunc := f.factories[feed.FeederId]
-
-	if factoryFunc == nil {
-		return nil, fmt.Errorf("no such factory: %s", feed.FeederId)
-	}
-
-	feeder, err := factoryFunc(feed)
-	if err != nil {
-		return nil, err
-	}
-	return feeder, nil
 }
 
 //---------------------------------------------------------------------

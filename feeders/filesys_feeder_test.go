@@ -39,16 +39,16 @@ func TestFileSysFeeder(t *testing.T) {
 	feed.FeederId = FileSysFeederId
 	feed.PollingInterval = 1
 	feed.PollingEndAt = time.Now().Add(3 * time.Second)
-	feed.Settings = map[string]interface{}{
+	feed.Settings = map[string]string{
 		"Path": root,
 	}
 
-	feeder, err := feederFactory.create(feed)
+	feeder, err := feederRegistry.data[feed.FeederId].Create(feed)
 	assert.NoError(err)
 
-	assert.Equal("string", feeder.SettingsSchema()["Path"])
-	assert.Equal("string", feeder.EventSchema()["Added"])
-	assert.Equal("string", feeder.EventSchema()["Deleted"])
+	assert.Equal("string", feeder.GetSettingsSchema()["Path"])
+	assert.Equal("string", feeder.GetEventSchema()["Added"])
+	assert.Equal("string", feeder.GetEventSchema()["Deleted"])
 
 	// make up some filenames to add and delete
 	basename := fmt.Sprintf("filesys.%d.", time.Now().Nanosecond())

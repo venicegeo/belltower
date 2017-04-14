@@ -4,6 +4,8 @@ import (
 	"math/rand"
 	"time"
 
+	"strconv"
+
 	"github.com/venicegeo/belltower/btorm"
 	"github.com/venicegeo/belltower/common"
 )
@@ -14,58 +16,69 @@ import (
 
 const RandomFeederId common.Ident = "73c9b03e-5455-4aa6-8c64-b1abeddf3763"
 
-func init() {
-	feederFactory.register(&RandomFeeder{})
+// implements Feeder
+type RandomFeeder struct {
+	random   *rand.Rand
+	settings map[string]string
 }
 
 type RandomEventData struct {
 	Value int
 }
 
-type RandomFeeder struct {
-	feed     *btorm.Feed
-	settings map[string]interface{}
-	random   *rand.Rand
-}
+func (f *RandomFeeder) GetName() string { return "RandomFeeder" }
 
-func (_ *RandomFeeder) Create(feed *btorm.Feed) (Feeder, error) {
-	settings := feed.Settings
-	seed := int64(settings["Seed"].(int))
-	if seed == 0 {
-		seed = time.Now().UnixNano()
-	}
+func (f *RandomFeeder) GetId() common.Ident { return RandomFeederId }
 
-	f := &RandomFeeder{
-		feed:     feed,
-		settings: settings,
-		random:   rand.New(rand.NewSource(seed)),
-	}
-
-	return f, nil
-}
-
-func (r *RandomFeeder) GetName() string { return "RandomFeeder" }
-
-func (r *RandomFeeder) Id() common.Ident { return RandomFeederId }
-
-func (r *RandomFeeder) SettingsSchema() map[string]string {
+func (f *RandomFeeder) GetSettingsSchema() map[string]string {
 	return map[string]string{
 		"Target": "integer",
 		"Seed":   "integer",
 	}
 }
 
-func (r *RandomFeeder) EventSchema() map[string]string {
+func (f *RandomFeeder) GetEventSchema() map[string]string {
 	return map[string]string{
 		"Value": "integer",
 	}
 }
 
-func (r *RandomFeeder) Poll() (interface{}, error) {
-	settings := r.feed.Settings
+func init() {
+	info := &FeederInfo{
+		FeederId:    RandomFeederId,
+		Description: "random feeder",
+		Create:      RandomFeederCreate,
+	}
+	feederRegistry.register(info)
+}
 
-	x := r.random.Intn(100)
-	if x > settings["Target"].(int) {
+func RandomFeederCreate(feed *btorm.Feed) (Feeder, error) {
+
+	seed32, err := strconv.Atoi(feed.Settings["Seed"])
+	if err != nil {
+		return nil, err
+	}
+	seed64 := int64(seed32)
+	if seed64 == 0 {
+		seed64 = time.Now().UnixNano()
+	}
+
+	f := &RandomFeeder{
+		settings: feed.Settings,
+		random:   rand.New(rand.NewSource(seed64)),
+	}
+
+	return f, nil
+}
+
+func (f *RandomFeeder) Poll() (interface{}, error) {
+
+	x := f.random.Intn(100)
+	target, err := strconv.Atoi(f.settings["Target"])
+	if err != nil {
+		return nil, err
+	}
+	if x > target {
 		// not a hit
 		return nil, nil
 	}
