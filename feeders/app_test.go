@@ -12,7 +12,8 @@ func TestApp(t *testing.T) {
 	assert := assert.New(t)
 
 	{
-		orm, err := btorm.NewBtOrm("", btorm.OrmOptionCreate)
+		orm := &btorm.BtOrm{}
+		err := orm.Open()
 		assert.NoError(err)
 		assert.NotNil(orm)
 

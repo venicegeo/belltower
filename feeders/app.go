@@ -16,7 +16,8 @@ type App struct {
 
 func NewApp() (*App, error) {
 
-	orm, err := btorm.NewBtOrm("", btorm.OrmOptionOpen)
+	orm := &btorm.BtOrm{}
+	err := orm.Open()
 	if err != nil {
 		return nil, err
 	}
