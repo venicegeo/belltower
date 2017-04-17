@@ -1,8 +1,12 @@
 package esorm
 
 import (
+	"context"
+	"log"
 	"testing"
 	"time"
+
+	elastic "gopkg.in/olivere/elastic.v5"
 
 	"encoding/json"
 
@@ -334,6 +338,108 @@ func TestDemoMappings(t *testing.T) {
 	assert.EqualValues(feed.Core, g.(*Demo).Core)
 	assert.EqualValues(feed.Nested, g.(*Demo).Nested)
 	assert.EqualValues(feed.Nested[1].B1, g.(*Demo).Nested[1].B1)
+}
+
+//---------------------------------------------------------------------
+
+type Queries struct {
+	Id    common.Ident `json:"id"`
+	Query string       `json:"query"`
+}
+
+type Doc struct {
+	Id      common.Ident `json:"id"`
+	Message string       `json:"message"`
+}
+
+func (d *Doc) GetId() common.Ident {
+	return d.Id
+}
+
+func (d *Doc) SetId() common.Ident {
+	d.Id = common.NewId()
+	return d.Id
+}
+
+func (d *Doc) String() string { return fmt.Sprintf("%#v", d) }
+
+func (d *Doc) GetMappingProperties() map[string]MappingProperty {
+	data := map[string]MappingProperty{
+		"id":      MappingProperty{Type: "keyword"},
+		"message": MappingProperty{Type: "text"},
+	}
+	return data
+}
+
+func TestPercolation(t *testing.T) {
+	assert := assert.New(t)
+
+	var orm Ormer = &Orm{}
+	if mock {
+		orm = &FakeOrm{}
+	}
+	err := orm.Open()
+	assert.NoError(err)
+
+	// to set things up correctly (ignore errors)
+	_ = orm.DeleteIndex(&Doc{})
+
+	obj := &Doc{}
+	index := GetIndexName(obj)
+
+	index = "docindex"
+
+	res0, err := orm.(*Orm).esClient.DeleteIndex(index).Do(orm.(*Orm).ctx)
+	assert.NoError(err)
+	assert.True(res0.Acknowledged)
+
+	// create index
+	mappingString := `
+	{
+	   	"settings":{},
+	   	"mappings":{
+	   		"doctype":{
+	   			"properties":{
+	   				"message":{
+						"type":"text",
+						"store": true,
+						"fielddata": true
+					}
+				}
+	   		},
+	   		"queries":{
+	   			"properties":{
+	   				"query":{"type":"percolator"}
+	   			}
+	   		}
+	   	}
+	}`
+	log.Printf(">> %#v", mappingString)
+	res1, err := orm.(*Orm).esClient.CreateIndex("docindex").BodyString(mappingString).Do(orm.(*Orm).ctx)
+	assert.NoError(err)
+	assert.True(res1.Acknowledged)
+	log.Printf(">> %#v", res1)
+
+	// Add a document
+	res2, err := orm.(*Orm).esClient.Index().
+		Index(index).
+		Type("queries").
+		Id("1").
+		BodyJson(`{"query":{"match":{"message":"bonsai tree"}}}`).
+		Refresh("wait_for").
+		Do(context.TODO())
+	assert.NoError(err)
+	log.Printf("\n>>>>>> %#v", res2)
+
+	// Percolate should return our registered query
+	pq := elastic.NewPercolatorQuery().
+		Field("query").
+		DocumentType("doctype").
+		Document(Doc{Message: "A new bonsai tree in the office"})
+	res3, err := orm.(*Orm).esClient.Search(index).Query(pq).Do(orm.(*Orm).ctx)
+	assert.NoError(err)
+	log.Printf("\n>>>>>>>>>>>>> %#v", res3)
+	log.Printf("\n>>>>>>>>>>>>> %#v", res3.Hits.Hits[0])
 }
 
 //---------------------------------------------------------------------

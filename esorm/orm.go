@@ -3,6 +3,7 @@ package esorm
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/venicegeo/belltower/common"
@@ -242,5 +243,78 @@ func (orm *Orm) CreateIndex(e Elasticable) error {
 		return fmt.Errorf("CreateIndex() not acknowledged")
 	}
 
+	return nil
+}
+
+func (orm *Orm) CreateIndexWithPercolation(e Elasticable) error {
+	index := GetIndexName(e)
+
+	exists, err := orm.IndexExists(e)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		return fmt.Errorf("index already exists")
+	}
+
+	mapping := NewMapping(e)
+	mapping.Mappings["queries"] = MappingProperty{
+		Properties: map[string]MappingProperty{
+			"query": MappingProperty{
+				Type: "percolator",
+			},
+		},
+	}
+	byts, err := json.Marshal(mapping)
+
+	if err != nil {
+		return err
+	}
+	mappingString := string(byts)
+	log.Printf(">> %s <<", mappingString)
+	if strings.Contains(mappingString, "string") {
+		panic("internal error: obselete datatype \"string\" in mapping for index " + index)
+	}
+
+	result, err := orm.esClient.CreateIndex(index).BodyString(mappingString).Do(orm.ctx)
+	if err != nil {
+		return err
+	}
+
+	if !result.Acknowledged {
+		return fmt.Errorf("CreateIndex() not acknowledged")
+	}
+
+	return nil
+}
+
+func (orm *Orm) AddPercolationQuery(obj Elasticable) error {
+	index := GetIndexName(obj)
+
+	_, err := orm.esClient.Index().
+		Index(index).
+		Type("query").
+		Id(obj.SetId().String()).
+		BodyJson(`{"query":{"match":{"message":"bonsai tree"}}}`).
+		Refresh("wait_for").
+		Do(orm.ctx)
+
+	return err
+}
+
+func (orm *Orm) AddPercolationDocument(obj Elasticable) error {
+	index := GetIndexName(obj)
+	typ := GetTypeName(obj)
+
+	pq := elastic.NewPercolatorQuery().
+		Field("query").
+		DocumentType(typ).
+		Document(obj)
+	res, err := orm.esClient.Search(index).Query(pq).Do(orm.ctx)
+	if err != nil {
+		return err
+	}
+	log.Printf("[[ %#v ]]", res)
 	return nil
 }
