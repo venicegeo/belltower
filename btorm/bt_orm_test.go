@@ -16,8 +16,10 @@ func TestDatabaseOpen(t *testing.T) {
 	var orm *BtOrm
 
 	// clean slate
-	err = ResetIndexes()
-	assert.NoError(err)
+	{
+		err = ResetIndexes()
+		assert.NoError(err)
+	}
 
 	// add one, make sure it is there
 	{
@@ -25,19 +27,17 @@ func TestDatabaseOpen(t *testing.T) {
 		err = orm.Open()
 		assert.NoError(err)
 
-		{
-			action := &Action{}
-			action.Name = "one"
-			id, err = orm.CreateAction("u", action)
-			assert.NoError(err)
-			assert.NotEmpty(id)
+		action := &Action{}
+		action.Name = "one"
+		id, err = orm.CreateAction("u", action)
+		assert.NoError(err)
+		assert.NotEmpty(id)
 
-			action, err = orm.ReadAction(id)
-			assert.NoError(err)
-			assert.NotNil(action)
-			assert.EqualValues(id, action.Id)
-			assert.EqualValues("one", action.Name)
-		}
+		action, err = orm.ReadAction(id)
+		assert.NoError(err)
+		assert.NotNil(action)
+		assert.EqualValues(id, action.Id)
+		assert.EqualValues("one", action.Name)
 
 		err = orm.Close()
 		assert.NoError(err)
@@ -49,21 +49,21 @@ func TestDatabaseOpen(t *testing.T) {
 		err = orm.Open()
 		assert.NoError(err)
 
-		{
-			action, err = orm.ReadAction(id)
-			assert.NoError(err)
-			assert.NotNil(action)
-			assert.EqualValues(id, action.Id)
-			assert.EqualValues("one", action.Name)
-		}
+		action, err = orm.ReadAction(id)
+		assert.NoError(err)
+		assert.NotNil(action)
+		assert.EqualValues(id, action.Id)
+		assert.EqualValues("one", action.Name)
 
 		err = orm.Close()
 		assert.NoError(err)
 	}
 
 	// wipe it all
-	err = ResetIndexes()
-	assert.NoError(err)
+	{
+		err = ResetIndexes()
+		assert.NoError(err)
+	}
 
 	// verify not there anymore
 	{
@@ -71,10 +71,8 @@ func TestDatabaseOpen(t *testing.T) {
 		err = orm.Open()
 		assert.NoError(err)
 
-		{
-			action, err = orm.ReadAction(id)
-			assert.Error(err)
-		}
+		action, err = orm.ReadAction(id)
+		assert.Error(err)
 
 		err = orm.Close()
 		assert.NoError(err)
