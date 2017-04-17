@@ -8,7 +8,7 @@ import (
 //---------------------------------------------------------------------
 
 type BtOrm struct {
-	Orm         *esorm.Orm
+	Orm         esorm.Ormer
 	prefix      string
 	objectTypes []esorm.Elasticable
 }
