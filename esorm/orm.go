@@ -126,7 +126,7 @@ func (orm *Orm) CreatePercolatorQuery(obj Elasticable) ([]Elasticable, int64, er
 	}
 
 	ary := []Elasticable{}
-
+	log.Printf("== %#v", result.Hits.Hits[0])
 	i := 0
 	for _, hit := range result.Hits.Hits {
 		tmp := common.NewViaReflection(obj)

@@ -381,65 +381,41 @@ func TestPercolation(t *testing.T) {
 	// to set things up correctly (ignore errors)
 	_ = orm.DeleteIndex(&Doc{})
 
-	obj := &Doc{}
+	obj1 := &Doc{}
+	obj2 := &Doc{}
+	obj3 := &Doc{}
 
 	// create index
-	mappingString := `
-	{
-	   	"settings":{},
-	   	"mappings":{
-	   		"doc_type":{
-	   			"properties":{
-	   				"message":{
-						"type":"text"
-					}
-				}
-	   		},
-	   		"queries":{
-	   			"properties":{
-	   				"query":{"type":"percolator"}
-	   			}
-	   		}
-	   	}
-	}`
-	log.Printf(">> %#v", mappingString)
-	//	res1, err := orm.(*Orm).esClient.CreateIndex("doc_index").BodyString(mappingString).Do(orm.(*Orm).ctx)
-	//	assert.NoError(err)
-	//	assert.True(res1.Acknowledged)
-	//	log.Printf(">> %#v", res1)
-
-	err = orm.CreateIndex(obj, true)
+	err = orm.CreateIndex(obj1, true)
 	assert.NoError(err)
 
 	// Add a document
 
-	q := `{"query":{"match":{"message":"foo"}}}`
-	_, err = orm.(*Orm).CreatePercolatorDocument(obj, q)
+	q1 := `{"query":{"match":{"message":"foo"}}}`
+	id1, err := orm.(*Orm).CreatePercolatorDocument(obj1, q1)
 	assert.NoError(err)
-	/*	err = orm.CreateQueryDocument(obj Elasticable, jsonQuery string)
-		res2, err := orm.(*Orm).esClient.Index().
-			Index("doc_index").
-			Type("queries").
-			Id("1").
-			BodyJson(`{"query":{"match":{"message":"bonsai tree"}}}`).
-			Refresh("wait_for").
-			Do(context.TODO())
-		assert.NoError(err)
-		log.Printf("\n>>>>>> %#v", res2)
-	*/
+	log.Printf("PercDoc: %s", id1)
+
+	q2 := `{"query":{"match":{"message":"bar"}}}`
+	id2, err := orm.(*Orm).CreatePercolatorDocument(obj2, q2)
+	assert.NoError(err)
+	log.Printf("PercDoc: %s", id2)
+
+	q3 := `{"query":{"match":{"message":"baz"}}}`
+	id3, err := orm.(*Orm).CreatePercolatorDocument(obj3, q3)
+	assert.NoError(err)
+	log.Printf("PercDoc: %s", id3)
+
 	// Percolate should return our registered query
-	/*	pq := elastic.NewPercolatorQuery().
-			Field("query").
-			DocumentType("doc_type").
-			Document(Doc{Message: "A new bonsai tree in the office"})
-		res3, err := orm.(*Orm).esClient.Search("doc_index").Query(pq).Do(orm.(*Orm).ctx)
-		assert.NoError(err)
-		assert.Equal(int64(1), res3.TotalHits())*/
-	obj = &Doc{Message: "foo"}
-	ary, cnt, err := orm.(*Orm).CreatePercolatorQuery(obj)
+	objX := &Doc{Message: "foo"}
+	ary, cnt, err := orm.(*Orm).CreatePercolatorQuery(objX)
 	assert.NoError(err)
-	log.Printf("\n>>>>>>>>>>>>> %#v", ary)
-	log.Printf("\n>>>>>>>>>>>>> %#v", cnt)
+	log.Printf("\n>>>>>>>>>>>>> %d %d", cnt, len(ary))
+
+	objY := &Doc{Message: "ba"}
+	ary, cnt, err = orm.(*Orm).CreatePercolatorQuery(objY)
+	assert.NoError(err)
+	log.Printf("\n>>>>>>>>>>>>> %d %d", cnt, len(ary))
 }
 
 //---------------------------------------------------------------------
