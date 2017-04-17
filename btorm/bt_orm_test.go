@@ -4,103 +4,91 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/venicegeo/belltower/common"
 )
 
 func TestDatabaseOpen(t *testing.T) {
 	assert := assert.New(t)
 
-	exists := func(orm *BtOrm) {
-		exists, err := orm.databaseExists()
-		assert.NoError(err)
-		assert.True(exists)
-	}
-
-	delete := func(orm *BtOrm) {
-		err := orm.deleteDatabase()
-		assert.NoError(err)
-	}
-
-	create := func() *BtOrm {
-		orm, err := NewBtOrm("", OrmOptionCreate)
-		if err != nil {
-			return nil
-		}
-		return orm
-	}
-
-	open := func() *BtOrm {
-		orm, err := NewBtOrm("", OrmOptionOpen)
-		if err != nil {
-			return nil
-		}
-		return orm
-	}
-
-	openOrCreate := func() *BtOrm {
-		orm, err := NewBtOrm("", OrmOptionOpenOrCreate)
-		if err != nil {
-			return nil
-		}
-		return orm
-	}
-
-	close := func(orm *BtOrm) {
-		err := orm.Close()
-		assert.NoError(err)
-	}
-
-	forceClean := func() {
-		orm := openOrCreate()
-		assert.NotNil(orm)
-		delete(orm)
-		close(orm)
-	}
-
+	var err error
+	var id common.Ident
+	var action *Action
 	var orm *BtOrm
 
-	forceClean()
+	// clean slate
+	err = ResetIndexes()
+	assert.NoError(err)
 
-	// db doesn't exist: open() should fail
-	orm = open()
-	assert.Nil(orm)
+	// add one, make sure it is there
+	{
+		orm := &BtOrm{}
+		err = orm.Open()
+		assert.NoError(err)
 
-	// db doesn't exist, create should succeed
-	orm = create()
-	assert.NotNil(orm)
-	exists(orm)
-	close(orm)
+		{
+			action := &Action{}
+			action.Name = "one"
+			id, err = orm.CreateAction("u", action)
+			assert.NoError(err)
+			assert.NotEmpty(id)
 
-	// db does exist: create() should succeed (by overwriting)
-	orm = create()
-	assert.NotNil(orm)
-	close(orm)
+			action, err = orm.ReadAction(id)
+			assert.NoError(err)
+			assert.NotNil(action)
+			assert.EqualValues(id, action.Id)
+			assert.EqualValues("one", action.Name)
+		}
 
-	// db does exist: open() should succeed
-	orm = open()
-	assert.NotNil(orm)
-	exists(orm)
-	close(orm)
+		err = orm.Close()
+		assert.NoError(err)
+	}
 
-	forceClean()
+	// verify still there
+	{
+		orm = &BtOrm{}
+		err = orm.Open()
+		assert.NoError(err)
 
-	// db doesn't exist, create() should succeed
-	orm = openOrCreate()
-	assert.NotNil(orm)
-	exists(orm)
-	close(orm)
+		{
+			action, err = orm.ReadAction(id)
+			assert.NoError(err)
+			assert.NotNil(action)
+			assert.EqualValues(id, action.Id)
+			assert.EqualValues("one", action.Name)
+		}
 
-	// db does exist, open() should succeed
-	orm = openOrCreate()
-	assert.NotNil(orm)
-	exists(orm)
-	delete(orm)
-	close(orm)
+		err = orm.Close()
+		assert.NoError(err)
+	}
+
+	// wipe it all
+	err = ResetIndexes()
+	assert.NoError(err)
+
+	// verify not there anymore
+	{
+		orm = &BtOrm{}
+		err = orm.Open()
+		assert.NoError(err)
+
+		{
+			action, err = orm.ReadAction(id)
+			assert.Error(err)
+		}
+
+		err = orm.Close()
+		assert.NoError(err)
+	}
 }
 
 func TestActionCRUD(t *testing.T) {
 	assert := assert.New(t)
 
-	orm, err := NewBtOrm("", OrmOptionCreate)
+	err := ResetIndexes()
+	assert.NoError(err)
+
+	orm := &BtOrm{}
+	err = orm.Open()
 	assert.NoError(err)
 	assert.NotNil(orm)
 
@@ -166,7 +154,11 @@ func TestActionCRUD(t *testing.T) {
 func TestFeedCRUD(t *testing.T) {
 	assert := assert.New(t)
 
-	orm, err := NewBtOrm("", OrmOptionCreate)
+	err := ResetIndexes()
+	assert.NoError(err)
+
+	orm := &BtOrm{}
+	err = orm.Open()
 	assert.NoError(err)
 	assert.NotNil(orm)
 
@@ -232,7 +224,11 @@ func TestFeedCRUD(t *testing.T) {
 func TestRuleCRUD(t *testing.T) {
 	assert := assert.New(t)
 
-	orm, err := NewBtOrm("", OrmOptionCreate)
+	err := ResetIndexes()
+	assert.NoError(err)
+
+	orm := &BtOrm{}
+	err = orm.Open()
 	assert.NoError(err)
 	assert.NotNil(orm)
 
@@ -298,7 +294,11 @@ func TestRuleCRUD(t *testing.T) {
 func TestUserCRUD(t *testing.T) {
 	assert := assert.New(t)
 
-	orm, err := NewBtOrm("", OrmOptionCreate)
+	err := ResetIndexes()
+	assert.NoError(err)
+
+	orm := &BtOrm{}
+	err = orm.Open()
 	assert.NoError(err)
 	assert.NotNil(orm)
 
