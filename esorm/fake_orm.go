@@ -235,7 +235,7 @@ func (orm *FakeOrm) DeleteIndex(e Elasticable) error {
 	return nil
 }
 
-func (orm *FakeOrm) CreateIndex(e Elasticable) error {
+func (orm *FakeOrm) CreateIndex(e Elasticable, usePercolation bool) error {
 	_, ok := orm.indexes[GetIndexName(e)]
 	if ok {
 		return fmt.Errorf("index %s already exists", GetIndexName(e))

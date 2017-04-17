@@ -13,15 +13,29 @@ type MappingProperty struct {
 	Properties map[string]MappingProperty `json:"properties,omitempty"`
 }
 
-func NewMapping(e Elasticable) *Mapping {
+func NewMapping(e Elasticable, usePercolation bool) *Mapping {
 	mt := MappingProperty{
 		Dynamic:    "strict",
 		Properties: e.GetMappingProperties(),
 	}
 
+	q := MappingProperty{}
+	if usePercolation {
+		q = MappingProperty{
+			Properties: map[string]MappingProperty{
+				"query": MappingProperty{
+					Type: "percolator",
+				},
+			},
+		}
+	}
+
 	m := &Mapping{
 		Settings: map[string]interface{}{},
-		Mappings: map[string]MappingProperty{GetTypeName(e): mt},
+		Mappings: map[string]MappingProperty{
+			GetTypeName(e): mt,
+			"queries":      q,
+		},
 	}
 
 	return m
