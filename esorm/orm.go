@@ -14,37 +14,53 @@ import (
 
 //---------------------------------------------------------------------
 
+type Ormer interface {
+	Open() error
+	Close() error
+
+	CreateDocument(obj Elasticable) (common.Ident, error)
+	ReadDocument(typ Elasticable) (Elasticable, error)
+	ReadDocuments(typ Elasticable, from int, size int) ([]Elasticable, int64, error)
+	UpdateDocument(src Elasticable) error
+	DeleteDocument(obj Elasticable) error
+
+	GetIndexes() ([]string, error)
+	IndexExists(e Elasticable) (bool, error)
+	DeleteIndex(e Elasticable) error
+	CreateIndex(e Elasticable) error
+}
+
 type Orm struct {
 	esClient *elastic.Client
 	ctx      context.Context
 }
 
-func NewOrm() (*Orm, error) {
+func init() {
+	var _ Ormer = (*Orm)(nil)
+}
+
+func (orm *Orm) Open() error {
 
 	ctx := context.Background()
 
 	// defaults to 127.0.0.1:9200
 	client, err := elastic.NewClient()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	esversion, err := client.ElasticsearchVersion("http://127.0.0.1:9200")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if !strings.HasPrefix(esversion, "5.2") {
-		return nil, fmt.Errorf("unsupported elasticsearch version: %s", esversion)
+		return fmt.Errorf("unsupported elasticsearch version: %s", esversion)
 	}
 
-	orm := &Orm{
-		esClient: client,
-		ctx:      ctx,
-	}
+	orm.esClient = client
+	orm.ctx = ctx
 
-	//orm.listAll(true)
-
-	return orm, nil
+	return nil
 }
 
 func (orm *Orm) Close() error {
@@ -73,7 +89,7 @@ func (orm *Orm) CreateDocument(obj Elasticable) (common.Ident, error) {
 	return common.ToIdent(resp.Id), nil
 }
 
-func (orm *Orm) ReadDocument(typ Elasticable) (interface{}, error) {
+func (orm *Orm) ReadDocument(typ Elasticable) (Elasticable, error) {
 	if typ.GetId() == common.NoIdent {
 		return nil, fmt.Errorf("object does not have Id set")
 	}
@@ -96,7 +112,7 @@ func (orm *Orm) ReadDocument(typ Elasticable) (interface{}, error) {
 		return nil, err
 	}
 
-	return typ2, nil
+	return typ2.(Elasticable), nil
 }
 
 // TODO: for now, always return sorted by id (ascending)

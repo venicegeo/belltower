@@ -12,12 +12,17 @@ import (
 	"github.com/venicegeo/belltower/common"
 )
 
+const mock = false
+
 func TestIndexOperations(t *testing.T) {
 	assert := assert.New(t)
 
-	orm, err := NewOrm()
+	var orm Ormer = &Orm{}
+	if mock {
+		orm = &FakeOrm{}
+	}
+	err := orm.Open()
 	assert.NoError(err)
-	assert.NotNil(orm)
 
 	e := &Demo{}
 	assert.Equal("demo_index", GetIndexName(e))
@@ -151,9 +156,12 @@ func TestMappingGeneration(t *testing.T) {
 func TestDocumentCRUD(t *testing.T) {
 	assert := assert.New(t)
 
-	orm, err := NewOrm()
+	var orm Ormer = &Orm{}
+	if mock {
+		orm = &FakeOrm{}
+	}
+	err := orm.Open()
 	assert.NoError(err)
-	assert.NotNil(orm)
 
 	orig := &Demo{Name: "Alice"}
 	orig2 := &Demo{Name: "Zed"}
@@ -167,7 +175,6 @@ func TestDocumentCRUD(t *testing.T) {
 	assert.NotEmpty(id)
 
 	// does read work?
-	//	dup := &Demo{}
 	dup, err := orm.ReadDocument(&Demo{Id: id})
 	assert.NoError(err)
 	assert.NotNil(dup)
@@ -269,9 +276,12 @@ func TestDocumentCRUD(t *testing.T) {
 func TestDemoMappings(t *testing.T) {
 	assert := assert.New(t)
 
-	orm, err := NewOrm()
+	var orm Ormer = &Orm{}
+	if mock {
+		orm = &FakeOrm{}
+	}
+	err := orm.Open()
 	assert.NoError(err)
-	assert.NotNil(orm)
 
 	// to set things up correctly (ignore errors)
 	_ = orm.DeleteIndex(&Demo{})

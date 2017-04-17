@@ -26,10 +26,7 @@ const (
 //---------------------------------------------------------------------
 
 func NewBtOrm(prefix string, ormOption OrmOption) (*BtOrm, error) {
-	orm, err := esorm.NewOrm()
-	if err != nil {
-		return nil, err
-	}
+	var err error
 
 	types := []esorm.Elasticable{
 		&Action{},
@@ -39,9 +36,14 @@ func NewBtOrm(prefix string, ormOption OrmOption) (*BtOrm, error) {
 	}
 
 	btOrm := &BtOrm{
-		Orm:         orm,
+		Orm:         &esorm.Orm{},
 		prefix:      prefix,
 		objectTypes: types,
+	}
+
+	err = btOrm.Orm.Open()
+	if err != nil {
+		return nil, err
 	}
 
 	switch ormOption {
