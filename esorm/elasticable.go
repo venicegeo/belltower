@@ -1,9 +1,6 @@
 package esorm
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/venicegeo/belltower/common"
 )
 
@@ -11,29 +8,13 @@ import (
 
 // every object type wil be stored in its own type in its own index
 type Elasticable interface {
-	GetMappingProperties() map[string]MappingProperty
+	GetId() common.Ident
+	SetId(common.Ident)
 
 	GetIndexName() string
 	GetTypeName() string
 
-	GetId() common.Ident
-	SetId(common.Ident)
+	GetMappingProperties() map[string]MappingProperty
 
 	String() string
 }
-
-type Queryable interface {
-	Elasticable
-	GetQuery() interface{}
-}
-
-func getLoweredName(x interface{}) string {
-	// TODO: reimplement via reflection
-	s := fmt.Sprintf("%T", x)
-	dot := strings.Index(s, ".")
-	t := strings.ToLower(s[dot+1:])
-	return t
-}
-
-//func GetIndexName(x interface{}) string { return getLoweredName(x) + "_index" }
-//func GetTypeName(x interface{}) string  { return getLoweredName(x) + "_type" }

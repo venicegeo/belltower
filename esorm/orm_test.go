@@ -148,6 +148,7 @@ func TestMappingGeneration(t *testing.T) {
 		byts, err := json.MarshalIndent(m, "", "    ")
 		assert.NoError(err)
 		actualMapping := string(byts)
+		//log.Printf("%s", d.expected)
 		//log.Printf("%s", actualMapping)
 		assert.JSONEq(d.expected, actualMapping)
 	}
@@ -338,19 +339,6 @@ func TestDemoMappings(t *testing.T) {
 
 //---------------------------------------------------------------------
 
-type PercQuery struct {
-	Id    common.Ident `json:"id"`
-	Query interface{}  `json:"query"`
-}
-
-func (d *PercQuery) GetMappingProperties() map[string]MappingProperty { panic(99) }
-func (d *PercQuery) GetId() common.Ident                              { return d.Id }
-func (d *PercQuery) SetId(id common.Ident)                            { d.Id = id }
-func (d *PercQuery) GetIndexName() string                             { return "doc_index" }
-func (d *PercQuery) GetTypeName() string                              { return "queries" }
-func (d *PercQuery) String() string                                   { return fmt.Sprintf("%#v", d) }
-func (d *PercQuery) GetQuery() interface{}                            { return d.Query }
-
 type Doc struct {
 	Id      common.Ident `json:"id"`
 	Message string       `json:"message"`
@@ -393,43 +381,39 @@ func TestPercolation(t *testing.T) {
 	err = orm.CreateIndex(obj1, true)
 	assert.NoError(err)
 
-	q1 := &PercQuery{
-		Query: map[string]interface{}{
-			"query": map[string]interface{}{
-				"match": map[string]interface{}{
-					"message": "foo",
-				},
+	q1 := &Query{
+		"query": map[string]interface{}{
+			"match": map[string]interface{}{
+				"message": "foo",
 			},
 		},
 	}
-	id1, err := orm.(*Orm).CreatePercolatorDocument(q1)
+
+	id1, err := orm.(*Orm).CreatePercolatorDocument(obj1, q1)
 	assert.NoError(err)
-	q1.Id = ""
-	id1x, err := orm.(*Orm).CreatePercolatorDocument(q1)
+	id1x, err := orm.(*Orm).CreatePercolatorDocument(obj1, q1)
 	assert.NoError(err)
 
-	q2 := &PercQuery{
-		Query: map[string]interface{}{
-			"query": map[string]interface{}{
-				"match": map[string]interface{}{
-					"message": "bar",
-				},
+	q2 := &Query{
+		"query": map[string]interface{}{
+			"match": map[string]interface{}{
+				"message": "bar",
 			},
 		},
 	}
-	id2, err := orm.(*Orm).CreatePercolatorDocument(q2)
+
+	id2, err := orm.(*Orm).CreatePercolatorDocument(obj1, q2)
 	assert.NoError(err)
 
-	q3 := &PercQuery{
-		Query: map[string]interface{}{
-			"query": map[string]interface{}{
-				"match": map[string]interface{}{
-					"message": "baz",
-				},
+	q3 := &Query{
+		"query": map[string]interface{}{
+			"match": map[string]interface{}{
+				"message": "baz",
 			},
 		},
 	}
-	_, err = orm.(*Orm).CreatePercolatorDocument(q3)
+
+	_, err = orm.(*Orm).CreatePercolatorDocument(obj1, q3)
 	assert.NoError(err)
 
 	objX := &Doc{Message: "bar"}

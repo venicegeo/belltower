@@ -94,19 +94,15 @@ func (orm *Orm) CreateDocument(obj Elasticable) (common.Ident, error) {
 	return common.ToIdent(resp.Id), nil
 }
 
-func (orm *Orm) CreatePercolatorDocument(obj Queryable) (common.Ident, error) {
-	if obj.GetId() != "" {
-		return "", fmt.Errorf("ID already assigned prior to Create()")
-	}
+func (orm *Orm) CreatePercolatorDocument(obj Elasticable, query *Query) (common.Ident, error) {
 
 	id := common.NewId()
-	obj.SetId(id)
 
 	resp, err := orm.esClient.Index().
 		Index(obj.GetIndexName()).
 		Type("queries").
 		Id(id.String()).
-		BodyJson(obj.GetQuery()).
+		BodyJson(query).
 		Refresh("wait_for").
 		Do(orm.ctx)
 
@@ -114,7 +110,7 @@ func (orm *Orm) CreatePercolatorDocument(obj Queryable) (common.Ident, error) {
 		return "", err
 	}
 	if !resp.Created {
-		return "", fmt.Errorf("Create() did not create")
+		return "", fmt.Errorf("CreatePerc() did not create")
 	}
 	return id, nil
 
@@ -130,7 +126,7 @@ func (orm *Orm) CreatePercolatorQuery(obj Elasticable) ([]common.Ident, int64, e
 		return nil, 0, err
 	}
 
-	if result == nil || result.Hits == nil || result.Hits.TotalHits <= 0 {
+	if result.Hits.TotalHits <= 0 {
 		return nil, 0, nil
 	}
 
