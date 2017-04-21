@@ -3,12 +3,13 @@ package esorm
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/venicegeo/belltower/common"
 
 	"golang.org/x/net/context"
+
+	"sort"
 
 	elastic "gopkg.in/olivere/elastic.v5"
 )
@@ -105,7 +106,7 @@ func (orm *Orm) CreatePercolatorDocument(obj Queryable) (common.Ident, error) {
 		Index(obj.GetIndexName()).
 		Type("queries").
 		Id(id.String()).
-		BodyJson(obj).
+		BodyJson(obj.GetQuery()).
 		Refresh("wait_for").
 		Do(orm.ctx)
 
@@ -119,36 +120,30 @@ func (orm *Orm) CreatePercolatorDocument(obj Queryable) (common.Ident, error) {
 
 }
 
-func (orm *Orm) CreatePercolatorQuery(obj Elasticable, q Queryable) ([]Queryable, int64, error) {
+func (orm *Orm) CreatePercolatorQuery(obj Elasticable) ([]common.Ident, int64, error) {
 	pq := elastic.NewPercolatorQuery().
 		Field("query").
 		DocumentType(obj.GetTypeName()).
 		Document(obj)
 	result, err := orm.esClient.Search(obj.GetIndexName()).Query(pq).Do(orm.ctx)
-	if result == nil {
-		return nil, 0, nil
+	if err != nil {
+		return nil, 0, err
 	}
-	if result.Hits == nil || result.Hits.TotalHits <= 0 {
+
+	if result == nil || result.Hits == nil || result.Hits.TotalHits <= 0 {
 		return nil, 0, nil
 	}
 
-	ary := []Queryable{}
-	i := 0
-	for _, hit := range result.Hits.Hits {
-		log.Printf("### %s", hit.Id)
-		byts := *hit.Source
-		tmp := common.NewViaReflection(q)
-		log.Printf(">> %#v %T", string(byts), tmp)
-		err = json.Unmarshal(byts, tmp)
-		if err != nil {
-			return nil, 0, err
-		}
-		log.Printf("}} %#v", err)
-		log.Printf("}} %#v", &tmp)
-		log.Printf("++}} %T %T %#v", tmp, tmp.(Queryable), tmp.(Queryable))
-		ary = append(ary, tmp.(Queryable))
-		log.Printf("]] %#v", ary[0])
-		i++
+	ary := make([]common.Ident, len(result.Hits.Hits))
+	aryS := make([]string, len(result.Hits.Hits))
+	for i, hit := range result.Hits.Hits {
+		aryS[i] = hit.Id
+	}
+
+	sort.Strings(aryS)
+
+	for i, v := range aryS {
+		ary[i] = common.ToIdent(v)
 	}
 
 	return ary, result.Hits.TotalHits, nil
@@ -264,7 +259,11 @@ func (orm *Orm) IndexExists(e Elasticable) (bool, error) {
 }
 
 func (orm *Orm) DeleteIndex(e Elasticable) error {
-	response, err := orm.esClient.DeleteIndex(e.GetIndexName()).Do(orm.ctx)
+	return orm.DeleteIndexByName(e.GetIndexName())
+}
+
+func (orm *Orm) DeleteIndexByName(indexName string) error {
+	response, err := orm.esClient.DeleteIndex(indexName).Do(orm.ctx)
 	if err != nil {
 		return err
 	}

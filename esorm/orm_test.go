@@ -1,7 +1,6 @@
 package esorm
 
 import (
-	"log"
 	"testing"
 	"time"
 
@@ -339,18 +338,18 @@ func TestDemoMappings(t *testing.T) {
 
 //---------------------------------------------------------------------
 
-type Queries struct {
+type PercQuery struct {
 	Id    common.Ident `json:"id"`
 	Query interface{}  `json:"query"`
 }
 
-func (d *Queries) GetMappingProperties() map[string]MappingProperty { panic(99) }
-func (d *Queries) GetId() common.Ident                              { return d.Id }
-func (d *Queries) SetId(id common.Ident)                            { d.Id = id }
-func (d *Queries) GetIndexName() string                             { return "doc_index" }
-func (d *Queries) GetTypeName() string                              { return "queries" }
-func (d *Queries) String() string                                   { return fmt.Sprintf("%#v", d) }
-func (d *Queries) GetQuery() interface{}                            { return d.Query }
+func (d *PercQuery) GetMappingProperties() map[string]MappingProperty { panic(99) }
+func (d *PercQuery) GetId() common.Ident                              { return d.Id }
+func (d *PercQuery) SetId(id common.Ident)                            { d.Id = id }
+func (d *PercQuery) GetIndexName() string                             { return "doc_index" }
+func (d *PercQuery) GetTypeName() string                              { return "queries" }
+func (d *PercQuery) String() string                                   { return fmt.Sprintf("%#v", d) }
+func (d *PercQuery) GetQuery() interface{}                            { return d.Query }
 
 type Doc struct {
 	Id      common.Ident `json:"id"`
@@ -383,18 +382,18 @@ func TestPercolation(t *testing.T) {
 
 	// to set things up correctly (ignore errors)
 	_ = orm.DeleteIndex(&Doc{})
+	//orm.(*Orm).DeleteIndexByName("demo_index")
+	//a, err := orm.GetIndexes()
+	//assert.NoError(err)
+	//log.Printf("%v", a)
 
 	obj1 := &Doc{}
-	//obj2 := &Doc{}
-	//obj3 := &Doc{}
-	qX := &Queries{}
 
 	// create index
 	err = orm.CreateIndex(obj1, true)
 	assert.NoError(err)
 
-	//q1 := &Queries{queryString: `{"query":{"match":{"message":"foo"}}}`}
-	q1 := &Queries{
+	q1 := &PercQuery{
 		Query: map[string]interface{}{
 			"query": map[string]interface{}{
 				"match": map[string]interface{}{
@@ -405,9 +404,11 @@ func TestPercolation(t *testing.T) {
 	}
 	id1, err := orm.(*Orm).CreatePercolatorDocument(q1)
 	assert.NoError(err)
+	q1.Id = ""
+	id1x, err := orm.(*Orm).CreatePercolatorDocument(q1)
+	assert.NoError(err)
 
-	//q2 := &Queries{queryString: `{"query":{"match":{"message":"bar"}}}`}
-	q2 := &Queries{
+	q2 := &PercQuery{
 		Query: map[string]interface{}{
 			"query": map[string]interface{}{
 				"match": map[string]interface{}{
@@ -419,8 +420,7 @@ func TestPercolation(t *testing.T) {
 	id2, err := orm.(*Orm).CreatePercolatorDocument(q2)
 	assert.NoError(err)
 
-	//q3 := &Queries{queryString: `{"query":{"match":{"message":"baz"}}}`}
-	q3 := &Queries{
+	q3 := &PercQuery{
 		Query: map[string]interface{}{
 			"query": map[string]interface{}{
 				"match": map[string]interface{}{
@@ -429,22 +429,29 @@ func TestPercolation(t *testing.T) {
 			},
 		},
 	}
-	id3, err := orm.(*Orm).CreatePercolatorDocument(q3)
+	_, err = orm.(*Orm).CreatePercolatorDocument(q3)
 	assert.NoError(err)
 
 	objX := &Doc{Message: "bar"}
-	ary, cnt, err := orm.(*Orm).CreatePercolatorQuery(objX, qX)
+	ary, cnt, err := orm.(*Orm).CreatePercolatorQuery(objX)
 	assert.NoError(err)
-	assert.EqualValues(id2, ary[0].GetId())
 	assert.EqualValues(1, cnt)
-	log.Printf("%#v", ary[0])
-	log.Printf("%s %s %s", id1, id2, id3)
+	assert.Len(ary, 1)
+	assert.EqualValues(id2, ary[0])
 
 	objY := &Doc{Message: "ba"}
-	ary, cnt, err = orm.(*Orm).CreatePercolatorQuery(objY, qX)
+	ary, cnt, err = orm.(*Orm).CreatePercolatorQuery(objY)
 	assert.NoError(err)
 	assert.EqualValues(0, cnt)
 	assert.Len(ary, 0)
+
+	objZ := &Doc{Message: "foo"}
+	ary, cnt, err = orm.(*Orm).CreatePercolatorQuery(objZ)
+	assert.NoError(err)
+	assert.EqualValues(2, cnt)
+	assert.Len(ary, 2)
+	assert.EqualValues(id1, ary[0])
+	assert.EqualValues(id1x, ary[1])
 }
 
 //---------------------------------------------------------------------

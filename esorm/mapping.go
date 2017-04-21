@@ -25,7 +25,7 @@ func NewMapping(e Elasticable, usePercolation bool) *Mapping {
 			Properties: map[string]MappingProperty{
 				"query": MappingProperty{
 					Type: "percolator",
-				}
+				},
 			},
 		}
 	}
