@@ -25,7 +25,7 @@ func NewMapping(e Elasticable, usePercolation bool) *Mapping {
 			Properties: map[string]MappingProperty{
 				"query": MappingProperty{
 					Type: "percolator",
-				},
+				}
 			},
 		}
 	}
@@ -33,8 +33,8 @@ func NewMapping(e Elasticable, usePercolation bool) *Mapping {
 	m := &Mapping{
 		Settings: map[string]interface{}{},
 		Mappings: map[string]MappingProperty{
-			GetTypeName(e): mt,
-			"queries":      q,
+			e.GetTypeName(): mt,
+			"queries":       q,
 		},
 	}
 

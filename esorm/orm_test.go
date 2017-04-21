@@ -26,7 +26,7 @@ func TestIndexOperations(t *testing.T) {
 	assert.NoError(err)
 
 	e := &Demo{}
-	assert.Equal("demo_index", GetIndexName(e))
+	assert.Equal("demo_index", e.GetIndexName())
 
 	// to set things up correctly (ignore errors)
 	_ = orm.DeleteIndex(e)
@@ -41,7 +41,7 @@ func TestIndexOperations(t *testing.T) {
 	names, err := orm.GetIndexes()
 	assert.NoError(err)
 	assert.True(len(names) >= 1)
-	assert.Contains(names, GetIndexName(e))
+	assert.Contains(names, e.GetIndexName())
 
 	// not allowed to create an index that already exists
 	err = orm.CreateIndex(e, false)
@@ -341,24 +341,27 @@ func TestDemoMappings(t *testing.T) {
 
 type Queries struct {
 	Id    common.Ident `json:"id"`
-	Query string       `json:"query"`
+	Query interface{}  `json:"query"`
 }
+
+func (d *Queries) GetMappingProperties() map[string]MappingProperty { panic(99) }
+func (d *Queries) GetId() common.Ident                              { return d.Id }
+func (d *Queries) SetId(id common.Ident)                            { d.Id = id }
+func (d *Queries) GetIndexName() string                             { return "doc_index" }
+func (d *Queries) GetTypeName() string                              { return "queries" }
+func (d *Queries) String() string                                   { return fmt.Sprintf("%#v", d) }
+func (d *Queries) GetQuery() interface{}                            { return d.Query }
 
 type Doc struct {
 	Id      common.Ident `json:"id"`
 	Message string       `json:"message"`
 }
 
-func (d *Doc) GetId() common.Ident {
-	return d.Id
-}
-
-func (d *Doc) SetId() common.Ident {
-	d.Id = common.NewId()
-	return d.Id
-}
-
-func (d *Doc) String() string { return fmt.Sprintf("%#v", d) }
+func (d *Doc) GetId() common.Ident   { return d.Id }
+func (d *Doc) SetId(id common.Ident) { d.Id = id }
+func (d *Doc) GetIndexName() string  { return "doc_index" }
+func (d *Doc) GetTypeName() string   { return "doc_type" }
+func (d *Doc) String() string        { return fmt.Sprintf("%#v", d) }
 
 func (d *Doc) GetMappingProperties() map[string]MappingProperty {
 	data := map[string]MappingProperty{
@@ -382,40 +385,66 @@ func TestPercolation(t *testing.T) {
 	_ = orm.DeleteIndex(&Doc{})
 
 	obj1 := &Doc{}
-	obj2 := &Doc{}
-	obj3 := &Doc{}
+	//obj2 := &Doc{}
+	//obj3 := &Doc{}
+	qX := &Queries{}
 
 	// create index
 	err = orm.CreateIndex(obj1, true)
 	assert.NoError(err)
 
-	// Add a document
-
-	q1 := `{"query":{"match":{"message":"foo"}}}`
-	id1, err := orm.(*Orm).CreatePercolatorDocument(obj1, q1)
+	//q1 := &Queries{queryString: `{"query":{"match":{"message":"foo"}}}`}
+	q1 := &Queries{
+		Query: map[string]interface{}{
+			"query": map[string]interface{}{
+				"match": map[string]interface{}{
+					"message": "foo",
+				},
+			},
+		},
+	}
+	id1, err := orm.(*Orm).CreatePercolatorDocument(q1)
 	assert.NoError(err)
-	log.Printf("PercDoc: %s", id1)
 
-	q2 := `{"query":{"match":{"message":"bar"}}}`
-	id2, err := orm.(*Orm).CreatePercolatorDocument(obj2, q2)
+	//q2 := &Queries{queryString: `{"query":{"match":{"message":"bar"}}}`}
+	q2 := &Queries{
+		Query: map[string]interface{}{
+			"query": map[string]interface{}{
+				"match": map[string]interface{}{
+					"message": "bar",
+				},
+			},
+		},
+	}
+	id2, err := orm.(*Orm).CreatePercolatorDocument(q2)
 	assert.NoError(err)
-	log.Printf("PercDoc: %s", id2)
 
-	q3 := `{"query":{"match":{"message":"baz"}}}`
-	id3, err := orm.(*Orm).CreatePercolatorDocument(obj3, q3)
+	//q3 := &Queries{queryString: `{"query":{"match":{"message":"baz"}}}`}
+	q3 := &Queries{
+		Query: map[string]interface{}{
+			"query": map[string]interface{}{
+				"match": map[string]interface{}{
+					"message": "baz",
+				},
+			},
+		},
+	}
+	id3, err := orm.(*Orm).CreatePercolatorDocument(q3)
 	assert.NoError(err)
-	log.Printf("PercDoc: %s", id3)
 
-	// Percolate should return our registered query
-	objX := &Doc{Message: "foo"}
-	ary, cnt, err := orm.(*Orm).CreatePercolatorQuery(objX)
+	objX := &Doc{Message: "bar"}
+	ary, cnt, err := orm.(*Orm).CreatePercolatorQuery(objX, qX)
 	assert.NoError(err)
-	log.Printf("\n>>>>>>>>>>>>> %d %d", cnt, len(ary))
+	assert.EqualValues(id2, ary[0].GetId())
+	assert.EqualValues(1, cnt)
+	log.Printf("%#v", ary[0])
+	log.Printf("%s %s %s", id1, id2, id3)
 
 	objY := &Doc{Message: "ba"}
-	ary, cnt, err = orm.(*Orm).CreatePercolatorQuery(objY)
+	ary, cnt, err = orm.(*Orm).CreatePercolatorQuery(objY, qX)
 	assert.NoError(err)
-	log.Printf("\n>>>>>>>>>>>>> %d %d", cnt, len(ary))
+	assert.EqualValues(0, cnt)
+	assert.Len(ary, 0)
 }
 
 //---------------------------------------------------------------------
@@ -444,6 +473,11 @@ type Demo struct {
 	CoreX    DemoCoreX         `json:"corex"`
 	Nested   []DemoCoreX       `json:"nested"`
 }
+
+func (d *Demo) GetId() common.Ident   { return d.Id }
+func (d *Demo) SetId(id common.Ident) { d.Id = id }
+func (d *Demo) GetIndexName() string  { return "demo_index" }
+func (d *Demo) GetTypeName() string   { return "demo_type" }
 
 func (d *Demo) String() string { return fmt.Sprintf("%#v", d) }
 
@@ -493,13 +527,4 @@ func (d *Demo) GetMappingProperties() map[string]MappingProperty {
 	}
 
 	return data
-}
-
-func (d *Demo) GetId() common.Ident {
-	return d.Id
-}
-
-func (d *Demo) SetId() common.Ident {
-	d.Id = common.NewId()
-	return d.Id
 }

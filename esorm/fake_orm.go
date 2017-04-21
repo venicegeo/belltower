@@ -74,9 +74,10 @@ func (orm *FakeOrm) Close() error {
 }
 
 func (orm *FakeOrm) CreateDocument(obj Elasticable) (common.Ident, error) {
-	idx := GetIndexName(obj)
-	typ := GetTypeName(obj)
-	id := obj.SetId()
+	idx := obj.GetIndexName()
+	typ := obj.GetTypeName()
+	id := common.NewId()
+	obj.SetId(id)
 
 	destIdx, ok := orm.indexes[idx]
 	if !ok {
@@ -99,8 +100,8 @@ func (orm *FakeOrm) ReadDocument(obj Elasticable) (Elasticable, error) {
 		return nil, fmt.Errorf("object does not have Id set")
 	}
 
-	idx := GetIndexName(obj)
-	typ := GetTypeName(obj)
+	idx := obj.GetIndexName()
+	typ := obj.GetTypeName()
 	id := obj.GetId()
 
 	destIdx, ok := orm.indexes[idx]
@@ -123,8 +124,8 @@ func (orm *FakeOrm) ReadDocument(obj Elasticable) (Elasticable, error) {
 // TODO: for now, always return sorted by id (ascending)
 func (orm *FakeOrm) ReadDocuments(obj Elasticable, from int, size int) ([]Elasticable, int64, error) {
 
-	idx := GetIndexName(obj)
-	typ := GetTypeName(obj)
+	idx := obj.GetIndexName()
+	typ := obj.GetTypeName()
 
 	destIdx, ok := orm.indexes[idx]
 	if !ok {
@@ -170,8 +171,8 @@ func (orm *FakeOrm) ReadDocuments(obj Elasticable, from int, size int) ([]Elasti
 }
 
 func (orm *FakeOrm) UpdateDocument(src Elasticable) error {
-	idx := GetIndexName(src)
-	typ := GetTypeName(src)
+	idx := src.GetIndexName()
+	typ := src.GetTypeName()
 	id := src.GetId()
 
 	destIdx, ok := orm.indexes[idx]
@@ -192,8 +193,8 @@ func (orm *FakeOrm) UpdateDocument(src Elasticable) error {
 }
 
 func (orm *FakeOrm) DeleteDocument(obj Elasticable) error {
-	idx := GetIndexName(obj)
-	typ := GetTypeName(obj)
+	idx := obj.GetIndexName()
+	typ := obj.GetTypeName()
 	id := obj.GetId()
 
 	destIdx, ok := orm.indexes[idx]
@@ -222,24 +223,24 @@ func (orm *FakeOrm) GetIndexes() ([]string, error) {
 }
 
 func (orm *FakeOrm) IndexExists(e Elasticable) (bool, error) {
-	_, ok := orm.indexes[GetIndexName(e)]
+	_, ok := orm.indexes[e.GetIndexName()]
 	return ok, nil
 }
 
 func (orm *FakeOrm) DeleteIndex(e Elasticable) error {
-	_, ok := orm.indexes[GetIndexName(e)]
+	_, ok := orm.indexes[e.GetIndexName()]
 	if !ok {
-		return fmt.Errorf("index %s does not exists", GetIndexName(e))
+		return fmt.Errorf("index %s does not exists", e.GetIndexName())
 	}
-	delete(orm.indexes, GetIndexName(e))
+	delete(orm.indexes, e.GetIndexName())
 	return nil
 }
 
 func (orm *FakeOrm) CreateIndex(e Elasticable, usePercolation bool) error {
-	_, ok := orm.indexes[GetIndexName(e)]
+	_, ok := orm.indexes[e.GetIndexName()]
 	if ok {
-		return fmt.Errorf("index %s already exists", GetIndexName(e))
+		return fmt.Errorf("index %s already exists", e.GetIndexName())
 	}
-	orm.indexes[GetIndexName(e)] = &FakeIndex{name: GetIndexName(e)}
+	orm.indexes[e.GetIndexName()] = &FakeIndex{name: e.GetIndexName()}
 	return nil
 }

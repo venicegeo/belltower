@@ -74,10 +74,13 @@ func (orm *Orm) CreateDocument(obj Elasticable) (common.Ident, error) {
 		return "", fmt.Errorf("ID already assigned prior to Create()")
 	}
 
+	id := common.NewId()
+	obj.SetId(id)
+
 	resp, err := orm.esClient.Index().
-		Index(GetIndexName(obj)).
-		Type(GetTypeName(obj)).
-		Id(obj.SetId().String()).
+		Index(obj.GetIndexName()).
+		Type(obj.GetTypeName()).
+		Id(obj.GetId().String()).
 		BodyJson(obj).
 		Do(orm.ctx)
 	if err != nil {
@@ -90,16 +93,19 @@ func (orm *Orm) CreateDocument(obj Elasticable) (common.Ident, error) {
 	return common.ToIdent(resp.Id), nil
 }
 
-func (orm *Orm) CreatePercolatorDocument(obj Elasticable, jsonQuery string) (common.Ident, error) {
+func (orm *Orm) CreatePercolatorDocument(obj Queryable) (common.Ident, error) {
 	if obj.GetId() != "" {
 		return "", fmt.Errorf("ID already assigned prior to Create()")
 	}
 
+	id := common.NewId()
+	obj.SetId(id)
+
 	resp, err := orm.esClient.Index().
-		Index(GetIndexName(obj)).
+		Index(obj.GetIndexName()).
 		Type("queries").
-		Id(obj.SetId().String()).
-		BodyJson(jsonQuery).
+		Id(id.String()).
+		BodyJson(obj).
 		Refresh("wait_for").
 		Do(orm.ctx)
 
@@ -109,33 +115,39 @@ func (orm *Orm) CreatePercolatorDocument(obj Elasticable, jsonQuery string) (com
 	if !resp.Created {
 		return "", fmt.Errorf("Create() did not create")
 	}
-
-	return common.ToIdent(resp.Id), nil
+	return id, nil
 
 }
 
-func (orm *Orm) CreatePercolatorQuery(obj Elasticable) ([]Elasticable, int64, error) {
+func (orm *Orm) CreatePercolatorQuery(obj Elasticable, q Queryable) ([]Queryable, int64, error) {
 	pq := elastic.NewPercolatorQuery().
 		Field("query").
-		DocumentType(GetTypeName(obj)).
+		DocumentType(obj.GetTypeName()).
 		Document(obj)
-	result, err := orm.esClient.Search(GetIndexName(obj)).Query(pq).Do(orm.ctx)
-
-	if result.Hits.TotalHits <= 0 {
+	result, err := orm.esClient.Search(obj.GetIndexName()).Query(pq).Do(orm.ctx)
+	if result == nil {
+		return nil, 0, nil
+	}
+	if result.Hits == nil || result.Hits.TotalHits <= 0 {
 		return nil, 0, nil
 	}
 
-	ary := []Elasticable{}
-	log.Printf("== %#v", result.Hits.Hits[0])
+	ary := []Queryable{}
 	i := 0
 	for _, hit := range result.Hits.Hits {
-		tmp := common.NewViaReflection(obj)
-
-		err = json.Unmarshal(*hit.Source, tmp)
+		log.Printf("### %s", hit.Id)
+		byts := *hit.Source
+		tmp := common.NewViaReflection(q)
+		log.Printf(">> %#v %T", string(byts), tmp)
+		err = json.Unmarshal(byts, tmp)
 		if err != nil {
 			return nil, 0, err
 		}
-		ary = append(ary, tmp.(Elasticable))
+		log.Printf("}} %#v", err)
+		log.Printf("}} %#v", &tmp)
+		log.Printf("++}} %T %T %#v", tmp, tmp.(Queryable), tmp.(Queryable))
+		ary = append(ary, tmp.(Queryable))
+		log.Printf("]] %#v", ary[0])
 		i++
 	}
 
@@ -148,8 +160,8 @@ func (orm *Orm) ReadDocument(typ Elasticable) (Elasticable, error) {
 	}
 
 	result, err := orm.esClient.Get().
-		Index(GetIndexName(typ)).
-		Type(GetTypeName(typ)).
+		Index(typ.GetIndexName()).
+		Type(typ.GetTypeName()).
 		Id(typ.GetId().String()).
 		Do(orm.ctx)
 	if err != nil {
@@ -172,8 +184,8 @@ func (orm *Orm) ReadDocument(typ Elasticable) (Elasticable, error) {
 func (orm *Orm) ReadDocuments(typ Elasticable, from int, size int) ([]Elasticable, int64, error) {
 
 	result, err := orm.esClient.Search().
-		Index(GetIndexName(typ)).
-		Type(GetTypeName(typ)).
+		Index(typ.GetIndexName()).
+		Type(typ.GetTypeName()).
 		Query(elastic.NewMatchAllQuery()).
 		From(from).Size(size).
 		Sort("id", true).
@@ -215,8 +227,8 @@ func (orm *Orm) UpdateDocument(src Elasticable) error {
 	}
 
 	_, err = orm.esClient.Update().
-		Index(GetIndexName(src)).
-		Type(GetTypeName(src)).
+		Index(src.GetIndexName()).
+		Type(src.GetTypeName()).
 		Id(src.GetId().String()).
 		Doc(dest).
 		Do(orm.ctx)
@@ -225,8 +237,8 @@ func (orm *Orm) UpdateDocument(src Elasticable) error {
 
 func (orm *Orm) DeleteDocument(obj Elasticable) error {
 	res, err := orm.esClient.Delete().
-		Index(GetIndexName(obj)).
-		Type(GetTypeName(obj)).
+		Index(obj.GetIndexName()).
+		Type(obj.GetTypeName()).
 		Id(obj.GetId().String()).
 		Do(orm.ctx)
 	if err != nil {
@@ -247,12 +259,12 @@ func (orm *Orm) GetIndexes() ([]string, error) {
 }
 
 func (orm *Orm) IndexExists(e Elasticable) (bool, error) {
-	exists, err := orm.esClient.IndexExists(GetIndexName(e)).Do(orm.ctx)
+	exists, err := orm.esClient.IndexExists(e.GetIndexName()).Do(orm.ctx)
 	return exists, err
 }
 
 func (orm *Orm) DeleteIndex(e Elasticable) error {
-	response, err := orm.esClient.DeleteIndex(GetIndexName(e)).Do(orm.ctx)
+	response, err := orm.esClient.DeleteIndex(e.GetIndexName()).Do(orm.ctx)
 	if err != nil {
 		return err
 	}
@@ -263,7 +275,7 @@ func (orm *Orm) DeleteIndex(e Elasticable) error {
 }
 
 func (orm *Orm) CreateIndex(e Elasticable, usePercolation bool) error {
-	index := GetIndexName(e)
+	index := e.GetIndexName()
 
 	exists, err := orm.IndexExists(e)
 	if err != nil {
@@ -282,8 +294,6 @@ func (orm *Orm) CreateIndex(e Elasticable, usePercolation bool) error {
 	}
 	mappingString := string(byts)
 
-	log.Printf("[[[ %s ]]]", mappingString)
-
 	if strings.Contains(mappingString, "string") {
 		panic("internal error: obselete datatype \"string\" in mapping for index " + index)
 	}
@@ -301,7 +311,7 @@ func (orm *Orm) CreateIndex(e Elasticable, usePercolation bool) error {
 }
 
 func (orm *Orm) CreateIndexWithPercolation(e Elasticable) error {
-	index := GetIndexName(e)
+	index := e.GetIndexName()
 
 	exists, err := orm.IndexExists(e)
 	if err != nil {
@@ -312,39 +322,14 @@ func (orm *Orm) CreateIndexWithPercolation(e Elasticable) error {
 		return fmt.Errorf("index already exists")
 	}
 
-	/*{
-		"settings":{},
-		"mappings":{
-			"doc_type":{
-				"dynamic":"strict",
-				"properties":{
-					"id":{"type":"keyword"},
-					"message":{"type":"text"}
-				}
-			},
-			"queries":{
-				"properties":{
-					"query":{"type":"percolator"}
-				}
-			}
-		}
-	}*/
-
 	mapping := NewMapping(e, true)
-	//	mapping.Mappings["queries"] = MappingProperty{
-	////		Properties: map[string]MappingProperty{
-	///		"query": MappingProperty{
-	//		Type: "percolator",
-	//	},
-	//	},
-	//}
+
 	byts, err := json.Marshal(mapping)
 
 	if err != nil {
 		return err
 	}
 	mappingString := string(byts)
-	log.Printf(">> %s <<", mappingString)
 	if strings.Contains(mappingString, "string") {
 		panic("internal error: obselete datatype \"string\" in mapping for index " + index)
 	}
@@ -362,12 +347,14 @@ func (orm *Orm) CreateIndexWithPercolation(e Elasticable) error {
 }
 
 func (orm *Orm) AddPercolationQuery(obj Elasticable) error {
-	index := GetIndexName(obj)
+	index := obj.GetIndexName()
+	id := common.NewId()
+	obj.SetId(id)
 
 	_, err := orm.esClient.Index().
 		Index(index).
 		Type("query").
-		Id(obj.SetId().String()).
+		Id(id.String()).
 		BodyJson(`{"query":{"match":{"message":"bonsai tree"}}}`).
 		Refresh("wait_for").
 		Do(orm.ctx)
@@ -376,17 +363,16 @@ func (orm *Orm) AddPercolationQuery(obj Elasticable) error {
 }
 
 func (orm *Orm) AddPercolationDocument(obj Elasticable) error {
-	index := GetIndexName(obj)
-	typ := GetTypeName(obj)
+	index := obj.GetIndexName()
+	typ := obj.GetTypeName()
 
 	pq := elastic.NewPercolatorQuery().
 		Field("query").
 		DocumentType(typ).
 		Document(obj)
-	res, err := orm.esClient.Search(index).Query(pq).Do(orm.ctx)
+	_, err := orm.esClient.Search(index).Query(pq).Do(orm.ctx)
 	if err != nil {
 		return err
 	}
-	log.Printf("[[ %#v ]]", res)
 	return nil
 }

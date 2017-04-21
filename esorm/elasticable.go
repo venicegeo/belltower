@@ -13,10 +13,18 @@ import (
 type Elasticable interface {
 	GetMappingProperties() map[string]MappingProperty
 
+	GetIndexName() string
+	GetTypeName() string
+
 	GetId() common.Ident
-	SetId() common.Ident
+	SetId(common.Ident)
 
 	String() string
+}
+
+type Queryable interface {
+	Elasticable
+	GetQuery() interface{}
 }
 
 func getLoweredName(x interface{}) string {
@@ -27,5 +35,5 @@ func getLoweredName(x interface{}) string {
 	return t
 }
 
-func GetIndexName(x interface{}) string { return getLoweredName(x) + "_index" }
-func GetTypeName(x interface{}) string  { return getLoweredName(x) + "_type" }
+//func GetIndexName(x interface{}) string { return getLoweredName(x) + "_index" }
+//func GetTypeName(x interface{}) string  { return getLoweredName(x) + "_type" }
