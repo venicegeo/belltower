@@ -94,15 +94,17 @@ func (orm *Orm) CreateDocument(obj Elasticable) (common.Ident, error) {
 	return common.ToIdent(resp.Id), nil
 }
 
-func (orm *Orm) CreatePercolatorDocument(obj Elasticable, query *Query) (common.Ident, error) {
+func (orm *Orm) CreatePercolatorDocument(obj Elasticable, filter *Filter) (common.Ident, error) {
 
 	id := common.NewId()
+
+	j := filter.toJson()
 
 	resp, err := orm.esClient.Index().
 		Index(obj.GetIndexName()).
 		Type("queries").
 		Id(id.String()).
-		BodyJson(query).
+		BodyJson(j).
 		Refresh("wait_for").
 		Do(orm.ctx)
 
@@ -127,7 +129,7 @@ func (orm *Orm) CreatePercolatorQuery(obj Elasticable) ([]common.Ident, int64, e
 	}
 
 	if result.Hits.TotalHits <= 0 {
-		return nil, 0, nil
+		return []common.Ident{}, 0, nil
 	}
 
 	ary := make([]common.Ident, len(result.Hits.Hits))
