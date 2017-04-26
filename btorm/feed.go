@@ -1,6 +1,7 @@
 package btorm
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/venicegeo/belltower/common"
@@ -18,6 +19,11 @@ type Feed struct {
 	LastMessageAt   time.Time         `json:"last_message_at"  crud:"r"`
 	Settings        map[string]string `json:"settings"         crud:"cr"`
 }
+
+func (feed *Feed) GetIndexName() string { return "feed_index" }
+func (feed *Feed) GetTypeName() string  { return "feed_type" }
+
+func (feed *Feed) String() string { return fmt.Sprintf("%#v", feed) }
 
 //---------------------------------------------------------------------
 

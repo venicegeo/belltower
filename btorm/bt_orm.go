@@ -1,6 +1,8 @@
 package btorm
 
 import (
+	"fmt"
+
 	"github.com/venicegeo/belltower/common"
 	"github.com/venicegeo/belltower/esorm"
 )
@@ -12,14 +14,6 @@ type BtOrm struct {
 	prefix      string
 	objectTypes []esorm.Elasticable
 }
-
-type OrmOption int
-
-const (
-	OrmOptionCreate       OrmOption = iota // removes old db if present, then creates
-	OrmOptionOpen                          // fails if not already exists
-	OrmOptionOpenOrCreate                  // if exists then open, else create
-)
 
 //---------------------------------------------------------------------
 
@@ -39,36 +33,26 @@ func (orm *BtOrm) Open() error {
 		return err
 	}
 
-	for _, t := range orm.objectTypes {
-		ok, err := orm.Orm.IndexExists(t)
-		if !ok {
-			err = orm.Orm.CreateIndex(t)
-			if err != nil {
-				return err
-			}
-		}
+	ok, err := allIndexesValid(orm)
+	if err != nil {
+		_ = orm.Orm.Close()
+		return err
+	}
+	if !ok {
+		_ = orm.Orm.Close()
+		return fmt.Errorf("DB indexes not all valid")
 	}
 
 	return nil
 }
 
-func ResetIndexes() error {
-	var err error
-
-	orm := &BtOrm{}
-	err = orm.Open()
-	if err != nil {
-		return err
-	}
-
-	// try to delete all the indexes
-
+// remove all the indxes
+func deleteIndexes(orm *BtOrm) error {
 	for _, t := range orm.objectTypes {
 		exists, err := orm.Orm.IndexExists(t)
 		if err != nil {
 			return err
 		}
-
 		if exists {
 			err = orm.Orm.DeleteIndex(t)
 			if err != nil {
@@ -76,17 +60,100 @@ func ResetIndexes() error {
 			}
 		}
 	}
+	return nil
+}
 
-	// and recreate
-
+// return true if any parts of the DB exist in any state
+func anyIndexExists(orm *BtOrm) (bool, error) {
 	for _, t := range orm.objectTypes {
-		err = orm.Orm.CreateIndex(t)
+		exists, err := orm.Orm.IndexExists(t)
+		if err != nil {
+			return true, err
+		}
+		if exists {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// return true if all the DB exists
+func allIndexesValid(orm *BtOrm) (bool, error) {
+	for _, t := range orm.objectTypes {
+		exists, err := orm.Orm.IndexExists(t)
+		if err != nil {
+			return false, err
+		}
+		if !exists {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+// create all the indexes
+func createIndexes(orm *BtOrm) error {
+	for _, t := range orm.objectTypes {
+		err := orm.Orm.CreateIndex(t, false)
 		if err != nil {
 			return err
 		}
 	}
+	return nil
+}
 
-	return orm.Close()
+func DatabaseDelete() error {
+	var err error
+
+	orm := &BtOrm{}
+	err = orm.Open()
+	if err != nil {
+		return err
+	}
+	defer orm.Close() // ignore errors
+
+	// try three times
+	for i := 0; i < 3; i++ {
+		err = deleteIndexes(orm)
+		if err != nil {
+			return err
+		}
+
+		exists, err := anyIndexExists(orm)
+		if err != nil {
+			return err
+		}
+		if !exists {
+			// success!
+			return nil
+		}
+	}
+
+	// at least one isn't getting deleted
+	return fmt.Errorf("Unable to delete all indexes from database")
+}
+
+func DatabaseInit() error {
+	var err error
+
+	orm := &BtOrm{}
+	err = orm.Open()
+	if err != nil {
+		return err
+	}
+	defer orm.Orm.Close() // ignore error
+
+	err = deleteIndexes(orm)
+	if err != nil {
+		return err
+	}
+
+	err = createIndexes(orm)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (orm *BtOrm) Close() error {

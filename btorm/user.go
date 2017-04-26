@@ -1,6 +1,7 @@
 package btorm
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/venicegeo/belltower/esorm"
@@ -12,6 +13,11 @@ type User struct {
 	Role        Role      `json:"role"          crud:"cr"`
 	LastLoginAt time.Time `json:"last_login_at" crud:"r"`
 }
+
+func (user *User) GetIndexName() string { return "user_index" }
+func (user *User) GetTypeName() string  { return "user_type" }
+
+func (user *User) String() string { return fmt.Sprintf("%#v", user) }
 
 //---------------------------------------------------------------------
 

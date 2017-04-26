@@ -12,6 +12,11 @@ func TestApp(t *testing.T) {
 	assert := assert.New(t)
 
 	{
+		err := btorm.DatabaseInit()
+		assert.NoError(err)
+	}
+
+	{
 		orm := &btorm.BtOrm{}
 		err := orm.Open()
 		assert.NoError(err)
@@ -51,6 +56,4 @@ func TestApp(t *testing.T) {
 
 	err = app.Run()
 	assert.NoError(err)
-
-	// verify all three feeds reported events
 }

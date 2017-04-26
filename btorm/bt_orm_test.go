@@ -7,6 +7,12 @@ import (
 	"github.com/venicegeo/belltower/common"
 )
 
+func Reset(t *testing.T) {
+	assert := assert.New(t)
+	err := DatabaseInit()
+	assert.NoError(err)
+}
+
 func TestDatabaseOpen(t *testing.T) {
 	assert := assert.New(t)
 
@@ -15,11 +21,7 @@ func TestDatabaseOpen(t *testing.T) {
 	var action *Action
 	var orm *BtOrm
 
-	// clean slate
-	{
-		err = ResetIndexes()
-		assert.NoError(err)
-	}
+	Reset(t)
 
 	// add one, make sure it is there
 	{
@@ -60,10 +62,7 @@ func TestDatabaseOpen(t *testing.T) {
 	}
 
 	// wipe it all
-	{
-		err = ResetIndexes()
-		assert.NoError(err)
-	}
+	Reset(t)
 
 	// verify not there anymore
 	{
@@ -82,11 +81,10 @@ func TestDatabaseOpen(t *testing.T) {
 func TestActionCRUD(t *testing.T) {
 	assert := assert.New(t)
 
-	err := ResetIndexes()
-	assert.NoError(err)
+	Reset(t)
 
 	orm := &BtOrm{}
-	err = orm.Open()
+	err := orm.Open()
 	assert.NoError(err)
 	assert.NotNil(orm)
 
@@ -152,11 +150,10 @@ func TestActionCRUD(t *testing.T) {
 func TestFeedCRUD(t *testing.T) {
 	assert := assert.New(t)
 
-	err := ResetIndexes()
-	assert.NoError(err)
+	Reset(t)
 
 	orm := &BtOrm{}
-	err = orm.Open()
+	err := orm.Open()
 	assert.NoError(err)
 	assert.NotNil(orm)
 
@@ -222,11 +219,10 @@ func TestFeedCRUD(t *testing.T) {
 func TestRuleCRUD(t *testing.T) {
 	assert := assert.New(t)
 
-	err := ResetIndexes()
-	assert.NoError(err)
+	Reset(t)
 
 	orm := &BtOrm{}
-	err = orm.Open()
+	err := orm.Open()
 	assert.NoError(err)
 	assert.NotNil(orm)
 
@@ -292,11 +288,10 @@ func TestRuleCRUD(t *testing.T) {
 func TestUserCRUD(t *testing.T) {
 	assert := assert.New(t)
 
-	err := ResetIndexes()
-	assert.NoError(err)
+	Reset(t)
 
 	orm := &BtOrm{}
-	err = orm.Open()
+	err := orm.Open()
 	assert.NoError(err)
 	assert.NotNil(orm)
 

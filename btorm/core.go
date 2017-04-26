@@ -21,7 +21,7 @@ type Core struct {
 }
 
 func (c *Core) GetId() common.Ident      { return c.Id }
-func (c *Core) SetId() common.Ident      { c.Id = common.NewId(); return c.Id }
+func (c *Core) SetId(id common.Ident)    { c.Id = id }
 func (c *Core) GetOwnerId() common.Ident { return c.OwnerId }
 func (c *Core) GetIsPublic() bool        { return c.IsPublic }
 
