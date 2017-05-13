@@ -1,6 +1,7 @@
 package feeders
 
 import (
+	"context"
 	"log"
 	"os"
 	"strconv"
@@ -82,7 +83,10 @@ func TestFileSysFeeder(t *testing.T) {
 		return nil
 	}
 
-	err = RunFeed(feed, feeder, poster)
+	ctx, cancel := context.WithDeadline(context.Background(), feed.PollingEndAt)
+	assert.NotNil(cancel)
+
+	err = runFeed(ctx, feed, feeder, poster)
 	assert.Error(err)
 
 	// verify the event was posted

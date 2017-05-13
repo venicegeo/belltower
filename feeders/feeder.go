@@ -1,10 +1,7 @@
 package feeders
 
 import (
-	"log"
 	"time"
-
-	"fmt"
 
 	"github.com/venicegeo/belltower/btorm"
 	"github.com/venicegeo/belltower/common"
@@ -57,46 +54,3 @@ type Event struct {
 type EventPosterFunc func(*Event) error
 
 //---------------------------------------------------------------------
-
-func RunFeed(feed *btorm.Feed, feeder Feeder, post EventPosterFunc) error {
-	errCount := 0
-
-	for {
-		now := time.Now()
-		if !feed.PollingEndAt.IsZero() && now.After(feed.PollingEndAt) {
-			return fmt.Errorf("end date reached")
-		}
-
-		if errCount == 3 {
-			log.Printf("Feeder aborting (%s)", feeder.GetName())
-			return fmt.Errorf("Feeder aborting -- too many errors")
-		}
-
-		eventData, err := feeder.Poll()
-
-		if err != nil {
-			log.Printf("Feeder poll error (%s): %v", feeder.GetName(), err)
-			errCount++
-		} else if eventData == nil {
-			// no error and no data - not a hit
-		} else {
-			// a hit! a hit!
-			event := &Event{
-				TimeStamp: time.Now(),
-				FeedId:    feed.Id,
-				FeederId:  feed.FeederId,
-				Data:      eventData,
-			}
-			err = post(event)
-			if err != nil {
-				log.Printf("Feeder post error (%s): %v", feeder.GetName(), err)
-				errCount++
-			}
-		}
-
-		d := time.Duration(feed.PollingInterval)
-		time.Sleep(d * time.Second)
-	}
-
-	// not reached
-}

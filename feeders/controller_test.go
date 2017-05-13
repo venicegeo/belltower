@@ -8,7 +8,7 @@ import (
 	"github.com/venicegeo/belltower/btorm"
 )
 
-func TestApp(t *testing.T) {
+func TestController(t *testing.T) {
 	assert := assert.New(t)
 
 	{
@@ -48,12 +48,10 @@ func TestApp(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	app, err := NewApp()
-	assert.NoError(err)
+	ctl := &Controller{}
 
-	err = app.Load()
-	assert.NoError(err)
-
-	err = app.Run()
+	err := ctl.Start()
 	assert.NoError(err)
 }
+
+need to test error handling in run loop
