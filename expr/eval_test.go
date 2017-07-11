@@ -13,8 +13,15 @@ func TestEval(t *testing.T) {
 		text     string
 		expected int
 	}{
-		{expected: 0, text: "0"},
-		{expected: 6, text: "1+2+3"},
+		// constants
+		{expected: 17, text: "17"},
+
+		// binops
+		{expected: 3, text: "1+2"},
+		{expected: -1, text: "1-2"},
+		{expected: 6, text: "2*3"},
+		{expected: 2, text: "6/3"},
+		{expected: 1, text: "6/5"},
 	}
 
 	for _, item := range data {

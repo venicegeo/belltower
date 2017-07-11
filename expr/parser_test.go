@@ -13,13 +13,17 @@ func TestParse(t *testing.T) {
 		text     string
 		expected bool
 	}{
-		{expected: true, text: "1+2"},
 		{expected: false, text: "1+"},
+
+		{expected: true, text: "1+2"},
+		{expected: true, text: "a+b"},
+		{expected: true, text: "f(8)"},
+		{expected: true, text: "f((x))"},
 	}
 
 	for _, item := range data {
 		e, err := NewExpression(item.text)
-		assert.Equal(item.expected, err == nil)
-		assert.Equal(item.expected, e != nil)
+		assert.Equal(item.expected, err == nil, item.text)
+		assert.Equal(item.expected, e != nil, item.text)
 	}
 }

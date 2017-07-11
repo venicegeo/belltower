@@ -6,20 +6,24 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
-	"strconv"
 )
 
-func eval(expr ast.Expr) (int, error) {
+func eval(expr ast.Expr) (*ast.BasicLit, error) {
 	switch typedExpr := expr.(type) {
 	case *ast.BinaryExpr:
 		return evalBinaryExpr(typedExpr)
 	case *ast.BasicLit:
-		switch typedExpr.Kind {
+		return nil, typedExpr
+		/*switch typedExpr.Kind {
 		case token.INT:
 			return strconv.Atoi(typedExpr.Value)
+		case token.STRING:
+			return typedExpr.Value, nil
+		case token.FLOAT:
+			return strconv.ParseFloat(typedExpr.Value, 64)
 		default:
 			return 0, fmt.Errorf("ast.BasicLit kind not supported: %s [%s]", typedExpr.Kind.String(), typedExpr.Value)
-		}
+		}*/
 	default:
 		return 0, fmt.Errorf("ast.Expr type not supported: %s [%s]", expr, typedExpr)
 	}
@@ -27,7 +31,7 @@ func eval(expr ast.Expr) (int, error) {
 	// notreached
 }
 
-func evalBinaryExpr(expr *ast.BinaryExpr) (int, error) {
+func evalBinaryExpr(expr *ast.BinaryExpr) (*ast.BasicLit, error) {
 	left, err := eval(expr.X)
 	if err != nil {
 		return 0, err
