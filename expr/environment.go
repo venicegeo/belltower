@@ -14,6 +14,8 @@ type EnvironmentFuncs struct {
 	funcs map[string]govaluate.ExpressionFunction
 }
 
+type Function govaluate.ExpressionFunction
+
 //---------------------------------------------------------------------------
 
 func NewEnvironmentVars() *EnvironmentVars {
@@ -56,7 +58,7 @@ func NewEnvironmentFuncs() *EnvironmentFuncs {
 	return env
 }
 
-func (env *EnvironmentFuncs) SetFuncs(fncs map[string]govaluate.ExpressionFunction) {
+func (env *EnvironmentFuncs) SetFuncs(fncs map[string]Function) {
 	if fncs != nil {
 		for k, v := range fncs {
 			env.SetFunc(k, v)
@@ -64,13 +66,13 @@ func (env *EnvironmentFuncs) SetFuncs(fncs map[string]govaluate.ExpressionFuncti
 	}
 }
 
-func (env *EnvironmentFuncs) SetFunc(name string, value govaluate.ExpressionFunction) {
-	env.funcs[name] = value
+func (env *EnvironmentFuncs) SetFunc(name string, value Function) {
+	env.funcs[name] = govaluate.ExpressionFunction(value)
 }
 
-func (env *EnvironmentFuncs) GetFunc(name string) string {
-	//f := env.funcs[name]
-	return name
+func (env *EnvironmentFuncs) GetFunc(name string) Function {
+	f := env.funcs[name]
+	return Function(f)
 }
 
 func (env *EnvironmentFuncs) String() string {

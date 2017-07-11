@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestEnvironment(t *testing.T) {
+func TestEnvironmentVars(t *testing.T) {
 	assert := assert.New(t)
 
 	mystruct := struct {
@@ -43,4 +43,33 @@ func TestEnvironment(t *testing.T) {
 
 	// can we get something that doesn't exist?
 	assert.Equal(nil, env.GetVar("xyzzy"))
+}
+func TestEnvironmentFuncs(t *testing.T) {
+	assert := assert.New(t)
+
+	var f Function = func(args ...interface{}) (interface{}, error) {
+		length := len(args[0].(string))
+		return (float64)(length), nil
+	}
+	var g Function = func(args ...interface{}) (interface{}, error) {
+		length := len(args[0].(string))
+		return -(float64)(length), nil
+	}
+	m := map[string]Function{
+		"strlen":    f,
+		"negstrlen": g,
+	}
+
+	env := NewEnvironmentFuncs()
+	env.SetFuncs(m)
+
+	assert.NotNil(env.GetFunc("strlen"))
+	assert.NotNil(env.GetFunc("negstrlen"))
+
+	// can we override?
+	env.SetFunc("strlen", g)
+	assert.NotNil(env.GetFunc("strlen"))
+
+	// can we get something that doesn't exist?
+	assert.Nil(env.GetFunc("xyzzy"))
 }

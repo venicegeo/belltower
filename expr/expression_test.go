@@ -131,3 +131,29 @@ func TestConversion(t *testing.T) {
 		assert.Equal(true, *b)
 	}
 }
+func TestFunction(t *testing.T) {
+	assert := assert.New(t)
+
+	f := func(args ...interface{}) (interface{}, error) {
+		length := len(args[0].(string))
+		return (float64)(length), nil
+	}
+	g := func(args ...interface{}) (interface{}, error) {
+		length := len(args[0].(string))
+		return -(float64)(length), nil
+	}
+	m := map[string]Function{
+		"strlen":    f,
+		"negstrlen": g,
+	}
+	env := NewEnvironmentFuncs()
+	env.SetFuncs(m)
+
+	e, err := NewExpression(`strlen("abc") * negstrlen("4567")`, env)
+	assert.NoError(err)
+	x, err := e.Eval(nil)
+	assert.NoError(err)
+	v := AsFloat(x)
+	assert.NotNil(v)
+	assert.Equal(-12.0, *v)
+}
