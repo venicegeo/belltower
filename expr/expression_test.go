@@ -11,10 +11,13 @@ func TestParseFails(t *testing.T) {
 
 	texts := []string{
 		"1+",
+		"foo.bar + 3",
+		"3 + x[2]",
+		`x["key"]`,
 	}
 
 	for _, text := range texts {
-		e, err := NewExpression(text)
+		e, err := NewExpression(text, nil)
 		assert.Error(err, text)
 		assert.Nil(e, text)
 	}
@@ -23,27 +26,47 @@ func TestParseFails(t *testing.T) {
 func TestEvalFails(t *testing.T) {
 	assert := assert.New(t)
 
-	texts := []string{
-		"1+x",
+	//myarray := []float64{0.1, 1.2, 2.3, 3.4}
+	//mymap := map[string]int{"two": 2}
+
+	data := []struct {
+		text string
+		env  *EnvironmentVars
+	}{
+		{text: "1+x"},
+		//{text: "x[2] * 2", env: NewEnvironment(map[string]interface{}{"x": myarray})},
+		//{text: `2 + x["two"]`, env: NewEnvironment(map[string]interface{}{"x": mymap})},
 	}
 
-	for _, text := range texts {
-		e, err := NewExpression(text)
-		assert.NoError(err, text)
-		assert.NotNil(e, text)
+	for _, item := range data {
+		e, err := NewExpression(item.text, nil)
+		assert.NoError(err, item.text)
+		assert.NotNil(e, item.text)
 
-		x, err := e.Eval()
-		assert.Error(err, text)
-		assert.Nil(x, text)
+		x, err := e.Eval(item.env)
+		assert.Error(err, item.text)
+		assert.Nil(x, item.text)
 	}
 }
 
 func TestEvals(t *testing.T) {
 	assert := assert.New(t)
 
+	mystruct := struct {
+		Frob int
+	}{
+		Frob: 19,
+	}
+
+	env1 := NewEnvironmentVars()
+	env1.SetVars(map[string]interface{}{"x": 15.5})
+	env2 := NewEnvironmentVars()
+	env2.SetVars(map[string]interface{}{"x": mystruct})
+
 	data := []struct {
 		text     string
 		expected interface{}
+		env      *EnvironmentVars
 	}{
 		// misc
 		{expected: 3.0, text: "1+2"},
@@ -58,14 +81,18 @@ func TestEvals(t *testing.T) {
 		{expected: 2.0, text: "6/3"},
 		{expected: 1.2, text: "6/5"},
 		{expected: true, text: "41>5 && (4/5 < 1.1)"},
+
+		// with an environment
+		{expected: 19.0, text: "x+3.5", env: env1},
+		{expected: 22.5, text: "x.Frob + 3.5", env: env2},
 	}
 
 	for _, item := range data {
-		e, err := NewExpression(item.text)
+		e, err := NewExpression(item.text, nil)
 		assert.NoError(err)
 		assert.NotNil(e)
 
-		x, err := e.Eval()
+		x, err := e.Eval(item.env)
 		assert.NoError(err)
 		assert.NotNil(x)
 
@@ -77,27 +104,27 @@ func TestConversion(t *testing.T) {
 	assert := assert.New(t)
 
 	{
-		e, err := NewExpression("1.23")
+		e, err := NewExpression("1.23", nil)
 		assert.NoError(err)
-		x, err := e.Eval()
+		x, err := e.Eval(nil)
 		assert.NoError(err)
 		f := AsFloat(x)
 		assert.NotNil(f)
 		assert.Equal(1.23, *f)
 	}
 	{
-		e, err := NewExpression(`"1,2,3"`)
+		e, err := NewExpression(`"1,2,3"`, nil)
 		assert.NoError(err)
-		x, err := e.Eval()
+		x, err := e.Eval(nil)
 		assert.NoError(err)
 		s := AsString(x)
 		assert.NotNil(s)
 		assert.Equal("1,2,3", *s)
 	}
 	{
-		e, err := NewExpression("true")
+		e, err := NewExpression("true", nil)
 		assert.NoError(err)
-		x, err := e.Eval()
+		x, err := e.Eval(nil)
 		assert.NoError(err)
 		b := AsBool(x)
 		assert.NotNil(b)
