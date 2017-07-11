@@ -1,46 +1,82 @@
 package expr
 
-// expression parser started life from https://thorstenball.com/blog/2016/11/16/putting-eval-in-go/
-
 import (
-	"bytes"
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/printer"
-	"go/token"
+
+	"github.com/Knetic/govaluate"
 )
 
 type Expression struct {
-	text string
-	tree ast.Expr
+	text       string
+	expression *govaluate.EvaluableExpression
 }
 
 func NewExpression(text string) (*Expression, error) {
-	tree, err := parser.ParseExpr(text)
+	expression, err := govaluate.NewEvaluableExpression(text)
 	if err != nil {
-		return nil, fmt.Errorf("parsing failed: %s", err)
+		return nil, err
 	}
 
 	e := &Expression{
-		text: text,
-		tree: tree,
+		text:       text,
+		expression: expression,
 	}
 
 	return e, nil
 }
 
 func (e *Expression) String() string {
-	buf := bytes.Buffer{}
-	printer.Fprint(&buf, token.NewFileSet(), e)
-	return buf.String()
+	return e.expression.String()
 }
 
-func (e *Expression) Eval() (int, error) {
+func (e *Expression) Eval() (result interface{}, err error) {
+	success := false
 
-	r, err := eval(e.tree)
+	defer func() {
+		if !success {
+			_ = recover()
+			err = fmt.Errorf("evaluation failed")
+			result = nil
+		}
+	}()
+
+	result, err = e.expression.Evaluate(nil)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	return r, nil
+	success = true
+
+	return result, nil
+}
+
+/*func AsInt(x interface{}) *int {
+	v, ok := x.(int)
+	if ok {
+		return &v
+	}
+	return nil
+}*/
+
+func AsFloat(x interface{}) *float64 {
+	v, ok := x.(float64)
+	if ok {
+		return &v
+	}
+	return nil
+}
+
+func AsBool(x interface{}) *bool {
+	v, ok := x.(bool)
+	if ok {
+		return &v
+	}
+	return nil
+}
+
+func AsString(x interface{}) *string {
+	v, ok := x.(string)
+	if ok {
+		return &v
+	}
+	return nil
 }
