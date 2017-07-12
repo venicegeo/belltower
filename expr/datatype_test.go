@@ -31,6 +31,7 @@ func TestDataType(t *testing.T) {
 	st := NewStructDataType("v3", fs)
 	assert.Equal("<v3/struct: <ii/int>, <ss/string>>", st.String())
 }
+
 func TestDataTypeJSON(t *testing.T) {
 	assert := assert.New(t)
 
@@ -57,25 +58,61 @@ func TestDataTypeJSON(t *testing.T) {
 			expected: "<IN/struct: <x/int>, <y/float>>",
 		},
 		{
-			jsn: `{
-				"x": "array[int]"
-			}`,
-			expected: "<struct: <array: <int>>>",
-		},
-		{
-			jsn: `{
-				"x": "map[bool]"
-			}`,
-			expected: "<struct: <map: <bool>>>",
-		},
-		{
-			jsn: `{
-				"x": {
-					"a": "bool",
-					"b": "string"
+			jsn: `
+			{
+				"name": "in",
+				"type": "struct",
+				"fields": [
+					{
+						"name": "x",
+						"type": "array",
+						"element": {
+							"type": "int"
+						}
 					}
+				]
 			}`,
-			expected: "<struct: <struct: <bool>, <string>>>",
+			expected: "<in/struct: <x/array: <int>>>",
+		},
+		{
+			jsn: `
+			{
+				"name": "x",
+				"type": "struct",
+				"fields": [
+					{
+						"name": "xx",
+						"type": "map",
+						"element": {
+							"type": "bool"
+						}
+					}
+				]
+			}`,
+			expected: "<x/struct: <xx/map: <bool>>>",
+		},
+		{
+			jsn: `{
+				"name": "x",
+				"type": "struct",
+				"fields": [
+					{
+						"name": "y",
+						"type": "struct",
+						"fields": [
+							{
+								"name": "a",
+								"type": "bool"
+							},
+							{
+								"name": "b",
+								"type": "string"
+							}
+						]
+					}
+				]
+			}`,
+			expected: "<x/struct: <y/struct: <a/bool>, <b/string>>>",
 		},
 	}
 

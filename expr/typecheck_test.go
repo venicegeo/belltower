@@ -33,7 +33,7 @@ func TestTypeCheck(t *testing.T) {
 		"Z": true,
 	}
 
-	aa, errs := TypeCheck(a, b)
+	aa, errs := typeCheck(a, b)
 
 	assert.Len(errs, 3)
 	//log.Printf(errs[0])
@@ -51,5 +51,4 @@ func TestTypeCheck(t *testing.T) {
 	//    t.w expected string but got float
 	//    t.y not set
 	//    b.z not used
-
 }

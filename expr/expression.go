@@ -11,7 +11,7 @@ type Expression struct {
 	expression *govaluate.EvaluableExpression
 }
 
-func NewExpression(text string, env *EnvironmentFuncs) (*Expression, error) {
+func NewExpression(text string, env *Functions) (*Expression, error) {
 	funcs := map[string]govaluate.ExpressionFunction{}
 	if env != nil {
 		funcs = env.funcs
@@ -34,7 +34,7 @@ func (e *Expression) String() string {
 	return e.expression.String()
 }
 
-func (e *Expression) Eval(env *EnvironmentVars) (result interface{}, err error) {
+func (e *Expression) Eval(env *Variables) (result interface{}, err error) {
 	success := false
 
 	defer func() {

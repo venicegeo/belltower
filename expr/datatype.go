@@ -7,7 +7,7 @@ import (
 )
 
 type DataType struct {
-	Name    string      `json:"name"`
+	Name    string      `json:"name,omitempty"`
 	Type    TypeName    `json:"type"`
 	Element *DataType   `json:"element,omitempty"` // for maps and arrays
 	Fields  []*DataType `json:"fields,omitempty"`  // for structs
@@ -52,76 +52,18 @@ func NewDataTypeFromJSON(jsn string) (*DataType, error) {
 		return nil, err
 	}
 
-	log.Printf("%#v", m)
 	err = m.validate()
 	if err != nil {
 		return nil, err
 	}
 
 	return m, nil
-	//	return NewDataTypeFromMap(m)
 }
-
-/*
-func NewDataTypeFromMap(m *map[string]interface{}) (*DataType, error) {
-
-	return parseMap(m)
-}
-
-func parseMap(m *map[string]interface{}) (*DataType, error) {
-
-	// example input:
-	//   {"x": "int", "y":"string"}
-	// output:
-	//   dt: <struct: <int>, <string>>
-
-	dt := &DataType{
-		Type:   TypeEnumStruct,
-		Fields: []*DataType{},
-	}
-
-	keys := []string{}
-	for k := range *m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, k := range keys {
-		v := (*m)[k]
-
-		//rawType := reflect.TypeOf(v).Kind()
-		//typ := TypeEnumInvalid
-
-		var t *DataType
-
-		switch v.(type) {
-		case string:
-			switch v.(string) {
-			case "int":
-				t = NewDataTypeInt()
-			case "float":
-				t = NewDataTypeFloat()
-			case "bool":
-				t = NewDataTypeBool()
-			case "string":
-				t = NewDataTypeString()
-			default:
-				return nil, fmt.Errorf("invalid type string: %s", v)
-			}
-		default:
-			return nil, fmt.Errorf("unknown type of map value: %s", v)
-		}
-
-		dt.Fields = append(dt.Fields, t)
-	}
-	return dt, nil
-}
-*/
 
 func (dt *DataType) validate() error {
-	if dt.Name == "" {
-		return fmt.Errorf("validation failed: Name is not set")
-	}
+	//	if dt.Name == "" {
+	//		return fmt.Errorf("validation failed: Name is not set")
+	//	}
 	if !isValidTypeName(string(dt.Type)) {
 		return fmt.Errorf("validation failed for field %s: type %s is invalid", dt.Name, dt.Type)
 	}
@@ -147,6 +89,9 @@ func (dt *DataType) validate() error {
 func (dt *DataType) String() string {
 	switch dt.Type {
 	case TypeNameInt, TypeNameFloat, TypeNameBool, TypeNameString:
+		if dt.Name == "" {
+			return fmt.Sprintf("<%s>", dt.Type)
+		}
 		return fmt.Sprintf("<%s/%s>", dt.Name, dt.Type)
 	case TypeNameMap, TypeNameArray:
 		return fmt.Sprintf("<%s/%s: %s>", dt.Name, dt.Type, dt.Element.String())

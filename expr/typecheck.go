@@ -28,32 +28,37 @@ import (
 //    t.w expected string but got float
 //    t.y not set
 //    b.z not used
-func TypeCheck(a interface{}, b map[string]interface{}) (interface{}, []string) {
+func typeCheck(a interface{}, b map[string]interface{}) (interface{}, []string) {
 	errs := []string{}
 
 	s := structs.New(a)
 
+	// to track if any of b's keys were not used
 	keyUsed := map[string]bool{}
 	for k, _ := range b {
 		keyUsed[k] = false
 	}
 
 	for _, name := range s.Names() {
+
+		// do we have a's required field?
 		_, ok := b[name]
 		if !ok {
 			errs = append(errs, fmt.Sprintf("struct field %s: not found in map", name))
 			continue
 		}
 
+		// yes, we used b's key
 		keyUsed[name] = true
 
+		// but, do the fields from a and b have the same type?
 		ok, errMsg := sameType(s.Field(name).Value(), b[name])
 		if !ok {
 			errs = append(errs, fmt.Sprintf("struct field %s: type error, %s", name, errMsg))
 			continue
 		}
 
-		// success!
+		// success, set the value into a
 		err := s.Field(name).Set(b[name])
 		if err != nil {
 			errs = append(errs, fmt.Sprintf("struct field %s: can't set (%s)", name, err))

@@ -31,7 +31,7 @@ func TestEvalFails(t *testing.T) {
 
 	data := []struct {
 		text string
-		env  *EnvironmentVars
+		env  *Variables
 	}{
 		{text: "1+x"},
 		//{text: "x[2] * 2", env: NewEnvironment(map[string]interface{}{"x": myarray})},
@@ -58,15 +58,15 @@ func TestEvals(t *testing.T) {
 		Frob: 19,
 	}
 
-	env1 := NewEnvironmentVars()
-	env1.SetVars(map[string]interface{}{"x": 15.5})
-	env2 := NewEnvironmentVars()
-	env2.SetVars(map[string]interface{}{"x": mystruct})
+	env1 := NewVariables()
+	env1.SetVariables(map[string]interface{}{"x": 15.5})
+	env2 := NewVariables()
+	env2.SetVariables(map[string]interface{}{"x": mystruct})
 
 	data := []struct {
 		text     string
 		expected interface{}
-		env      *EnvironmentVars
+		env      *Variables
 	}{
 		// misc
 		{expected: 3.0, text: "1+2"},
@@ -146,8 +146,8 @@ func TestFunction(t *testing.T) {
 		"strlen":    f,
 		"negstrlen": g,
 	}
-	env := NewEnvironmentFuncs()
-	env.SetFuncs(m)
+	env := NewFunctions()
+	env.SetFunctions(m)
 
 	e, err := NewExpression(`strlen("abc") * negstrlen("4567")`, env)
 	assert.NoError(err)
