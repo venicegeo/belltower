@@ -70,34 +70,16 @@ func TypeCheck(a interface{}, b map[string]interface{}) (interface{}, []string) 
 	return a, errs
 }
 
-type typeCode int
-
-const (
-	typeInt typeCode = iota
-	typeFloat
-	typeString
-	typeBool
-)
-
-var typeEnum map[typeCode]string = map[typeCode]string{
-	typeInt:    "INT",
-	typeFloat:  "FLOAT",
-	typeString: "STRING",
-	typeBool:   "BOOL",
-}
-
-func getType(a interface{}) typeCode {
+func getType(a interface{}) TypeName {
 	switch a.(type) {
 	case int:
-		return typeInt
-	case float64:
-		return typeFloat
-	case float32:
-		return typeFloat
+		return TypeNameInt
+	case float32, float64:
+		return TypeNameFloat
 	case string:
-		return typeString
+		return TypeNameString
 	case bool:
-		return typeBool
+		return TypeNameBool
 	}
 	panic(12)
 }
@@ -107,7 +89,7 @@ func sameType(a interface{}, b interface{}) (bool, string) {
 	bType := getType(b)
 
 	if aType != bType {
-		return false, fmt.Sprintf("expected %s but received %s", typeEnum[aType], typeEnum[bType])
+		return false, fmt.Sprintf("expected %s but received %s", aType, bType)
 	}
 	return true, ""
 }
