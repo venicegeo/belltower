@@ -7,14 +7,16 @@ import (
 )
 
 type tuple struct {
-	o Validater
-	s string
-	p Validater
+	valid    bool
+	obj      Validater
+	json     string
+	expected Validater
 }
 
 var port1 = tuple{
-	o: &Port{},
-	s: `{
+	valid: true,
+	obj:   &Port{},
+	json: `{
 		"id": "123",
 		"name": "foo",
 		"porttype": "input",
@@ -23,7 +25,7 @@ var port1 = tuple{
 			"type": "int"
 		}
 	}`,
-	p: &Port{
+	expected: &Port{
 		Name: "foo",
 		Id:   "123",
 		DataType: &DataType{
@@ -35,13 +37,14 @@ var port1 = tuple{
 }
 
 var metadata1 = tuple{
-	o: &Metadata{},
-	s: `{
+	valid: true,
+	obj:   &Metadata{},
+	json: `{
 		"contact": "mpg",
 		"version": "1.2.3",
 		"description": "xyzzy"
 	}`,
-	p: &Metadata{
+	expected: &Metadata{
 		Contact:     "mpg",
 		Version:     "1.2.3",
 		Description: "xyzzy",
@@ -49,39 +52,41 @@ var metadata1 = tuple{
 }
 
 var componentType1 = tuple{
-	o: &ComponentType{},
-	s: `{
+	valid: true,
+	obj:   &ComponentType{},
+	json: `{
 		"id": "123",
 		"name": "ticker",
-		"metadata": ` + metadata1.s + `,
-		"input": ` + port1.s + `,
-		"output": ` + port1.s + `,
-		"config": ` + port1.s + `
+		"metadata": ` + metadata1.json + `,
+		"input": ` + port1.json + `,
+		"output": ` + port1.json + `,
+		"config": ` + port1.json + `
 	}`,
-	p: &ComponentType{
+	expected: &ComponentType{
 		Id:       "123",
 		Name:     "ticker",
-		Metadata: metadata1.o.(*Metadata),
-		Input:    port1.o.(*Port),
-		Output:   port1.o.(*Port),
-		Config:   port1.o.(*Port),
+		Metadata: metadata1.obj.(*Metadata),
+		Input:    port1.obj.(*Port),
+		Output:   port1.obj.(*Port),
+		Config:   port1.obj.(*Port),
 	},
 }
 
 var component1 = tuple{
-	o: &Component{},
-	s: `{
+	valid: true,
+	obj:   &Component{},
+	json: `{
 		"id": "123",
 		"name": "ticker",
-		"metadata": ` + metadata1.s + `,
+		"metadata": ` + metadata1.json + `,
 		"type": "Ticker",
 		"precondition": "x>y",
 		"postcondition": "x<y"
 	}`,
-	p: &Component{
+	expected: &Component{
 		Id:            "123",
 		Name:          "ticker",
-		Metadata:      metadata1.o.(*Metadata),
+		Metadata:      metadata1.obj.(*Metadata),
 		Type:          "Ticker",
 		Precondition:  "x>y",
 		Postcondition: "x<y",
@@ -89,19 +94,20 @@ var component1 = tuple{
 }
 
 var component2 = tuple{
-	o: &Component{},
-	s: `{
+	valid: true,
+	obj:   &Component{},
+	json: `{
 		"id": "124",
 		"name": "ticker2",
-		"metadata": ` + metadata1.s + `,
+		"metadata": ` + metadata1.json + `,
 		"type": "Ticker",
 		"precondition": "x>y",
 		"postcondition": "x<y"
 	}`,
-	p: &Component{
+	expected: &Component{
 		Id:            "124",
 		Name:          "ticker2",
-		Metadata:      metadata1.o.(*Metadata),
+		Metadata:      metadata1.obj.(*Metadata),
 		Type:          "Ticker",
 		Precondition:  "x>y",
 		Postcondition: "x<y",
@@ -109,23 +115,24 @@ var component2 = tuple{
 }
 
 var graph1 = tuple{
-	o: &Graph{},
-	s: `{
+	valid: true,
+	obj:   &Graph{},
+	json: `{
 		"id": "123",
 		"name": "ticker",
-		"metadata": ` + metadata1.s + `,
+		"metadata": ` + metadata1.json + `,
 		"components": [
-			` + component1.s + `,
-			` + component2.s + `
+			` + component1.json + `,
+			` + component2.json + `
 		]
 	}`,
-	p: &Graph{
+	expected: &Graph{
 		Id:       "123",
 		Name:     "ticker",
-		Metadata: metadata1.o.(*Metadata),
+		Metadata: metadata1.obj.(*Metadata),
 		Components: []*Component{
-			component1.p.(*Component),
-			component2.p.(*Component),
+			component1.expected.(*Component),
+			component2.expected.(*Component),
 		},
 	},
 }
@@ -133,37 +140,19 @@ var graph1 = tuple{
 func TestGraphTypes(t *testing.T) {
 	assert := assert.New(t)
 
-	items := []struct {
-		valid bool
-		tuple tuple
-	}{
-		{
-			tuple: port1,
-			valid: true,
-		},
-		{
-			tuple: metadata1,
-			valid: true,
-		},
-		{
-			tuple: componentType1,
-			valid: true,
-		},
-		{
-			tuple: component1,
-			valid: true,
-		},
-		{
-			tuple: graph1,
-			valid: true,
-		},
+	items := []tuple{
+		port1,
+		metadata1,
+		componentType1,
+		component1,
+		graph1,
 	}
 
 	for _, item := range items {
 
 		//t.Log("----------------\n", item.jsn, "-----------------\n")
 
-		p, err := NewObjectFromJSON(item.tuple.s, item.tuple.o)
+		p, err := NewObjectFromJSON(item.json, item.obj)
 		if !item.valid {
 			assert.Error(err)
 			assert.Nil(p)
@@ -172,6 +161,6 @@ func TestGraphTypes(t *testing.T) {
 		assert.NoError(err)
 		assert.NotNil(p)
 
-		assert.Equal(item.tuple.p, p)
+		assert.Equal(item.expected, p)
 	}
 }
