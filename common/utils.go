@@ -1,132 +1,84 @@
 package common
 
-import (
-	"fmt"
-	"reflect"
-	"time"
-)
+//---------------------------------------------------------------------
 
-func GetMapValueAsInt(m map[string]interface{}, key string) (int, error) {
-	value, ok := m[key]
-	if !ok {
-		return 0, fmt.Errorf("Missing config field '%s'", key)
-	}
-	ret, ok := value.(int)
-	if !ok {
-		return 0, fmt.Errorf("Config field '%s' not legal integer", key)
-	}
-	return ret, nil
+type Map map[string]interface{}
+
+func (m Map) Has(key string) bool {
+	_, ok := m[key]
+	return ok
 }
 
-func GetMapValueAsBool(m map[string]interface{}, key string) (bool, error) {
-	value, ok := m[key]
+func (m Map) IsInt(key string) bool {
+	v, ok := m[key]
 	if !ok {
-		return false, fmt.Errorf("Missing config field '%s'", key)
-	}
-	ret, ok := value.(bool)
-	if !ok {
-		return false, fmt.Errorf("Config field '%s' not legal boolean", key)
-	}
-	return ret, nil
-}
-
-func GetMapValueAsString(m map[string]interface{}, key string) (string, error) {
-	value, ok := m[key]
-	if !ok {
-		return "", fmt.Errorf("Missing config field '%s'", key)
-	}
-	ret, ok := value.(string)
-	if !ok {
-		return "", fmt.Errorf("Config field '%s' not legal string", key)
-	}
-	return ret, nil
-}
-
-func GetMapValueAsFloat(m map[string]interface{}, key string) (float64, error) {
-	value, ok := m[key]
-	if !ok {
-		return 0.0, fmt.Errorf("Missing config field '%s'", key)
-	}
-	ret, ok := value.(float64)
-	if !ok {
-		return 0.0, fmt.Errorf("Config field '%s' not legal float", key)
-	}
-	return ret, nil
-}
-
-func GetMapValueAsDuration(m map[string]interface{}, key string) (time.Duration, error) {
-	value, ok := m[key]
-	if !ok {
-		return time.Duration(0), fmt.Errorf("Missing config field '%s'", key)
-	}
-	t, ok := value.(time.Duration)
-	if !ok {
-		return time.Duration(0), fmt.Errorf("Config field '%s' not legal time.Duration: %v", key, value)
-	}
-	//	ret, err := time.ParseDuration(t)
-	//	if err != nil {
-	//		return time.Duration(0), err
-	//	}
-	//	return ret, nil
-	return t, nil
-}
-
-// ObjectsAreEqual determines if two objects are considered equal.
-//
-// taken from testify's assertions.go
-func ObjectsAreEqual(expected, actual interface{}) bool {
-
-	if expected == nil || actual == nil {
-		return expected == actual
-	}
-
-	return reflect.DeepEqual(expected, actual)
-}
-
-func MapsAreEqualValues(expected, actual interface{}) bool {
-
-	e, eok := expected.(map[string]interface{})
-	a, aok := actual.(map[string]interface{})
-	if !eok || !aok {
 		return false
 	}
-
-	if len(e) != len(a) {
-		return false
-	}
-
-	for ek, ev := range e {
-		av, ok := a[ek]
-		if !ok {
-			return false
-		}
-		ok = ObjectsAreEqualValues(ev, av)
-		if !ok {
-			return false
-		}
-	}
-
-	return true
+	_, ok = v.(int)
+	return ok
 }
 
-// ObjectsAreEqualValues gets whether two objects are equal, or if their
-// values are equal.
-//
-// taken from testify's assertions.go
-func ObjectsAreEqualValues(expected, actual interface{}) bool {
-	if ObjectsAreEqual(expected, actual) {
-		return true
+func (m Map) AsInt(key string) int {
+	if !m.IsInt(key) {
+		return 0
 	}
+	return m[key].(int)
+}
 
-	actualType := reflect.TypeOf(actual)
-	if actualType == nil {
+func (m Map) IsString(key string) bool {
+	v, ok := m[key]
+	if !ok {
 		return false
 	}
-	expectedValue := reflect.ValueOf(expected)
-	if expectedValue.IsValid() && expectedValue.Type().ConvertibleTo(actualType) {
-		// Attempt comparison after type conversion
-		return reflect.DeepEqual(expectedValue.Convert(actualType).Interface(), actual)
-	}
+	_, ok = v.(string)
+	return ok
+}
 
-	return false
+func (m Map) AsString(key string) string {
+	if !m.IsString(key) {
+		return ""
+	}
+	return m[key].(string)
+}
+
+func (m Map) AsValidString(key string) (string, bool) {
+	s := m.AsString(key)
+	if s == "" {
+		return "", false
+	}
+	return s, true
+}
+
+//---------------------------------------------------------------------
+
+/*func AsInt(x interface{}) *int {
+	v, ok := x.(int)
+	if ok {
+		return &v
+	}
+	return nil
+}*/
+
+func AsFloat(x interface{}) *float64 {
+	v, ok := x.(float64)
+	if ok {
+		return &v
+	}
+	return nil
+}
+
+func AsBool(x interface{}) *bool {
+	v, ok := x.(bool)
+	if ok {
+		return &v
+	}
+	return nil
+}
+
+func AsString(x interface{}) *string {
+	v, ok := x.(string)
+	if ok {
+		return &v
+	}
+	return nil
 }
