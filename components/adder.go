@@ -60,8 +60,8 @@ func (adder *Adder) localConfigure() error {
 }
 
 func (adder *Adder) OnInput(data string) {
-	log.Printf("OnInput!")
-	adder.Output <- "yow"
+	log.Printf("Adder: OnInput <%s>", data)
+	adder.Output <- "adder" + data + "yow"
 }
 
 func (adder *Adder) Run(in common.Map) (common.Map, error) {

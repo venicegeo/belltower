@@ -22,31 +22,28 @@ type Ticker struct {
 }
 
 func (ticker *Ticker) Description() *Description {
-	configFields := []*common.DataType{
+	config := []*common.DataType{
 		common.NewScalarDataType("max", common.TypeNameInt),
 	}
-	config := common.NewStructDataType("config", configFields)
 
-	inFields := []*common.DataType{
+	input := []*common.DataType{
 		common.NewScalarDataType("x", common.TypeNameInt),
 	}
-	in := common.NewStructDataType("Input", inFields)
 
-	outFields := []*common.DataType{
+	output := []*common.DataType{
 		common.NewScalarDataType("y", common.TypeNameInt),
 	}
-	out := common.NewStructDataType("Output", outFields)
 
 	return &Description{
 		Name: "ticker",
 		Config: &common.Port{
-			DataType: config,
+			DataType: common.NewStructDataType("Config", config),
 		},
 		Input: &common.Port{
-			DataType: in,
+			DataType: common.NewStructDataType("Input", input),
 		},
 		Output: &common.Port{
-			DataType: out,
+			DataType: common.NewStructDataType("Output", output),
 		},
 	}
 }
@@ -61,8 +58,8 @@ func (ticker *Ticker) localConfigure() error {
 }
 
 func (ticker *Ticker) OnInput(data string) {
-	log.Printf("OnInput ticker!")
-	ticker.Output <- "baz"
+	log.Printf("Ticker: OnInput <%s>", data)
+	ticker.Output <- "ticker" + data + "baz"
 }
 
 func (ticker *Ticker) Run(in common.Map) (common.Map, error) {

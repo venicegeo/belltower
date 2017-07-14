@@ -12,34 +12,48 @@ import (
 	flow "github.com/trustmaster/goflow"
 )
 
-type GraphImplementation struct {
+// Network represents a running instance of a common.Graph
+// We can have several Networks running at the same time.
+type Network struct {
 	flow.Graph
 }
 
-func InterpretGraph(graph *common.Graph) (*GraphImplementation, error) {
-	g := &GraphImplementation{}
+func NewNetwork(graph *common.Graph) (*Network, error) {
+
+	g := &Network{}
 	g.InitGraphState()
 
+	//
+	// first add the component nodes
+	//
 	for _, component := range graph.Components {
 
-		c, err := components.Factory(component.Type, component.Config)
+		c, err := components.Factory.Create(component.Type, component.Config)
 		if err != nil {
 			return nil, err
 		}
 
 		ok := g.Add(c, component.Name)
 		if !ok {
-			return nil, fmt.Errorf("failed to add component")
+			return nil, fmt.Errorf("failed to add component: %s (type %s)", component.Name, component.Type)
 		}
 
-		if component.Name == "myticker" {
-			ok = g.MapInPort("IN", "myticker", "Input")
+		if component.Type == "Ticker" {
+			ok = g.MapInPort("INPORT", component.Name, "Input")
 			if !ok {
 				return nil, fmt.Errorf("failed to add InPort")
 			}
+		} else if component.Type == "Adder" {
+			ok = g.MapOutPort("OUTPORT", component.Name, "Output")
+			if !ok {
+				return nil, fmt.Errorf("failed to add OutPort")
+			}
 		}
 	}
-	log.Printf("here0")
+
+	//
+	// now add the connection edges
+	//
 	for _, connection := range graph.Connections {
 
 		send := strings.Split(connection.Source, ".")[0]
@@ -47,33 +61,39 @@ func InterpretGraph(graph *common.Graph) (*GraphImplementation, error) {
 		recv := strings.Split(connection.Destination, ".")[0]
 		recvPort := strings.Split(connection.Destination, ".")[1]
 
-		log.Printf("here3 %s %s %s %s", send, sendPort, recv, recvPort)
-
 		ok := g.Connect(send, sendPort, recv, recvPort)
 		if !ok {
-			return nil, fmt.Errorf("failed to add connection")
+			return nil, fmt.Errorf("failed to add connection: %s to %s", connection.Source, connection.Destination)
 		}
-		log.Printf("here2 %s", connection.Source)
 	}
-	log.Printf("here1")
 
 	return g, nil
 }
 
-func DoIt(g *GraphImplementation) error {
+func (g *Network) Execute() error {
 
-	// We need a channel to talk to it
+	// input channel
 	in := make(chan string)
-	ok := g.SetInPort("IN", in)
+	ok := g.SetInPort("INPORT", in)
 	if !ok {
 		return fmt.Errorf("failed to SetInPort")
+	}
+
+	// output channel
+	out := make(chan string)
+	ok = g.SetOutPort("OUTPORT", out)
+	if !ok {
+		return fmt.Errorf("failed to SetOutPort")
 	}
 
 	// Run the net
 	flow.RunNet(g)
 
-	// Now we can send some names and see what happens
-	in <- "John"
+	// kick it off
+	in <- "go"
+
+	result := <-out
+	log.Printf("RESULT: %s", result)
 
 	// Close the input to shut the network down
 	close(in)

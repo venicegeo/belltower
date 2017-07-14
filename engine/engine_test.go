@@ -40,10 +40,10 @@ func TestFlow(t *testing.T) {
 		Connections: connections,
 	}
 
-	gi, err := InterpretGraph(g)
+	net, err := NewNetwork(g)
 	assert.NoError(err)
-	assert.NotNil(gi)
+	assert.NotNil(net)
 
-	err = DoIt(gi)
+	err = net.Execute()
 	assert.NoError(err)
 }
