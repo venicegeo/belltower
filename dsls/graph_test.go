@@ -114,6 +114,23 @@ var component2 = tuple{
 	},
 }
 
+var connection1 = tuple{
+	valid: true,
+	obj:   &Connection{},
+	json: `{
+		"id": "123",
+		"name": "link",
+		"source": "foo.out",
+		"destination": "bar.in"
+	}`,
+	expected: &Connection{
+		Id:          "123",
+		Name:        "link",
+		Source:      "foo.out",
+		Destination: "bar.in",
+	},
+}
+
 var graph1 = tuple{
 	valid: true,
 	obj:   &Graph{},
@@ -124,6 +141,9 @@ var graph1 = tuple{
 		"components": [
 			` + component1.json + `,
 			` + component2.json + `
+		],
+		"connections": [
+			` + connection1.json + `
 		]
 	}`,
 	expected: &Graph{
@@ -133,6 +153,9 @@ var graph1 = tuple{
 		Components: []*Component{
 			component1.expected.(*Component),
 			component2.expected.(*Component),
+		},
+		Connections: []*Connection{
+			connection1.expected.(*Connection),
 		},
 	},
 }
@@ -145,6 +168,7 @@ func TestGraphTypes(t *testing.T) {
 		metadata1,
 		componentType1,
 		component1,
+		connection1,
 		graph1,
 	}
 

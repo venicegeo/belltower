@@ -7,7 +7,8 @@ type Graph struct {
 	Name     string    `json:"name"`
 	Metadata *Metadata `json:"metadata"`
 
-	Components []*Component `json:"components"`
+	Components  []*Component  `json:"components"`
+	Connections []*Connection `json:"connections"`
 }
 
 type Id string
@@ -39,6 +40,7 @@ type Component struct {
 
 	Precondition  string `json:"precondition,omitempty"`
 	Postcondition string `json:"postcondition,omitempty"`
+	Config        Map
 }
 
 type PortTypeEnum string
@@ -57,6 +59,13 @@ type Port struct {
 	PortType PortTypeEnum `json:"porttype"`
 }
 
+type Connection struct {
+	Id          Id     `json:"id"`
+	Name        string `json:"name"`
+	Source      string `json:"source"`      // component.port
+	Destination string `json:"destination"` // component.port
+}
+
 //---------------------------------------------------------------------
 
 type Validater interface {
@@ -68,6 +77,7 @@ func (p *Port) Validate() error          { return nil }
 func (p *Component) Validate() error     { return nil }
 func (p *ComponentType) Validate() error { return nil }
 func (p *Graph) Validate() error         { return nil }
+func (p *Connection) Validate() error    { return nil }
 
 func NewObjectFromJSON(jsn string, obj Validater) (interface{}, error) {
 	err := json.Unmarshal([]byte(jsn), obj)
