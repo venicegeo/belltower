@@ -14,22 +14,22 @@ func TestFlow(t *testing.T) {
 			Name: "myticker",
 			Type: "Ticker",
 			Config: Map{
-				"x": 5,
+				"max": 5,
 			},
 		},
 		&Component{
 			Name: "myadder",
 			Type: "Adder",
 			Config: Map{
-				"x": 5,
+				"addend": 5,
 			},
 		},
 	}
 
 	connections := []*Connection{
 		&Connection{
-			Source:      "myticker.output",
-			Destination: "myadder.input",
+			Source:      "myticker.Output",
+			Destination: "myadder.Input",
 		},
 	}
 

@@ -44,7 +44,7 @@ func (c *ComponentImplementationCore) configureCore(config Map) error {
 
 	c.executionCount = 0
 
-	cond, ok := config.getString("precondition")
+	cond, ok := config.asValidString("precondition")
 	if ok {
 		e, err := NewExpression(cond, nil)
 		if err != nil {
@@ -53,7 +53,7 @@ func (c *ComponentImplementationCore) configureCore(config Map) error {
 		c.precondition = e
 	}
 
-	cond, ok = config.getString("postcondition")
+	cond, ok = config.asValidString("postcondition")
 	if ok {
 		e, err := NewExpression(cond, nil)
 		if err != nil {
@@ -95,12 +95,12 @@ func (adder *AdderComponent) Description() *ComponentDescription {
 	inFields := []*DataType{
 		NewScalarDataType("x", TypeNameInt),
 	}
-	in := NewStructDataType("in", inFields)
+	in := NewStructDataType("Input", inFields)
 
 	outFields := []*DataType{
 		NewScalarDataType("y", TypeNameInt),
 	}
-	out := NewStructDataType("out", outFields)
+	out := NewStructDataType("Output", outFields)
 
 	return &ComponentDescription{
 		Name: "adder",
@@ -122,7 +122,10 @@ func (adder *AdderComponent) Configure(config Map) error {
 		return err
 	}
 
-	adder.addend = adder.config["addend"].(int)
+	if !adder.config.isInt("addend") {
+		return fmt.Errorf("required ticker field missing: addend")
+	}
+	adder.addend = adder.config.asInt("addend")
 
 	return nil
 }
@@ -164,12 +167,12 @@ func (ticker *TickerComponent) Description() *ComponentDescription {
 	inFields := []*DataType{
 		NewScalarDataType("x", TypeNameInt),
 	}
-	in := NewStructDataType("in", inFields)
+	in := NewStructDataType("Input", inFields)
 
 	outFields := []*DataType{
 		NewScalarDataType("y", TypeNameInt),
 	}
-	out := NewStructDataType("out", outFields)
+	out := NewStructDataType("Output", outFields)
 
 	return &ComponentDescription{
 		Name: "ticker",
@@ -191,6 +194,9 @@ func (ticker *TickerComponent) Configure(config Map) error {
 		return err
 	}
 
+	if !ticker.config.isInt("max") {
+		return fmt.Errorf("required ticker field missing: max")
+	}
 	ticker.max = ticker.config.asInt("max")
 
 	return nil
@@ -238,6 +244,7 @@ func InterpretGraph(graph *Graph) (*GraphImplementation, error) {
 	g.InitGraphState()
 
 	for _, component := range graph.Components {
+
 		c, err := ComponentFactory(component.Type, component.Config)
 		if err != nil {
 			return nil, err
@@ -255,7 +262,7 @@ func InterpretGraph(graph *Graph) (*GraphImplementation, error) {
 			}
 		}
 	}
-
+	log.Printf("here0")
 	for _, connection := range graph.Connections {
 
 		send := strings.Split(connection.Source, ".")[0]
@@ -263,11 +270,15 @@ func InterpretGraph(graph *Graph) (*GraphImplementation, error) {
 		recv := strings.Split(connection.Destination, ".")[0]
 		recvPort := strings.Split(connection.Destination, ".")[1]
 
+		log.Printf("here3 %s %s %s %s", send, sendPort, recv, recvPort)
+
 		ok := g.Connect(send, sendPort, recv, recvPort)
 		if !ok {
 			return nil, fmt.Errorf("failed to add connection")
 		}
+		log.Printf("here2 %s", connection.Source)
 	}
+	log.Printf("here1")
 
 	return g, nil
 }

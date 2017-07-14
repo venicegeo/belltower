@@ -9,33 +9,40 @@ func (m Map) has(key string) bool {
 	return ok
 }
 
+func (m Map) isInt(key string) bool {
+	v, ok := m[key]
+	if !ok {
+		return false
+	}
+	_, ok = v.(int)
+	return ok
+}
+
+func (m Map) asInt(key string) int {
+	if !m.isInt(key) {
+		return 0
+	}
+	return m[key].(int)
+}
+
 func (m Map) isString(key string) bool {
 	v, ok := m[key]
 	if !ok {
 		return false
 	}
 	_, ok = v.(string)
-	if !ok {
-		return false
-	}
-	return true
+	return ok
 }
 
 func (m Map) asString(key string) string {
-	if is
-	s, _ := m.asValidString(key)
-	return s
+	if !m.isString(key) {
+		return ""
+	}
+	return m[key].(string)
 }
 
 func (m Map) asValidString(key string) (string, bool) {
-	v, ok := m[key]
-	if !ok {
-		return "", false
-	}
-	s, ok := v.(string)
-	if !ok {
-		return "", false
-	}
+	s := m.asString(key)
 	if s == "" {
 		return "", false
 	}
