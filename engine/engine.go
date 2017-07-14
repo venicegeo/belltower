@@ -90,10 +90,16 @@ func (g *Network) Execute() error {
 	flow.RunNet(g)
 
 	// kick it off
-	in <- "go"
+	n := 2
 
-	result := <-out
-	log.Printf("RESULT: %s", result)
+	for i := 0; i < n; i++ {
+		in <- fmt.Sprintf("<%d>", i)
+	}
+
+	for i := 0; i < n; i++ {
+		result := <-out
+		log.Printf("RESULT: %s", result)
+	}
 
 	// Close the input to shut the network down
 	close(in)
