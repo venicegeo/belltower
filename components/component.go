@@ -6,8 +6,8 @@ import (
 )
 
 type Component interface {
-	// describes the port datatypes, etc
-	Description() *Description
+	//// describes the port datatypes, etc
+	//Description() *Description
 
 	// configuration specific to your component type
 	// only called by ComponentCore.configure()
@@ -15,15 +15,15 @@ type Component interface {
 	localConfigure() error
 
 	// perform one execution
-	Run(in common.Map) (out common.Map, err error)
+	Run(in common.ArgMap) (out common.ArgMap, err error)
 
 	// called by Factory to do init work for ComponentCore fields
 	// do not implement yourself
-	coreConfigure(config common.Map) error
+	coreConfigure(config common.ArgMap) error
 }
 
 type ComponentCore struct {
-	config         common.Map
+	config         common.ArgMap
 	precondition   *common.Expression
 	postcondition  *common.Expression
 	executionCount int
@@ -31,14 +31,17 @@ type ComponentCore struct {
 	flow.Component
 }
 
-func (c *ComponentCore) coreConfigure(config common.Map) error {
+func (c *ComponentCore) coreConfigure(config common.ArgMap) error {
 
 	c.config = config
 
 	c.executionCount = 0
 
-	cond, ok := config.AsValidString("precondition")
-	if ok {
+	cond, err := config.GetStringOrDefault("precondition", "")
+	if err != nil {
+		return err
+	}
+	if cond != "" {
 		e, err := common.NewExpression(cond, nil)
 		if err != nil {
 			return err
@@ -46,8 +49,11 @@ func (c *ComponentCore) coreConfigure(config common.Map) error {
 		c.precondition = e
 	}
 
-	cond, ok = config.AsValidString("postcondition")
-	if ok {
+	cond, err = config.GetStringOrDefault("postcondition", "")
+	if err != nil {
+		return nil
+	}
+	if cond != "" {
 		e, err := common.NewExpression(cond, nil)
 		if err != nil {
 			return err

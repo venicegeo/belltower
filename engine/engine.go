@@ -9,6 +9,8 @@ import (
 	"github.com/venicegeo/belltower/common"
 	"github.com/venicegeo/belltower/components"
 
+	"time"
+
 	flow "github.com/trustmaster/goflow"
 )
 
@@ -96,13 +98,16 @@ func (g *Network) Execute() error {
 		in <- fmt.Sprintf("<%d>", i)
 	}
 
-	for i := 0; i < n; i++ {
-		result := <-out
+	go func() {
+		time.Sleep(3 * time.Second)
+		// Close the input to shut the network down
+		log.Printf("closing")
+		close(in)
+	}()
+
+	for result := range out {
 		log.Printf("RESULT: %s", result)
 	}
-
-	// Close the input to shut the network down
-	close(in)
 
 	// Wait until the app has done its job
 	<-g.Wait()

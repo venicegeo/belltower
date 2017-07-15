@@ -18,7 +18,7 @@ func (f *TypeFactory) Register(name string, typ Component) {
 	f.types[name] = typ
 }
 
-func (f *TypeFactory) Create(typ string, config common.Map) (Component, error) {
+func (f *TypeFactory) Create(typ string, config common.ArgMap) (Component, error) {
 
 	dummy := f.types[typ]
 	if dummy == nil {

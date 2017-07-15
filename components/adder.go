@@ -1,7 +1,6 @@
 package components
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/venicegeo/belltower/common"
@@ -11,66 +10,73 @@ func init() {
 	Factory.Register("Adder", &Adder{})
 }
 
+// -- CONFIG --
+//
+// Addend int
+//   The value added to the input. Default is zero.
+//
+// -- INPUT --
+//
+// (none)
+//
+// -- OUTPUT --
+//
+// Sum int
+//   Value of input added to addend.
+
 type Adder struct {
 	ComponentCore
 
-	addend int
-
 	Input  <-chan string
 	Output chan<- string
-}
 
-func (adder *Adder) Description() *Description {
-	configFields := []*common.DataType{
-		common.NewScalarDataType("addend", common.TypeNameInt),
-	}
-	config := common.NewStructDataType("config", configFields)
-
-	inFields := []*common.DataType{
-		common.NewScalarDataType("x", common.TypeNameInt),
-	}
-	in := common.NewStructDataType("Input", inFields)
-
-	outFields := []*common.DataType{
-		common.NewScalarDataType("y", common.TypeNameInt),
-	}
-	out := common.NewStructDataType("Output", outFields)
-
-	return &Description{
-		Name: "adder",
-		Config: &common.Port{
-			DataType: config,
-		},
-		Input: &common.Port{
-			DataType: in,
-		},
-		Output: &common.Port{
-			DataType: out,
-		},
-	}
+	// local state
+	addend int
 }
 
 func (adder *Adder) localConfigure() error {
-	if !adder.config.IsInt("addend") {
-		return fmt.Errorf("required ticker field missing: addend")
+
+	addend, err := adder.config.GetIntOrDefault("addend", 0)
+	if err != nil {
+		return err
 	}
-	adder.addend = adder.config.AsInt("addend")
+
+	adder.addend = addend
 
 	return nil
 }
 
 func (adder *Adder) OnInput(data string) {
 	log.Printf("Adder: OnInput <%s>", data)
-	adder.Output <- "adder" + data + "yow"
+
+	in, err := common.NewArgMap(data)
+	if err != nil {
+		panic(err)
+	}
+
+	out, err := adder.Run(in)
+	if err != nil {
+		panic(err)
+	}
+
+	s, err := out.ToJSON()
+	if err != nil {
+		panic(err)
+	}
+
+	adder.Output <- s
 }
 
-func (adder *Adder) Run(in common.Map) (common.Map, error) {
-	x := in["x"].(int)
+func (adder *Adder) Run(in common.ArgMap) (common.ArgMap, error) {
 
-	y := x + adder.addend
+	out := common.ArgMap{}
 
-	out := common.Map{}
-	out["y"] = y
+	input, err := in.GetInt("addend")
+	if err != nil {
+		return out, err
+	}
+
+	out["sum"] = input + adder.addend
 
 	return out, nil
 }

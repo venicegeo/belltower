@@ -18,20 +18,18 @@ func TestFactory(t *testing.T) {
 		assert.NoError(err)
 		assert.NotNil(x)
 
-		assert.Equal("Bob", x.Description().Name)
 		assert.Equal(0, x.(*xyzzy).executionCount)
 		assert.Nil(x.(*xyzzy).config["param"])
 		assert.Equal(19, x.(*xyzzy).myint)
 	}
 
-	config := common.Map{
+	config := common.ArgMap{
 		"param": "seventeen",
 	}
 	x, err := Factory.Create("Xyzzy", config)
 	assert.NoError(err)
 	assert.NotNil(x)
 
-	assert.Equal("Bob", x.Description().Name)
 	assert.Equal(0, x.(*xyzzy).executionCount)
 	assert.Equal("seventeen", x.(*xyzzy).config["param"])
 	assert.Equal(19, x.(*xyzzy).myint)
@@ -44,17 +42,11 @@ type xyzzy struct {
 	myint int
 }
 
-func (x *xyzzy) Description() *Description {
-	return &Description{
-		Name: "Bob",
-	}
-}
-
 func (x *xyzzy) localConfigure() error {
 	x.myint = 19
 	return nil
 }
 
-func (x *xyzzy) Run(in common.Map) (common.Map, error) {
+func (x *xyzzy) Run(in common.ArgMap) (common.ArgMap, error) {
 	return nil, nil
 }

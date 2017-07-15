@@ -12,7 +12,7 @@ func TestComponent(t *testing.T) {
 
 	Factory.Register("Foo", &foo{})
 
-	config := common.Map{
+	config := common.ArgMap{
 		"myotherint": 17,
 	}
 	x, err := Factory.Create("Foo", config)
@@ -24,7 +24,7 @@ func TestComponent(t *testing.T) {
 	assert.Equal(19, x.(*foo).myint)
 
 	// does Run() work?
-	in := common.Map{"x": 11}
+	in := common.ArgMap{"x": 11}
 	out, err := x.Run(in)
 	assert.Equal(11+19+17, out["y"])
 }
@@ -36,19 +36,13 @@ type foo struct {
 	myint int
 }
 
-func (x *foo) Description() *Description {
-	return &Description{
-		Name: "Bob",
-	}
-}
-
 func (x *foo) localConfigure() error {
 	x.myint = 19
 	return nil
 }
 
-func (x *foo) Run(in common.Map) (common.Map, error) {
-	out := common.Map{}
+func (x *foo) Run(in common.ArgMap) (common.ArgMap, error) {
+	out := common.ArgMap{}
 
 	out["y"] = in["x"].(int) + x.myint + x.config["myotherint"].(int)
 
