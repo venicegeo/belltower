@@ -40,7 +40,7 @@ type Component struct {
 
 	Precondition  string `json:"precondition,omitempty"`
 	Postcondition string `json:"postcondition,omitempty"`
-	Config        Map
+	Config        ArgMap
 }
 
 type PortTypeEnum string

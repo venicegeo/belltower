@@ -8,8 +8,8 @@ import (
 
 type ArgMap map[string]interface{}
 
-const errFieldNotFound = "argmap: required field %s not found"
-const errFieldWrongType = "argmap: field %s is of type %s, but received %s"
+const errFieldNotFound = "argmap: required field '%s' not found"
+const errFieldWrongType = "argmap: field '%s' is of type '%s', but received '%s'"
 
 func NewArgMap(jsn string) (ArgMap, error) {
 
@@ -33,17 +33,15 @@ func (m ArgMap) ToJSON() (string, error) {
 
 //---------------------------------------------------------------------
 
-func (m ArgMap) GetInt(field string) (int, error) {
+func (m ArgMap) GetInterfaceOrDefault(field string, defalt interface{}) (interface{}, error) {
 	v, ok := m[field]
 	if !ok {
-		return 0, fmt.Errorf(errFieldNotFound, field)
+		return defalt, nil
 	}
-	vi, ok := v.(int)
-	if !ok {
-		return 0, fmt.Errorf(errFieldWrongType, field, "int", reflect.TypeOf(v).String())
-	}
-	return vi, nil
+	return v, nil
 }
+
+//---------------------------------------------------------------------
 
 func (m ArgMap) GetFloat(field string) (float64, error) {
 	v, ok := m[field]
@@ -52,6 +50,10 @@ func (m ArgMap) GetFloat(field string) (float64, error) {
 	}
 	vf, ok := v.(float64)
 	if !ok {
+		vi, ok := v.(int)
+		if ok {
+			return float64(vi), nil
+		}
 		return 0.0, fmt.Errorf(errFieldWrongType, field, "float64", reflect.TypeOf(v).String())
 	}
 	return vf, nil
@@ -83,19 +85,6 @@ func (m ArgMap) GetBool(field string) (bool, error) {
 
 //---------------------------------------------------------------------
 
-func (m ArgMap) GetIntOrDefault(field string, defalt int) (int, error) {
-	v, ok := m[field]
-	if !ok {
-		return defalt, nil
-		//return 0, fmt.Errorf(errFieldNotFound, field)
-	}
-	vi, ok := v.(int)
-	if !ok {
-		return 0, fmt.Errorf(errFieldWrongType, field, "int", reflect.TypeOf(v).String())
-	}
-	return vi, nil
-}
-
 func (m ArgMap) GetFloatOrDefault(field string, defalt float64) (float64, error) {
 	v, ok := m[field]
 	if !ok {
@@ -104,6 +93,10 @@ func (m ArgMap) GetFloatOrDefault(field string, defalt float64) (float64, error)
 	}
 	vf, ok := v.(float64)
 	if !ok {
+		vi, ok := v.(int)
+		if ok {
+			return float64(vi), nil
+		}
 		return 0.0, fmt.Errorf(errFieldWrongType, field, "float64", reflect.TypeOf(v).String())
 	}
 	return vf, nil

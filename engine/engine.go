@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"log"
 
 	"strings"
 
@@ -67,6 +66,7 @@ func NewNetwork(graph *common.Graph) (*Network, error) {
 		if !ok {
 			return nil, fmt.Errorf("failed to add connection: %s to %s", connection.Source, connection.Destination)
 		}
+		fmt.Printf("NewNetwork: connected: %s to %s\n", connection.Source, connection.Destination)
 	}
 
 	return g, nil
@@ -92,21 +92,16 @@ func (g *Network) Execute() error {
 	flow.RunNet(g)
 
 	// kick it off
-	n := 2
-
-	for i := 0; i < n; i++ {
-		in <- fmt.Sprintf("<%d>", i)
-	}
+	in <- fmt.Sprintf("{}")
 
 	go func() {
-		time.Sleep(3 * time.Second)
-		// Close the input to shut the network down
-		log.Printf("closing")
+		time.Sleep(10 * time.Second)
+		fmt.Printf("closing after 10 seconds\n")
 		close(in)
 	}()
 
 	for result := range out {
-		log.Printf("RESULT: %s", result)
+		fmt.Printf("RESULT: %s\n", result)
 	}
 
 	// Wait until the app has done its job

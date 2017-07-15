@@ -15,15 +15,22 @@ func TestFlow(t *testing.T) {
 		&common.Component{
 			Name: "myticker",
 			Type: "Ticker",
-			Config: common.Map{
-				"max": 5,
+			Config: common.ArgMap{
+				"limit": 5.0,
 			},
 		},
 		&common.Component{
 			Name: "myadder",
 			Type: "Adder",
-			Config: common.Map{
-				"addend": 5,
+			Config: common.ArgMap{
+				"addend": 10.0,
+			},
+		},
+		&common.Component{
+			Name: "myremapper",
+			Type: "Remapper",
+			Config: common.ArgMap{
+				"remaps": map[string]string{"count": "value"},
 			},
 		},
 	}
@@ -31,6 +38,10 @@ func TestFlow(t *testing.T) {
 	connections := []*common.Connection{
 		&common.Connection{
 			Source:      "myticker.Output",
+			Destination: "myremapper.Input",
+		},
+		&common.Connection{
+			Source:      "myremapper.Output",
 			Destination: "myadder.Input",
 		},
 	}

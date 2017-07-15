@@ -16,10 +16,10 @@ func TestArgMap(t *testing.T) {
 		"f": 12.34,
 	}
 
-	// positiove tests
-	i, err := m.GetInt("i")
+	// positive tests
+	i, err := m.GetFloat("i")
 	assert.NoError(err)
-	assert.Equal(5, i)
+	assert.Equal(float64(5), i)
 	f, err := m.GetFloat("f")
 	assert.NoError(err)
 	assert.Equal(12.34, f)
@@ -31,10 +31,6 @@ func TestArgMap(t *testing.T) {
 	assert.Equal(true, b)
 
 	// negative tests
-	_, err = m.GetInt("s")
-	assert.Error(err)
-	_, err = m.GetInt("x")
-	assert.Error(err)
 	_, err = m.GetFloat("s")
 	assert.Error(err)
 	_, err = m.GetFloat("x")

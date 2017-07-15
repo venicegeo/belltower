@@ -1,7 +1,8 @@
 package components
 
 import (
-	"log"
+	"fmt"
+	"sync"
 
 	"time"
 
@@ -14,16 +15,16 @@ func init() {
 
 // -- CONFIG --
 //
-// Interval string
+// interval string
 //   Time between each tick event, expressed as a Duration.
 //   Default is "1s".
 //
-// IsRandomized bool
+// isRandomized bool
 //   If false, the interval lengths will be constant, using the Interval setting.
 //   If true, the interval lengths will be random, in the range [0..Interval).
 //   Default is false.
 //
-// Limit int
+// limit int
 //   How many ticks should be issued before stopping.
 //   If zero, will never stop.
 //
@@ -33,7 +34,7 @@ func init() {
 //
 // -- OUTPUT --
 //
-// Count int
+// count int
 //   Number of ticks sent, including this one. The count starts at 1.
 
 type Ticker struct {
@@ -42,11 +43,14 @@ type Ticker struct {
 	Input  <-chan string
 	Output chan<- string
 
+	// lock around state change in Run()
+	StateLock *sync.Mutex
+
 	// local state
 	isRandomized bool
-	counter      int
+	counter      float64
 	interval     time.Duration
-	limit        int
+	limit        float64
 }
 
 func (ticker *Ticker) localConfigure() error {
@@ -56,7 +60,7 @@ func (ticker *Ticker) localConfigure() error {
 		return err
 	}
 
-	limit, err := ticker.config.GetIntOrDefault("limit", 0)
+	limit, err := ticker.config.GetFloatOrDefault("limit", 0.0)
 	if err != nil {
 		return err
 	}
@@ -77,29 +81,45 @@ func (ticker *Ticker) localConfigure() error {
 }
 
 func (ticker *Ticker) OnInput(data string) {
-	log.Printf("Ticker: OnInput <%s>", data)
+	fmt.Printf("Ticker OnInput: %s\n", data)
 
-	in, err := common.NewArgMap(data)
+	_, err := common.NewArgMap(data)
 	if err != nil {
 		panic(err)
 	}
 
-	out, err := ticker.Run(in)
-	if err != nil {
-		panic(err)
+	f := func() {
+		out, err := ticker.Run(nil)
+		if err != nil {
+			panic(err)
+		}
+
+		s, err := out.ToJSON()
+		if err != nil {
+			panic(err)
+		}
+
+		ticker.Output <- s
 	}
 
-	s, err := out.ToJSON()
-	if err != nil {
-		panic(err)
-	}
+	for {
+		time.Sleep(ticker.interval)
 
-	ticker.Output <- s
+		f()
+
+		//	time.Sleep(500 * time.Millisecond)
+
+		if ticker.limit > 0.0 && ticker.counter >= ticker.limit {
+			break
+		}
+	}
 }
 
 func (ticker *Ticker) Run(in common.ArgMap) (common.ArgMap, error) {
 
 	ticker.counter++
+
+	fmt.Printf("Ticker.Run: counter=%f\n", ticker.counter)
 
 	out := common.ArgMap{}
 	out["count"] = ticker.counter

@@ -1,7 +1,7 @@
 package components
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/venicegeo/belltower/common"
 )
@@ -12,17 +12,18 @@ func init() {
 
 // -- CONFIG --
 //
-// Addend int
+// addend int
 //   The value added to the input. Default is zero.
 //
 // -- INPUT --
 //
-// (none)
+// value int
+//   The value added to the addend from the configuration. Default is zero.
 //
 // -- OUTPUT --
 //
-// Sum int
-//   Value of input added to addend.
+// sum int
+//   Value of input value added to addend.
 
 type Adder struct {
 	ComponentCore
@@ -31,12 +32,12 @@ type Adder struct {
 	Output chan<- string
 
 	// local state
-	addend int
+	addend float64
 }
 
 func (adder *Adder) localConfigure() error {
 
-	addend, err := adder.config.GetIntOrDefault("addend", 0)
+	addend, err := adder.config.GetFloatOrDefault("addend", 0.0)
 	if err != nil {
 		return err
 	}
@@ -47,7 +48,7 @@ func (adder *Adder) localConfigure() error {
 }
 
 func (adder *Adder) OnInput(data string) {
-	log.Printf("Adder: OnInput <%s>", data)
+	fmt.Printf("Adder OnInput: %s\n", data)
 
 	in, err := common.NewArgMap(data)
 	if err != nil {
@@ -71,12 +72,12 @@ func (adder *Adder) Run(in common.ArgMap) (common.ArgMap, error) {
 
 	out := common.ArgMap{}
 
-	input, err := in.GetInt("addend")
+	value, err := in.GetFloat("value")
 	if err != nil {
 		return out, err
 	}
 
-	out["sum"] = input + adder.addend
+	out["sum"] = value + adder.addend
 
 	return out, nil
 }
