@@ -1,6 +1,8 @@
 package components
 
 import (
+	"encoding/json"
+
 	"github.com/trustmaster/goflow"
 	"github.com/venicegeo/belltower/common"
 )
@@ -72,4 +74,28 @@ type Description struct {
 	Config *common.Port `json:"config,omitempty"`
 	Input  *common.Port `json:"input,omitempty"`
 	Output *common.Port `json:"output,omitempty"`
+}
+
+func FromJSONToStruct(jsn string, obj interface{}) error {
+
+	m := common.ArgMap{}
+	err := json.Unmarshal([]byte(jsn), &m)
+	if err != nil {
+		return err
+	}
+
+	err = m.ToStruct(&obj)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func FromStructToJSON(obj interface{}) (string, error) {
+	buf, err := json.Marshal(obj)
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
 }

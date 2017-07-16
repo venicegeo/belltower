@@ -5,8 +5,6 @@ import (
 	"sync"
 
 	"time"
-
-	"encoding/json"
 )
 
 func init() {
@@ -72,18 +70,17 @@ func (ticker *Ticker) OnInput(string) {
 	fmt.Printf("Ticker OnInput\n")
 
 	f := func() {
-		out, err := ticker.Run(nil)
+		output, err := ticker.Run(nil)
 		if err != nil {
 			panic(err)
 		}
 
-		output := out.(TickerOutputData)
-		buf, err := json.Marshal(output)
+		outputJson, err := FromStructToJSON(output)
 		if err != nil {
 			panic(err)
 		}
 
-		ticker.Output <- string(buf)
+		ticker.Output <- outputJson
 	}
 
 	for {

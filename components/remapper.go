@@ -1,7 +1,6 @@
 package components
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/venicegeo/belltower/common"
@@ -44,10 +43,10 @@ func (remapper *Remapper) Configure() error {
 	return nil
 }
 
-func (remapper *Remapper) OnInput(data string) {
-	fmt.Printf("Remapper OnInput: %s\n", data)
+func (remapper *Remapper) OnInput(inputJson string) {
+	fmt.Printf("Remapper OnInput: %s\n", inputJson)
 
-	inputMap, err := common.NewArgMap(data)
+	inputMap, err := common.NewArgMap(inputJson)
 	if err != nil {
 		panic(err)
 	}
@@ -57,12 +56,12 @@ func (remapper *Remapper) OnInput(data string) {
 		panic(err)
 	}
 
-	buf, err := json.Marshal(outputMap)
+	outputJson, err := outputMap.(common.ArgMap).ToJSON()
 	if err != nil {
 		panic(err)
 	}
 
-	remapper.Output <- string(buf)
+	remapper.Output <- outputJson
 }
 
 func (remapper *Remapper) Run(in interface{}) (interface{}, error) {

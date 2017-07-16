@@ -2,10 +2,6 @@ package components
 
 import (
 	"fmt"
-
-	"encoding/json"
-
-	"github.com/venicegeo/belltower/common"
 )
 
 func init() {
@@ -53,17 +49,11 @@ func (adder *Adder) Configure() error {
 	return nil
 }
 
-func (adder *Adder) OnInput(data string) {
-	fmt.Printf("Adder OnInput: %s\n", data)
-
-	inputMap := common.ArgMap{}
-	err := json.Unmarshal([]byte(data), &inputMap)
-	if err != nil {
-		panic(err)
-	}
+func (adder *Adder) OnInput(inputJson string) {
+	fmt.Printf("Adder OnInput: %s\n", inputJson)
 
 	input := AdderInputData{}
-	_, err = common.SetStructFromMap(inputMap, &input, true)
+	err := FromJSONToStruct(inputJson, &input)
 	if err != nil {
 		panic(err)
 	}
@@ -73,12 +63,12 @@ func (adder *Adder) OnInput(data string) {
 		panic(err)
 	}
 
-	buf, err := json.Marshal(output)
+	outputJson, err := FromStructToJSON(output)
 	if err != nil {
 		panic(err)
 	}
 
-	adder.Output <- string(buf)
+	adder.Output <- outputJson
 }
 
 func (adder *Adder) Run(in interface{}) (interface{}, error) {
