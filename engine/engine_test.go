@@ -30,7 +30,7 @@ func TestFlow(t *testing.T) {
 			Name: "myremapper",
 			Type: "Remapper",
 			Config: common.ArgMap{
-				"remaps": map[string]string{"count": "value"},
+				"remaps": map[string]string{"Count": "Value"},
 			},
 		},
 	}

@@ -52,7 +52,7 @@ func (remapper *Remapper) OnInput(data string) {
 		panic(err)
 	}
 
-	outputMap, err := remapper.Run(&inputMap)
+	outputMap, err := remapper.Run(inputMap)
 	if err != nil {
 		panic(err)
 	}

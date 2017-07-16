@@ -12,21 +12,20 @@ func TestComponent(t *testing.T) {
 
 	Factory.Register("Foo", &foo{})
 
-	config := fooInputData{
-		X: 17,
+	config := common.ArgMap{
+		"i": 17,
 	}
 	x, err := Factory.Create("Foo", config)
 	assert.NoError(err)
 	assert.NotNil(x)
 
 	assert.Equal(0, x.(*foo).executionCount)
-	assert.Equal(17, x.(*foo).config["myotherint"])
-	assert.Equal(19, x.(*foo).myint)
+	assert.Equal(17, x.(*foo).config["i"])
 
 	// does Run() work?
-	in := common.ArgMap{"x": 11}
+	in := fooInputData{X: 11}
 	out, err := x.Run(in)
-	assert.Equal(11+19+17, out.(fooOutputData).Y)
+	assert.Equal(11+17, out.(fooOutputData).Y)
 }
 
 //---------------------------------------------------------------------
@@ -45,8 +44,8 @@ type fooOutputData struct {
 
 type foo struct {
 	ComponentCore
-	myint      int
-	myotherint int
+	xx int
+	ii int
 }
 
 func (x *foo) Configure() error {
@@ -56,8 +55,7 @@ func (x *foo) Configure() error {
 		return err
 	}
 
-	x.myotherint = data.I
-	x.myint = 19
+	x.ii = data.I
 
 	return nil
 }
@@ -66,7 +64,7 @@ func (x *foo) Run(in interface{}) (interface{}, error) {
 	input := in.(fooInputData)
 
 	out := fooOutputData{
-		Y: input.X + x.myint + x.myotherint,
+		Y: input.X + x.xx + x.ii,
 	}
 
 	return out, nil
