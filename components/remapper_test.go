@@ -29,9 +29,10 @@ func TestRemapper(t *testing.T) {
 	out, err := remapper.Run(in)
 	assert.NoError(err)
 
-	assert.Equal(11, out["omega"])
-	assert.Equal(22, out["psi"])
-	assert.Equal(33, out["gamma"])
-	assert.NotContains(out, "alpha")
-	assert.NotContains(out, "beta")
+	outputMap := out.(common.ArgMap)
+	assert.Equal(11, outputMap["omega"])
+	assert.Equal(22, outputMap["psi"])
+	assert.Equal(33, outputMap["gamma"])
+	assert.NotContains(outputMap, "alpha")
+	assert.NotContains(outputMap, "beta")
 }

@@ -12,10 +12,10 @@ type Component interface {
 	// configuration specific to your component type
 	// only called by ComponentCore.configure()
 	// you must implement
-	localConfigure() error
+	Configure() error
 
 	// perform one execution
-	Run(in common.ArgMap) (out common.ArgMap, err error)
+	Run(interface{} /*in common.ArgMap*/) (interface{} /*common.ArgMap*/, error)
 
 	// called by Factory to do init work for ComponentCore fields
 	// do not implement yourself

@@ -22,5 +22,5 @@ func TestTicker(t *testing.T) {
 	out, err := ticker.Run(in)
 	assert.NoError(err)
 
-	assert.Equal(1.0, out["count"])
+	assert.Equal(1, out.(TickerOutputData).Count)
 }

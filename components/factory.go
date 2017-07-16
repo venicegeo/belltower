@@ -40,7 +40,7 @@ func (f *TypeFactory) Create(typ string, config common.ArgMap) (Component, error
 		return nil, err
 	}
 
-	err = component.localConfigure()
+	err = component.Configure()
 	if err != nil {
 		return nil, err
 	}

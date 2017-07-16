@@ -31,6 +31,11 @@ func (m ArgMap) ToJSON() (string, error) {
 	return string(buf), nil
 }
 
+func (m ArgMap) ToStruct(result interface{}) error {
+	_, err := SetStructFromMap(m, result, true)
+	return err
+}
+
 //---------------------------------------------------------------------
 
 func (m ArgMap) GetInterfaceOrDefault(field string, defalt interface{}) (interface{}, error) {

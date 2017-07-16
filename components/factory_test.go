@@ -42,11 +42,11 @@ type xyzzy struct {
 	myint int
 }
 
-func (x *xyzzy) localConfigure() error {
+func (x *xyzzy) Configure() error {
 	x.myint = 19
 	return nil
 }
 
-func (x *xyzzy) Run(in common.ArgMap) (common.ArgMap, error) {
+func (x *xyzzy) Run(in interface{}) (interface{}, error) {
 	return nil, nil
 }

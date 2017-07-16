@@ -6,36 +6,35 @@ import (
 
 	"time"
 
-	"github.com/venicegeo/belltower/common"
+	"encoding/json"
 )
 
 func init() {
 	Factory.Register("Ticker", &Ticker{})
 }
 
-// -- CONFIG --
-//
-// interval string
-//   Time between each tick event, expressed as a Duration.
-//   Default is "1s".
-//
-// isRandomized bool
-//   If false, the interval lengths will be constant, using the Interval setting.
-//   If true, the interval lengths will be random, in the range [0..Interval).
-//   Default is false.
-//
-// limit int
-//   How many ticks should be issued before stopping.
-//   If zero, will never stop.
-//
-// -- INPUT --
-//
-// (none)
-//
-// -- OUTPUT --
-//
-// count int
-//   Number of ticks sent, including this one. The count starts at 1.
+type TickerConfigData struct {
+	//   Time between each tick event, expressed as a Duration.
+	//   Default is "1s".
+	Interval time.Duration
+
+	//   If false, the interval lengths will be constant, using the Interval setting.
+	//   If true, the interval lengths will be random, in the range [0..Interval).
+	//   Default is false.
+	IsRandomized bool
+
+	//   How many ticks should be issued before stopping.
+	//   If zero, will never stop.
+	Limit int
+}
+
+// Nope.
+type TickerInputData struct{}
+
+type TickerOutputData struct {
+	// Number of ticks sent, including this one. The count starts at 1.
+	Count int
+}
 
 type Ticker struct {
 	ComponentCore
@@ -48,45 +47,29 @@ type Ticker struct {
 
 	// local state
 	isRandomized bool
-	counter      float64
+	counter      int
 	interval     time.Duration
-	limit        float64
+	limit        int
 }
 
-func (ticker *Ticker) localConfigure() error {
+func (ticker *Ticker) Configure() error {
 
-	interval, err := ticker.config.GetStringOrDefault("interval", "1s")
+	data := TickerConfigData{}
+	//_, err := common.SetStructFromMap(ticker.config, &data, true)
+	err := ticker.config.ToStruct(&data)
 	if err != nil {
 		return err
 	}
 
-	limit, err := ticker.config.GetFloatOrDefault("limit", 0.0)
-	if err != nil {
-		return err
-	}
-
-	isRandomized, err := ticker.config.GetBoolOrDefault("isRandomized", false)
-	if err != nil {
-		return err
-	}
-
-	ticker.interval, err = time.ParseDuration(interval)
-	if err != nil {
-		return err
-	}
-	ticker.limit = limit
-	ticker.isRandomized = isRandomized
+	ticker.interval = data.Interval
+	ticker.limit = data.Limit
+	ticker.isRandomized = data.IsRandomized
 
 	return nil
 }
 
-func (ticker *Ticker) OnInput(data string) {
-	fmt.Printf("Ticker OnInput: %s\n", data)
-
-	_, err := common.NewArgMap(data)
-	if err != nil {
-		panic(err)
-	}
+func (ticker *Ticker) OnInput(string) {
+	fmt.Printf("Ticker OnInput\n")
 
 	f := func() {
 		out, err := ticker.Run(nil)
@@ -94,12 +77,13 @@ func (ticker *Ticker) OnInput(data string) {
 			panic(err)
 		}
 
-		s, err := out.ToJSON()
+		output := out.(TickerOutputData)
+		buf, err := json.Marshal(output)
 		if err != nil {
 			panic(err)
 		}
 
-		ticker.Output <- s
+		ticker.Output <- string(buf)
 	}
 
 	for {
@@ -109,20 +93,21 @@ func (ticker *Ticker) OnInput(data string) {
 
 		//	time.Sleep(500 * time.Millisecond)
 
-		if ticker.limit > 0.0 && ticker.counter >= ticker.limit {
+		if ticker.limit > 0 && ticker.counter >= ticker.limit {
 			break
 		}
 	}
 }
 
-func (ticker *Ticker) Run(in common.ArgMap) (common.ArgMap, error) {
+func (ticker *Ticker) Run(interface{}) (interface{}, error) {
 
 	ticker.counter++
 
-	fmt.Printf("Ticker.Run: counter=%f\n", ticker.counter)
+	fmt.Printf("Ticker.Run: counter=%d\n", ticker.counter)
 
-	out := common.ArgMap{}
-	out["count"] = ticker.counter
+	output := TickerOutputData{
+		Count: ticker.counter,
+	}
 
-	return out, nil
+	return output, nil
 }

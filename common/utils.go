@@ -2,6 +2,35 @@ package common
 
 //---------------------------------------------------------------------
 
+import (
+	"github.com/mitchellh/mapstructure"
+)
+
+func SetStructFromMap(input map[string]interface{}, result interface{}, weakly bool) (interface{}, error) {
+
+	var md mapstructure.Metadata
+	config := &mapstructure.DecoderConfig{
+		Metadata: &md,
+		Result:   result,
+	}
+	if weakly {
+		config.WeaklyTypedInput = true
+		config.DecodeHook = mapstructure.StringToTimeDurationHookFunc()
+	}
+
+	decoder, err := mapstructure.NewDecoder(config)
+	if err != nil {
+		return nil, err
+	}
+
+	err = decoder.Decode(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 //---------------------------------------------------------------------
 
 /*func AsInt(x interface{}) *int {

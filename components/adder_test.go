@@ -18,11 +18,11 @@ func TestAdder(t *testing.T) {
 	adder, err := Factory.Create("Adder", config)
 	assert.NoError(err)
 
-	in := common.ArgMap{
-		"value": 7,
+	in := AdderInputData{
+		Value: 7,
 	}
 	out, err := adder.Run(in)
 	assert.NoError(err)
 
-	assert.Equal(10.0, out["sum"])
+	assert.Equal(10.0, out.(AdderOutputData).Sum)
 }

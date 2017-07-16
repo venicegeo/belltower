@@ -12,8 +12,8 @@ func TestComponent(t *testing.T) {
 
 	Factory.Register("Foo", &foo{})
 
-	config := common.ArgMap{
-		"myotherint": 17,
+	config := fooInputData{
+		X: 17,
 	}
 	x, err := Factory.Create("Foo", config)
 	assert.NoError(err)
@@ -26,25 +26,48 @@ func TestComponent(t *testing.T) {
 	// does Run() work?
 	in := common.ArgMap{"x": 11}
 	out, err := x.Run(in)
-	assert.Equal(11+19+17, out["y"])
+	assert.Equal(11+19+17, out.(fooOutputData).Y)
 }
 
 //---------------------------------------------------------------------
 
-type foo struct {
-	ComponentCore
-	myint int
+type fooConfigData struct {
+	I int
 }
 
-func (x *foo) localConfigure() error {
+type fooInputData struct {
+	X int
+}
+
+type fooOutputData struct {
+	Y int
+}
+
+type foo struct {
+	ComponentCore
+	myint      int
+	myotherint int
+}
+
+func (x *foo) Configure() error {
+	data := fooConfigData{}
+	err := x.config.ToStruct(&data)
+	if err != nil {
+		return err
+	}
+
+	x.myotherint = data.I
 	x.myint = 19
+
 	return nil
 }
 
-func (x *foo) Run(in common.ArgMap) (common.ArgMap, error) {
-	out := common.ArgMap{}
+func (x *foo) Run(in interface{}) (interface{}, error) {
+	input := in.(fooInputData)
 
-	out["y"] = in["x"].(int) + x.myint + x.config["myotherint"].(int)
+	out := fooOutputData{
+		Y: input.X + x.myint + x.myotherint,
+	}
 
 	return out, nil
 }

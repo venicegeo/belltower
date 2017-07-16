@@ -3,6 +3,8 @@ package components
 import (
 	"fmt"
 
+	"encoding/json"
+
 	"github.com/venicegeo/belltower/common"
 )
 
@@ -10,20 +12,23 @@ func init() {
 	Factory.Register("Adder", &Adder{})
 }
 
-// -- CONFIG --
-//
-// addend int
-//   The value added to the input. Default is zero.
-//
-// -- INPUT --
-//
-// value int
-//   The value added to the addend from the configuration. Default is zero.
-//
-// -- OUTPUT --
-//
-// sum int
-//   Value of input value added to addend.
+type AdderConfigData struct {
+
+	// The value added to the input. Default is zero.
+	Addend float64
+}
+
+type AdderInputData struct {
+
+	// The value added to the addend from the configuration. Default is zero.
+	Value float64
+}
+
+type AdderOutputData struct {
+
+	// Value of input value added to addend.
+	Sum float64
+}
 
 type Adder struct {
 	ComponentCore
@@ -35,14 +40,15 @@ type Adder struct {
 	addend float64
 }
 
-func (adder *Adder) localConfigure() error {
+func (adder *Adder) Configure() error {
 
-	addend, err := adder.config.GetFloatOrDefault("addend", 0.0)
+	data := AdderConfigData{}
+	err := adder.config.ToStruct(&data)
 	if err != nil {
 		return err
 	}
 
-	adder.addend = addend
+	adder.addend = data.Addend
 
 	return nil
 }
@@ -50,34 +56,37 @@ func (adder *Adder) localConfigure() error {
 func (adder *Adder) OnInput(data string) {
 	fmt.Printf("Adder OnInput: %s\n", data)
 
-	in, err := common.NewArgMap(data)
+	inputMap := common.ArgMap{}
+	err := json.Unmarshal([]byte(data), &inputMap)
 	if err != nil {
 		panic(err)
 	}
 
-	out, err := adder.Run(in)
+	input := AdderInputData{}
+	_, err = common.SetStructFromMap(inputMap, &input, true)
 	if err != nil {
 		panic(err)
 	}
 
-	s, err := out.ToJSON()
+	output, err := adder.Run(input)
 	if err != nil {
 		panic(err)
 	}
 
-	adder.Output <- s
+	buf, err := json.Marshal(output)
+	if err != nil {
+		panic(err)
+	}
+
+	adder.Output <- string(buf)
 }
 
-func (adder *Adder) Run(in common.ArgMap) (common.ArgMap, error) {
+func (adder *Adder) Run(in interface{}) (interface{}, error) {
 
-	out := common.ArgMap{}
+	input := in.(AdderInputData)
+	output := AdderOutputData{}
 
-	value, err := in.GetFloat("value")
-	if err != nil {
-		return out, err
-	}
+	output.Sum = input.Value + adder.addend
 
-	out["sum"] = value + adder.addend
-
-	return out, nil
+	return output, nil
 }

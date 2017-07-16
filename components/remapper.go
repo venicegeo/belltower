@@ -1,6 +1,7 @@
 package components
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/venicegeo/belltower/common"
@@ -10,23 +11,15 @@ func init() {
 	Factory.Register("Remapper", &Remapper{})
 }
 
-// -- CONFIG --
-//
-// remapped []{from, to string}
-//   The value added to the input. Default is zero.
-//
-// -- INPUT --
-//
-// anything
-//
-// -- OUTPUT --
-//
-// same as input, but remapped
+type RemapperConfigData struct {
 
-type RemapPair struct {
-	from string
-	to   string
+	// remap field "key" to field "value"
+	Remaps map[string]string
 }
+
+// Remapper doesn't use input or output data object, since it works with fields known only at runtime
+//type RemapperInputData struct {}
+//type RemapperOutputData struct {}
 
 type Remapper struct {
 	ComponentCore
@@ -38,17 +31,15 @@ type Remapper struct {
 	remaps map[string]string
 }
 
-func (remapper *Remapper) localConfigure() error {
+func (remapper *Remapper) Configure() error {
 
-	remaps, err := remapper.config.GetInterfaceOrDefault("remaps", nil)
+	remaps := RemapperConfigData{}
+	err := remapper.config.ToStruct(&remaps)
 	if err != nil {
 		return err
 	}
-	if remaps == nil {
-		return fmt.Errorf("remaps list cannot be empty")
-	}
 
-	remapper.remaps = remaps.(map[string]string)
+	remapper.remaps = remaps.Remaps
 
 	return nil
 }
@@ -56,38 +47,40 @@ func (remapper *Remapper) localConfigure() error {
 func (remapper *Remapper) OnInput(data string) {
 	fmt.Printf("Remapper OnInput: %s\n", data)
 
-	in, err := common.NewArgMap(data)
+	inputMap, err := common.NewArgMap(data)
 	if err != nil {
 		panic(err)
 	}
 
-	out, err := remapper.Run(in)
+	outputMap, err := remapper.Run(&inputMap)
 	if err != nil {
 		panic(err)
 	}
 
-	s, err := out.ToJSON()
+	buf, err := json.Marshal(outputMap)
 	if err != nil {
 		panic(err)
 	}
 
-	remapper.Output <- s
+	remapper.Output <- string(buf)
 }
 
-func (remapper *Remapper) Run(in common.ArgMap) (common.ArgMap, error) {
+func (remapper *Remapper) Run(in interface{}) (interface{}, error) {
 
-	out := in
+	inputMap := in.(common.ArgMap)
+
+	outputMap := inputMap
 
 	for from, to := range remapper.remaps {
 
-		fromValue, ok := in[from]
+		fromValue, ok := inputMap[from]
 		if !ok {
 			return nil, fmt.Errorf("field '%s' not found for remapping", from)
 		}
 
-		out[to] = fromValue
-		delete(out, from)
+		outputMap[to] = fromValue
+		delete(outputMap, from)
 	}
 
-	return out, nil
+	return outputMap, nil
 }
