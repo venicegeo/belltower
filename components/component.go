@@ -2,6 +2,7 @@ package components
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/trustmaster/goflow"
 	"github.com/venicegeo/belltower/common"
@@ -99,3 +100,61 @@ func FromStructToJSON(obj interface{}) (string, error) {
 	}
 	return string(buf), nil
 }
+
+//---------------------------------------------------------------------
+
+func init() {
+	Factory.Register("Starter", &Starter{})
+}
+
+type StarterConfigData struct{}
+
+type StarterInputData struct{}
+
+type StarterOutputData struct{}
+
+type Starter struct {
+	ComponentCore
+	Input  <-chan string
+	Output chan<- string
+}
+
+func (*Starter) Configure() error {
+	return nil
+}
+
+func (s *Starter) OnInput(string) {
+	fmt.Printf("Starter OnInput\n")
+	s.Output <- "{}"
+}
+
+func (*Starter) Run(in interface{}) (interface{}, error) { return nil, nil }
+
+//---------------------------------------------------------------------
+
+func init() {
+	Factory.Register("Stopper", &Stopper{})
+}
+
+type StopperConfigData struct{}
+
+type StopperInputData struct{}
+
+type StopperOutputData struct{}
+
+type Stopper struct {
+	ComponentCore
+	Input  <-chan string
+	Output chan<- string
+}
+
+func (*Stopper) Configure() error {
+	return nil
+}
+
+func (s *Stopper) OnInput(string) {
+	fmt.Printf("Stopper OnInput\n")
+	s.Output <- "{}"
+}
+
+func (*Stopper) Run(in interface{}) (interface{}, error) { return nil, nil }

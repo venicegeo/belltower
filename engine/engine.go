@@ -38,18 +38,15 @@ func NewNetwork(graph *common.Graph) (*Network, error) {
 		if !ok {
 			return nil, fmt.Errorf("failed to add component: %s (type %s)", component.Name, component.Type)
 		}
+	}
 
-		if component.Type == "Ticker" {
-			ok = g.MapInPort("INPORT", component.Name, "Input")
-			if !ok {
-				return nil, fmt.Errorf("failed to add InPort")
-			}
-		} else if component.Type == "Adder" {
-			ok = g.MapOutPort("OUTPORT", component.Name, "Output")
-			if !ok {
-				return nil, fmt.Errorf("failed to add OutPort")
-			}
-		}
+	ok := g.MapInPort("START.Input", "START", "Input")
+	if !ok {
+		return nil, fmt.Errorf("failed to add InPort")
+	}
+	ok = g.MapOutPort("STOP.Output", "STOP", "Output")
+	if !ok {
+		return nil, fmt.Errorf("failed to add OutPort")
 	}
 
 	//
@@ -76,30 +73,32 @@ func (g *Network) Execute() error {
 
 	// input channel
 	in := make(chan string)
-	ok := g.SetInPort("INPORT", in)
+	ok := g.SetInPort("START.Input", in)
 	if !ok {
 		return fmt.Errorf("failed to SetInPort")
 	}
 
 	// output channel
 	out := make(chan string)
-	ok = g.SetOutPort("OUTPORT", out)
+	ok = g.SetOutPort("STOP.Output", out)
 	if !ok {
 		return fmt.Errorf("failed to SetOutPort")
 	}
 
-	// Run the net
+	// start the net
 	flow.RunNet(g)
 
-	// kick it off
+	// send the initial input
 	in <- fmt.Sprintf("{}")
 
+	// set up the shutdown mechanism
 	go func() {
 		time.Sleep(10 * time.Second)
 		fmt.Printf("closing after 10 seconds\n")
 		close(in)
 	}()
 
+	// read all the outputs
 	for result := range out {
 		fmt.Printf("RESULT: %s\n", result)
 	}

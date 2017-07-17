@@ -13,6 +13,14 @@ func TestFlow(t *testing.T) {
 
 	components := []*common.Component{
 		&common.Component{
+			Name: "START",
+			Type: "Starter",
+		},
+		&common.Component{
+			Name: "STOP",
+			Type: "Stopper",
+		},
+		&common.Component{
 			Name: "myticker",
 			Type: "Ticker",
 			Config: common.ArgMap{
@@ -36,14 +44,10 @@ func TestFlow(t *testing.T) {
 	}
 
 	connections := []*common.Connection{
-		&common.Connection{
-			Source:      "myticker.Output",
-			Destination: "myremapper.Input",
-		},
-		&common.Connection{
-			Source:      "myremapper.Output",
-			Destination: "myadder.Input",
-		},
+		&common.Connection{Source: "START.Output", Destination: "myticker.Input"},
+		&common.Connection{Source: "myticker.Output", Destination: "myremapper.Input"},
+		&common.Connection{Source: "myremapper.Output", Destination: "myadder.Input"},
+		&common.Connection{Source: "myadder.Output", Destination: "STOP.Input"},
 	}
 
 	g := &common.Graph{
