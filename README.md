@@ -1,6 +1,9 @@
 _Campanile (cam-pin-EE-lay): a bell tower or watchtower; the tallest building in Venice_
 
+
 # Goals
+
+_"Do Nothing 'til You Hear from Me"_
 
 1. Needs to support existing applications/services as they are, as no one will update their service to meet some new system we invent (e.g. try to get a 3rd party to do REST calls to us or monitor a message queue).
 
@@ -21,9 +24,7 @@ _Campanile (cam-pin-EE-lay): a bell tower or watchtower; the tallest building in
 
 9. The system is not responsible for "starting" or "owning" client jobs. The system will invoke remote services, but any "job management" within the context of that job belomgs to the client service.
 
-10. 
-
-Open: Should we allow the graph to be changed while it is running? (does goflow support this?)
+**Open:** Should we allow the graph to be changed while it is running? (does goflow support this?)
 
 
 
@@ -43,23 +44,48 @@ Open: Should we allow the graph to be changed while it is running? (does goflow 
 * conventions and best practices for writing components
 * error propagation
 * glossary of terms
-* add support for pre/post conditions
 * generalize executing a graph
-
+* add tests for Graph
+* logger component (for test verification)
+* printer component
+* test N ins/outs for START/STOP
+* build Replicate component
+* build Or component
 
 ## Next
 
+* add support for pre/post conditions
+* move Factory, Component classes into engine pkg? common pkg?
 * "slow motion" mode
 * support running more than one graph at a time
 * all components should have these fields at the core level:
   * date started
   * number of messages received, processed, etc
   * cpu and wall time used
-  * ...
 * design the server-level system, including:
   * security
   * user management
   * database to persist state
+* add DSL support - parser, etc.
+* add argument type checking
+* add metadata support
+* add "notes" support
+* add automated description generation
+* add funcs to govaluate library
+* implement rest of components library
+* revivie file watcher lib (and tests)
+* document classes
+* code coverage
+* linting
+* remove dead classes
+* "names" should only be alphanumeric
+* build more infrastrcuture to make defining Components easier
+* nice model for error handling in general
+* need a /dev/null (Grounder) component
+* validate graph connectivity
+* remove START/STOP req'ments
+design an AND component
+
 
 ## Future
 
