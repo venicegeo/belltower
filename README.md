@@ -73,30 +73,46 @@ Open: Should we allow the graph to be changed while it is running? (does goflow 
 
 # Library of Components
 
-* Ticker
-* Adder
-* Remapper
-* ...
-* FieldOperator
-* Printer
-* JQer
-* SHer
-* SSHer
-* FileWatcher
-* S3Watcher
-* HttpVerber
-* Mailer
-* Logger
-* RabbitMQer
-* Piazzaer
-* Beachfronter
-* WebPageWatcher
-* Joiner
-* Sleeper
-* RandomGenerator
-* Selector
-* Replicator
-* Sampler
+(components in _italics_ are not yet implemented)
+
+* A
+  * **Adder** - just adds a set value to a field: "in.x + config.y -> out.z"
+* B
+  * _Beachfronter - runs a BF command_
+* F
+  * _FileWatcher - watches a (local) directory for changes (new files, deletes, modifies)_
+* H
+  * _HttpVerber - executes a HTTP GET, POST, etc, using in as the body and sending the repsonse to out_
+* J
+  * _JQer - runs a JQ command on the input_
+  * _Joiner - waits until it has an message on all input ports, then sends the concatenation(?) to out_
+* L
+  * _Logger - writes in to a file or log system_
+* M
+  * _Mailer - sends mail, with body (and To/Subject?) taken from in_
+* O
+  * _Orer - when an input is recieved at any one or two or more input ports, forwards the result to out_
+* P
+  * _Piazzaer - runs a Piazza command_
+  * _Printer - sends input to console/stdout_
+* R
+  * _RabbitMQPoster - sends in to an MQ queue_
+  * _RabbitMQWatcher - watches an MQ queue for new data, and sends it to out_
+  * _RandomGenerator - sends random numbers, strings, etc to out_
+  * **Remapper** - remaps ("changes the name of") a field: in.x -> out.y
+  * _Replicator - duplicates the input, e.g. "in -> out1, out2, out3"_
+* S
+  * _S3Watcher - watches an S3 bucket for changes_
+  * _Sampler - forwards every Nth input message to out (or maybe sends the "average" of the N messages)_
+  * _SHer - runs a shell command, with in->stdin and stdout->out_
+  * _SimpleFunction - allows for simple math, string manipulation, etc, to be done on a given field_
+  * _Sleeper - sleeps for a period of time, then forwards in to out_
+  * _SSHer - runs am ssh shell command, with in->stdin and stdout->out_
+* T
+  * **Ticker** - sends a simple output every N seconds
+* W
+  * _WebPageWatcher - watches a web page (web site?), sends changes to out_
+
 
 
 # Concept for a Graph DSL
