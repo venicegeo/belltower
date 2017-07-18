@@ -1,7 +1,6 @@
 package components
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/trustmaster/goflow"
@@ -9,20 +8,28 @@ import (
 )
 
 type Component interface {
-	//// describes the port datatypes, etc
-	//Description() *Description
-
-	// configuration specific to your component type
-	// only called by ComponentCore.configure()
-	// you must implement
+	// the system calls this to do init work specific to your component type
+	// you must implement this
 	Configure() error
 
-	// perform one execution
-	Run(interface{} /*in common.ArgMap*/) (interface{} /*common.ArgMap*/, error)
-
-	// called by Factory to do init work for ComponentCore fields
-	// do not implement yourself
+	// the system calls this to do init work for ComponentCore fields
+	// do not implement this yourself
 	coreConfigure(config common.ArgMap) error
+
+	// Implement "OnPORT" for each input port, using the right signature and contents. For example:
+	//
+	// func (adder *Adder) OnInput(inputJson string) {
+	//   input := &AdderInputData{}
+	//   err := input.ReadFromJSON(inputJson)
+	//   if err != nil {...}
+	//   output := &AdderOutputData{}
+	//   output.x = ...
+	//   outputJson, err := output.WriteToJSON()
+	//   if err != nil {...}
+	//   adder.Output <- outputJson
+	// }
+	//
+	// See adder.go for a complete example.
 }
 
 type ComponentCore struct {
@@ -35,6 +42,7 @@ type ComponentCore struct {
 }
 
 func (c *ComponentCore) coreConfigure(config common.ArgMap) error {
+	// TODO: can this be replaced by Init() somehow?
 
 	c.config = config
 
@@ -67,51 +75,12 @@ func (c *ComponentCore) coreConfigure(config common.ArgMap) error {
 	return nil
 }
 
-type Description struct {
-	Id       common.Id        `json:"id"`
-	Name     string           `json:"name"`
-	Metadata *common.Metadata `json:"metadata,omitempty"`
-
-	Config *common.Port `json:"config,omitempty"`
-	Input  *common.Port `json:"input,omitempty"`
-	Output *common.Port `json:"output,omitempty"`
-}
-
-func FromJSONToStruct(jsn string, obj interface{}) error {
-
-	m := common.ArgMap{}
-	err := json.Unmarshal([]byte(jsn), &m)
-	if err != nil {
-		return err
-	}
-
-	err = m.ToStruct(&obj)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func FromStructToJSON(obj interface{}) (string, error) {
-	buf, err := json.Marshal(obj)
-	if err != nil {
-		return "", err
-	}
-	return string(buf), nil
-}
-
 //---------------------------------------------------------------------
 
 func init() {
 	Factory.Register("Starter", &Starter{})
+	Factory.Register("Stopper", &Stopper{})
 }
-
-type StarterConfigData struct{}
-
-type StarterInputData struct{}
-
-type StarterOutputData struct{}
 
 type Starter struct {
 	ComponentCore
@@ -119,28 +88,11 @@ type Starter struct {
 	Output chan<- string
 }
 
-func (*Starter) Configure() error {
-	return nil
-}
-
+func (*Starter) Configure() error { return nil }
 func (s *Starter) OnInput(string) {
 	fmt.Printf("Starter OnInput\n")
 	s.Output <- "{}"
 }
-
-func (*Starter) Run(in interface{}) (interface{}, error) { return nil, nil }
-
-//---------------------------------------------------------------------
-
-func init() {
-	Factory.Register("Stopper", &Stopper{})
-}
-
-type StopperConfigData struct{}
-
-type StopperInputData struct{}
-
-type StopperOutputData struct{}
 
 type Stopper struct {
 	ComponentCore
@@ -148,13 +100,9 @@ type Stopper struct {
 	Output chan<- string
 }
 
-func (*Stopper) Configure() error {
-	return nil
-}
+func (*Stopper) Configure() error { return nil }
 
 func (s *Stopper) OnInput(string) {
 	fmt.Printf("Stopper OnInput\n")
 	s.Output <- "{}"
 }
-
-func (*Stopper) Run(in interface{}) (interface{}, error) { return nil, nil }

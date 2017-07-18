@@ -1,10 +1,41 @@
 package common
 
-//---------------------------------------------------------------------
-
 import (
+	"encoding/json"
+
 	"github.com/mitchellh/mapstructure"
 )
+
+//---------------------------------------------------------------------
+
+type Serializer interface {
+	ReadFromJSON(string) error
+	WriteToJSON() (string, error)
+	Validate() error
+}
+
+func ReadFromJSON(jsn string, obj interface{}) error {
+
+	// TODO: zero out obj (if is struct, use Structs pkg)
+
+	err := json.Unmarshal([]byte(jsn), obj)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func WriteToJSON(obj interface{}) (string, error) {
+	buf, err := json.Marshal(obj)
+	if err != nil {
+		return "", err
+	}
+
+	return string(buf), nil
+}
+
+//---------------------------------------------------------------------
 
 func SetStructFromMap(input map[string]interface{}, result interface{}, weakly bool) (interface{}, error) {
 
@@ -32,6 +63,8 @@ func SetStructFromMap(input map[string]interface{}, result interface{}, weakly b
 }
 
 //---------------------------------------------------------------------
+
+// TODO: remove these
 
 /*func AsInt(x interface{}) *int {
 	v, ok := x.(int)

@@ -11,30 +11,30 @@ import (
 func TestFlow(t *testing.T) {
 	assert := assert.New(t)
 
-	components := []*common.Component{
-		&common.Component{
+	components := []*common.ComponentModel{
+		&common.ComponentModel{
 			Name: "START",
 			Type: "Starter",
 		},
-		&common.Component{
+		&common.ComponentModel{
 			Name: "STOP",
 			Type: "Stopper",
 		},
-		&common.Component{
+		&common.ComponentModel{
 			Name: "myticker",
 			Type: "Ticker",
 			Config: common.ArgMap{
 				"limit": 5.0,
 			},
 		},
-		&common.Component{
+		&common.ComponentModel{
 			Name: "myadder",
 			Type: "Adder",
 			Config: common.ArgMap{
 				"addend": 10.0,
 			},
 		},
-		&common.Component{
+		&common.ComponentModel{
 			Name: "myremapper",
 			Type: "Remapper",
 			Config: common.ArgMap{
@@ -43,14 +43,14 @@ func TestFlow(t *testing.T) {
 		},
 	}
 
-	connections := []*common.Connection{
-		&common.Connection{Source: "START.Output", Destination: "myticker.Input"},
-		&common.Connection{Source: "myticker.Output", Destination: "myremapper.Input"},
-		&common.Connection{Source: "myremapper.Output", Destination: "myadder.Input"},
-		&common.Connection{Source: "myadder.Output", Destination: "STOP.Input"},
+	connections := []*common.ConnectionModel{
+		&common.ConnectionModel{Source: "START.Output", Destination: "myticker.Input"},
+		&common.ConnectionModel{Source: "myticker.Output", Destination: "myremapper.Input"},
+		&common.ConnectionModel{Source: "myremapper.Output", Destination: "myadder.Input"},
+		&common.ConnectionModel{Source: "myadder.Output", Destination: "STOP.Input"},
 	}
 
-	g := &common.Graph{
+	g := &common.GraphModel{
 		Components:  components,
 		Connections: connections,
 	}

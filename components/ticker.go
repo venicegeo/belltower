@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/venicegeo/belltower/common"
+
 	"time"
 )
 
@@ -29,10 +31,15 @@ type TickerConfigData struct {
 // Nope.
 type TickerInputData struct{}
 
+// implements Serializer
 type TickerOutputData struct {
 	// Number of ticks sent, including this one. The count starts at 1.
 	Count int
 }
+
+func (m *TickerOutputData) Validate() error               { return nil } // TODO
+func (m *TickerOutputData) ReadFromJSON(jsn string) error { return common.ReadFromJSON(jsn, m) }
+func (m *TickerOutputData) WriteToJSON() (string, error)  { return common.WriteToJSON(m) }
 
 type Ticker struct {
 	ComponentCore
@@ -75,7 +82,7 @@ func (ticker *Ticker) OnInput(string) {
 			panic(err)
 		}
 
-		outputJson, err := FromStructToJSON(output)
+		outputJson, err := (output).(*TickerOutputData).WriteToJSON()
 		if err != nil {
 			panic(err)
 		}
@@ -102,7 +109,7 @@ func (ticker *Ticker) Run(interface{}) (interface{}, error) {
 
 	fmt.Printf("Ticker.Run: counter=%d\n", ticker.counter)
 
-	output := TickerOutputData{
+	output := &TickerOutputData{
 		Count: ticker.counter,
 	}
 

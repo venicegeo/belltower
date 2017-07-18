@@ -19,7 +19,7 @@ type Network struct {
 	flow.Graph
 }
 
-func NewNetwork(graph *common.Graph) (*Network, error) {
+func NewNetwork(graph *common.GraphModel) (*Network, error) {
 
 	g := &Network{}
 	g.InitGraphState()

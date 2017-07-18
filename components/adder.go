@@ -2,6 +2,8 @@ package components
 
 import (
 	"fmt"
+
+	"github.com/venicegeo/belltower/common"
 )
 
 func init() {
@@ -14,17 +16,27 @@ type AdderConfigData struct {
 	Addend float64
 }
 
+// implements Serializer
 type AdderInputData struct {
 
 	// The value added to the addend from the configuration. Default is zero.
 	Value float64
 }
 
+func (m *AdderInputData) Validate() error               { return nil } // TODO
+func (m *AdderInputData) ReadFromJSON(jsn string) error { return common.ReadFromJSON(jsn, m) }
+func (m *AdderInputData) WriteToJSON() (string, error)  { return common.WriteToJSON(m) }
+
+// implements Serializer
 type AdderOutputData struct {
 
 	// Value of input value added to addend.
 	Sum float64
 }
+
+func (m *AdderOutputData) Validate() error               { return nil } // TODO
+func (m *AdderOutputData) ReadFromJSON(jsn string) error { return common.ReadFromJSON(jsn, m) }
+func (m *AdderOutputData) WriteToJSON() (string, error)  { return common.WriteToJSON(m) }
 
 type Adder struct {
 	ComponentCore
@@ -52,8 +64,8 @@ func (adder *Adder) Configure() error {
 func (adder *Adder) OnInput(inputJson string) {
 	fmt.Printf("Adder OnInput: %s\n", inputJson)
 
-	input := AdderInputData{}
-	err := FromJSONToStruct(inputJson, &input)
+	input := &AdderInputData{}
+	err := input.ReadFromJSON(inputJson)
 	if err != nil {
 		panic(err)
 	}
@@ -63,7 +75,7 @@ func (adder *Adder) OnInput(inputJson string) {
 		panic(err)
 	}
 
-	outputJson, err := FromStructToJSON(output)
+	outputJson, err := output.(*AdderOutputData).WriteToJSON()
 	if err != nil {
 		panic(err)
 	}
@@ -74,7 +86,7 @@ func (adder *Adder) OnInput(inputJson string) {
 func (adder *Adder) Run(in interface{}) (interface{}, error) {
 
 	input := in.(AdderInputData)
-	output := AdderOutputData{}
+	output := &AdderOutputData{}
 
 	output.Sum = input.Value + adder.addend
 
