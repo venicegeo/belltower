@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/venicegeo/belltower/common"
-	"github.com/venicegeo/belltower/components"
+	_ "github.com/venicegeo/belltower/components"
 
 	"time"
 
@@ -29,7 +29,7 @@ func NewNetwork(graph *common.GraphModel) (*Network, error) {
 	//
 	for _, component := range graph.Components {
 
-		c, err := components.Factory.Create(component.Type, component.Config)
+		c, err := common.Factory.Create(component.Type, component.Config)
 		if err != nil {
 			return nil, err
 		}

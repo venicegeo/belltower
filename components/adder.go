@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	Factory.Register("Adder", &Adder{})
+	common.Factory.Register("Adder", &Adder{})
 }
 
 type AdderConfigData struct {
@@ -39,7 +39,7 @@ func (m *AdderOutputData) ReadFromJSON(jsn string) error { return common.ReadFro
 func (m *AdderOutputData) WriteToJSON() (string, error)  { return common.WriteToJSON(m) }
 
 type Adder struct {
-	ComponentCore
+	common.ComponentCore
 
 	Input  <-chan string
 	Output chan<- string
@@ -51,7 +51,7 @@ type Adder struct {
 func (adder *Adder) Configure() error {
 
 	data := AdderConfigData{}
-	err := adder.config.ToStruct(&data)
+	err := adder.Config.ToStruct(&data)
 	if err != nil {
 		return err
 	}
@@ -61,34 +61,26 @@ func (adder *Adder) Configure() error {
 	return nil
 }
 
-func (adder *Adder) OnInput(inputJson string) {
-	fmt.Printf("Adder OnInput: %s\n", inputJson)
+func (adder *Adder) OnInput(inJ string) {
+	fmt.Printf("Adder OnInput: %s\n", inJ)
 
-	input := &AdderInputData{}
-	err := input.ReadFromJSON(inputJson)
+	inS := &AdderInputData{}
+	err := inS.ReadFromJSON(inJ)
 	if err != nil {
 		panic(err)
 	}
 
-	output, err := adder.Run(input)
+	outS := &AdderOutputData{}
+
+	// the work
+	{
+		outS.Sum = inS.Value + adder.addend
+	}
+
+	outJ, err := outS.WriteToJSON()
 	if err != nil {
 		panic(err)
 	}
 
-	outputJson, err := output.(*AdderOutputData).WriteToJSON()
-	if err != nil {
-		panic(err)
-	}
-
-	adder.Output <- outputJson
-}
-
-func (adder *Adder) Run(in interface{}) (interface{}, error) {
-
-	input := in.(AdderInputData)
-	output := &AdderOutputData{}
-
-	output.Sum = input.Value + adder.addend
-
-	return output, nil
+	adder.Output <- outJ
 }

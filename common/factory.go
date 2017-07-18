@@ -1,9 +1,7 @@
-package components
+package common
 
 import (
 	"fmt"
-
-	"github.com/venicegeo/belltower/common"
 )
 
 type TypeFactory struct {
@@ -18,14 +16,14 @@ func (f *TypeFactory) Register(name string, typ Component) {
 	f.types[name] = typ
 }
 
-func (f *TypeFactory) Create(typ string, config common.ArgMap) (Component, error) {
+func (f *TypeFactory) Create(typ string, config ArgMap) (Component, error) {
 
 	dummy := f.types[typ]
 	if dummy == nil {
 		return nil, fmt.Errorf("component factory: invalid name: %s", typ)
 	}
 
-	dummy2 := common.NewViaReflection(dummy)
+	dummy2 := NewViaReflection(dummy)
 	if dummy2 == nil {
 		return nil, fmt.Errorf("component factory: unable to create: %s", typ)
 	}

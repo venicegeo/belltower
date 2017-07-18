@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	Factory.Register("Remapper", &Remapper{})
+	common.Factory.Register("Remapper", &Remapper{})
 }
 
 type RemapperConfigData struct {
@@ -21,7 +21,7 @@ type RemapperConfigData struct {
 //type RemapperOutputData struct {}
 
 type Remapper struct {
-	ComponentCore
+	common.ComponentCore
 
 	Input  <-chan string
 	Output chan<- string
@@ -33,7 +33,7 @@ type Remapper struct {
 func (remapper *Remapper) Configure() error {
 
 	remaps := RemapperConfigData{}
-	err := remapper.config.ToStruct(&remaps)
+	err := remapper.Config.ToStruct(&remaps)
 	if err != nil {
 		return err
 	}
@@ -43,43 +43,41 @@ func (remapper *Remapper) Configure() error {
 	return nil
 }
 
-func (remapper *Remapper) OnInput(inputJson string) {
-	fmt.Printf("Remapper OnInput: %s\n", inputJson)
+func (remapper *Remapper) OnInput(inJ string) {
+	fmt.Printf("Remapper OnInput: %s\n", inJ)
 
-	inputMap, err := common.NewArgMap(inputJson)
+	inMap, err := common.NewArgMap(inJ)
 	if err != nil {
 		panic(err)
 	}
 
-	outputMap, err := remapper.Run(inputMap)
+	outMap, err := remapper.run(inMap)
 	if err != nil {
 		panic(err)
 	}
 
-	outputJson, err := outputMap.(common.ArgMap).ToJSON()
+	outJ, err := outMap.ToJSON()
 	if err != nil {
 		panic(err)
 	}
 
-	remapper.Output <- outputJson
+	remapper.Output <- outJ
 }
 
-func (remapper *Remapper) Run(in interface{}) (interface{}, error) {
+func (remapper *Remapper) run(inMap common.ArgMap) (common.ArgMap, error) {
 
-	inputMap := in.(common.ArgMap)
-
-	outputMap := inputMap
+	outMap := inMap
 
 	for from, to := range remapper.remaps {
 
-		fromValue, ok := inputMap[from]
+		fromValue, ok := inMap[from]
 		if !ok {
 			return nil, fmt.Errorf("field '%s' not found for remapping", from)
 		}
 
-		outputMap[to] = fromValue
-		delete(outputMap, from)
+		outMap[to] = fromValue
+		delete(outMap, from)
 	}
 
-	return outputMap, nil
+	return outMap, nil
 }

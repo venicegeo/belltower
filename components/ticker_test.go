@@ -10,17 +10,24 @@ import (
 func TestTicker(t *testing.T) {
 	assert := assert.New(t)
 
-	Factory.Register("Ticker", &Ticker{})
+	common.Factory.Register("Ticker", &Ticker{})
 
 	config := common.ArgMap{
 		"Limit": 3,
 	}
-	ticker, err := Factory.Create("Ticker", config)
+	tickerX, err := common.Factory.Create("Ticker", config)
 	assert.NoError(err)
+	ticker := tickerX.(*Ticker)
 
-	in := common.ArgMap{}
-	out, err := ticker.Run(in)
-	assert.NoError(err)
+	// this setup is normally done by goflow itself
+	chIn := make(chan string)
+	chOut := make(chan string)
+	ticker.Input = chIn
+	ticker.Output = chOut
 
-	assert.Equal(1, out.(TickerOutputData).Count)
+	inJ := "{}"
+	go ticker.OnInput(inJ)
+
+	outJ := <-chOut
+	assert.JSONEq(`{"Count":1}`, outJ)
 }

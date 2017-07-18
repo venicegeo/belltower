@@ -10,19 +10,25 @@ import (
 func TestAdder(t *testing.T) {
 	assert := assert.New(t)
 
-	Factory.Register("Adder", &Adder{})
+	common.Factory.Register("Adder", &Adder{})
 
 	config := common.ArgMap{
 		"addend": 3,
 	}
-	adder, err := Factory.Create("Adder", config)
+	adderX, err := common.Factory.Create("Adder", config)
 	assert.NoError(err)
+	adder := adderX.(*Adder)
 
-	in := AdderInputData{
-		Value: 7,
-	}
-	out, err := adder.Run(in)
-	assert.NoError(err)
+	// this setup is normally done by goflow itself
+	chIn := make(chan string)
+	chOut := make(chan string)
+	adder.Input = chIn
+	adder.Output = chOut
 
-	assert.Equal(10.0, out.(AdderOutputData).Sum)
+	inJ := `{"Value": 7}`
+	go adder.OnInput(inJ)
+
+	// check the returned result
+	outJ := <-chOut
+	assert.JSONEq(`{"Sum":10.0}`, outJ)
 }

@@ -1,10 +1,9 @@
-package components
+package common
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/venicegeo/belltower/common"
 )
 
 func TestFactory(t *testing.T) {
@@ -19,20 +18,21 @@ func TestFactory(t *testing.T) {
 		assert.NotNil(x)
 
 		assert.Equal(0, x.(*xyzzy).executionCount)
-		assert.Nil(x.(*xyzzy).config["param"])
+		assert.Nil(x.(*xyzzy).Config["param"])
 		assert.Equal(19, x.(*xyzzy).myint)
 	}
 
-	config := common.ArgMap{
+	config := ArgMap{
 		"param": "seventeen",
 	}
 	x, err := Factory.Create("Xyzzy", config)
 	assert.NoError(err)
 	assert.NotNil(x)
+	xx := x.(*xyzzy)
 
-	assert.Equal(0, x.(*xyzzy).executionCount)
-	assert.Equal("seventeen", x.(*xyzzy).config["param"])
-	assert.Equal(19, x.(*xyzzy).myint)
+	assert.Equal(0, xx.executionCount)
+	assert.Equal("seventeen", xx.Config["param"])
+	assert.Equal(19, xx.myint)
 }
 
 //---------------------------------------------------------------------

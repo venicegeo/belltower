@@ -1,10 +1,9 @@
-package components
+package common
 
 import (
 	"fmt"
 
 	"github.com/trustmaster/goflow"
-	"github.com/venicegeo/belltower/common"
 )
 
 type Component interface {
@@ -14,7 +13,7 @@ type Component interface {
 
 	// the system calls this to do init work for ComponentCore fields
 	// do not implement this yourself
-	coreConfigure(config common.ArgMap) error
+	coreConfigure(config ArgMap) error
 
 	// Implement "OnPORT" for each input port, using the right signature and contents. For example:
 	//
@@ -33,18 +32,18 @@ type Component interface {
 }
 
 type ComponentCore struct {
-	config         common.ArgMap
-	precondition   *common.Expression
-	postcondition  *common.Expression
+	Config         ArgMap
+	precondition   *Expression
+	postcondition  *Expression
 	executionCount int
 
 	flow.Component
 }
 
-func (c *ComponentCore) coreConfigure(config common.ArgMap) error {
+func (c *ComponentCore) coreConfigure(config ArgMap) error {
 	// TODO: can this be replaced by Init() somehow?
 
-	c.config = config
+	c.Config = config
 
 	c.executionCount = 0
 
@@ -53,7 +52,7 @@ func (c *ComponentCore) coreConfigure(config common.ArgMap) error {
 		return err
 	}
 	if cond != "" {
-		e, err := common.NewExpression(cond, nil)
+		e, err := NewExpression(cond, nil)
 		if err != nil {
 			return err
 		}
@@ -65,7 +64,7 @@ func (c *ComponentCore) coreConfigure(config common.ArgMap) error {
 		return nil
 	}
 	if cond != "" {
-		e, err := common.NewExpression(cond, nil)
+		e, err := NewExpression(cond, nil)
 		if err != nil {
 			return err
 		}

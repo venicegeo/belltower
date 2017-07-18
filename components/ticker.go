@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	Factory.Register("Ticker", &Ticker{})
+	common.Factory.Register("Ticker", &Ticker{})
 }
 
 type TickerConfigData struct {
@@ -42,7 +42,7 @@ func (m *TickerOutputData) ReadFromJSON(jsn string) error { return common.ReadFr
 func (m *TickerOutputData) WriteToJSON() (string, error)  { return common.WriteToJSON(m) }
 
 type Ticker struct {
-	ComponentCore
+	common.ComponentCore
 
 	Input  <-chan string
 	Output chan<- string
@@ -60,8 +60,7 @@ type Ticker struct {
 func (ticker *Ticker) Configure() error {
 
 	data := TickerConfigData{}
-	//_, err := common.SetStructFromMap(ticker.config, &data, true)
-	err := ticker.config.ToStruct(&data)
+	err := ticker.Config.ToStruct(&data)
 	if err != nil {
 		return err
 	}
@@ -73,21 +72,23 @@ func (ticker *Ticker) Configure() error {
 	return nil
 }
 
-func (ticker *Ticker) OnInput(string) {
+func (ticker *Ticker) OnInput(_ string) {
 	fmt.Printf("Ticker OnInput\n")
 
 	f := func() {
-		output, err := ticker.Run(nil)
+		ticker.counter++
+		fmt.Printf("Ticker.Run: counter=%d\n", ticker.counter)
+
+		outS := &TickerOutputData{
+			Count: ticker.counter,
+		}
+
+		outJ, err := outS.WriteToJSON()
 		if err != nil {
 			panic(err)
 		}
 
-		outputJson, err := (output).(*TickerOutputData).WriteToJSON()
-		if err != nil {
-			panic(err)
-		}
-
-		ticker.Output <- outputJson
+		ticker.Output <- outJ
 	}
 
 	for {
@@ -101,17 +102,4 @@ func (ticker *Ticker) OnInput(string) {
 			break
 		}
 	}
-}
-
-func (ticker *Ticker) Run(interface{}) (interface{}, error) {
-
-	ticker.counter++
-
-	fmt.Printf("Ticker.Run: counter=%d\n", ticker.counter)
-
-	output := &TickerOutputData{
-		Count: ticker.counter,
-	}
-
-	return output, nil
 }

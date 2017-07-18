@@ -136,6 +136,7 @@ design an AND component
   * _SSHer - runs am ssh shell command, with in->stdin and stdout->out_
 * T
   * **Ticker** - sends a simple output every N seconds
+  * _Timer - sends a simple output at a specified time (e.g. every day at midnight)
 * W
   * _WebPageWatcher - watches a web page (web site?), sends changes to out_
 
