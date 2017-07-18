@@ -16,7 +16,7 @@ type RemapperConfigData struct {
 	Remaps map[string]string
 }
 
-// Remapper doesn't use input or output data object, since it works with fields known only at runtime
+// Remapper doesn't use an input or output data object, since it works with fields known only at runtime
 //type RemapperInputData struct {}
 //type RemapperOutputData struct {}
 

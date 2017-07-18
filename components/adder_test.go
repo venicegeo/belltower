@@ -10,8 +10,6 @@ import (
 func TestAdder(t *testing.T) {
 	assert := assert.New(t)
 
-	common.Factory.Register("Adder", &Adder{})
-
 	config := common.ArgMap{
 		"addend": 3,
 	}

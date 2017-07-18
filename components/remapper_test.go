@@ -10,8 +10,6 @@ import (
 func TestRemapper(t *testing.T) {
 	assert := assert.New(t)
 
-	common.Factory.Register("Remapper", &Remapper{})
-
 	config := common.ArgMap{
 		"remaps": map[string]string{
 			"alpha": "omega",

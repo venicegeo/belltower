@@ -10,8 +10,6 @@ import (
 func TestTicker(t *testing.T) {
 	assert := assert.New(t)
 
-	common.Factory.Register("Ticker", &Ticker{})
-
 	config := common.ArgMap{
 		"Limit": 3,
 	}
