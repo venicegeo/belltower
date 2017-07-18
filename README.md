@@ -46,7 +46,6 @@ _"Do Nothing 'til You Hear from Me"_
 * glossary of terms
 * generalize executing a graph
 * add tests for Graph
-* logger component (for test verification)
 * printer component
 * test N ins/outs for START/STOP
 * build Replicate component
@@ -83,9 +82,10 @@ _"Do Nothing 'til You Hear from Me"_
 * nice model for error handling in general
 * need a /dev/null (Grounder) component
 * validate graph connectivity
-* remove START/STOP req'ments
-design an AND component
-
+* remove START/STOP req'ments; tie all open output ports to STOP (ground?)
+* design an AND component
+* put panic-checks around all goflow calls (and one big one at app level?)
+* can we generalize Replicator to have num output ports set at config time, e.g. an array of Output chans?
 
 ## Future
 
@@ -105,6 +105,8 @@ design an AND component
   * **Adder** - just adds a set value to a field: "in.x + config.y -> out.z"
 * B
   * _Beachfronter - runs a BF command_
+* C
+  * **Copier** - duplicates the input, e.g. "in -> out1, out2
 * F
   * _FileWatcher - watches a (local) directory for changes (new files, deletes, modifies)_
 * H
@@ -113,20 +115,18 @@ design an AND component
   * _JQer - runs a JQ command on the input_
   * _Joiner - waits until it has an message on all input ports, then sends the concatenation(?) to out_
 * L
-  * _Logger - writes in to a file or log system_
+  * **Logger** - writes in to a file (or stdout (or stderr))
 * M
   * _Mailer - sends mail, with body (and To/Subject?) taken from in_
 * O
   * _Orer - when an input is recieved at any one or two or more input ports, forwards the result to out_
 * P
   * _Piazzaer - runs a Piazza command_
-  * _Printer - sends input to console/stdout_
 * R
   * _RabbitMQPoster - sends in to an MQ queue_
   * _RabbitMQWatcher - watches an MQ queue for new data, and sends it to out_
   * _RandomGenerator - sends random numbers, strings, etc to out_
   * **Remapper** - remaps ("changes the name of") a field: in.x -> out.y
-  * _Replicator - duplicates the input, e.g. "in -> out1, out2, out3"_
 * S
   * _S3Watcher - watches an S3 bucket for changes_
   * _Sampler - forwards every Nth input message to out (or maybe sends the "average" of the N messages)_
