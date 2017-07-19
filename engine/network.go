@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"log"
 
 	"strings"
 
@@ -94,7 +93,7 @@ func (net *Network) portExists(componentName string, portName string) bool {
 
 // timeout is in seconds, zero means no timeout
 func (g *Network) Execute(timeout int) error {
-	log.Printf("AAA")
+
 	// input channel
 	in := make(chan string)
 	ok := g.SetInPort("START.Input", in)
@@ -108,7 +107,6 @@ func (g *Network) Execute(timeout int) error {
 	if !ok {
 		return fmt.Errorf("failed to SetOutPort")
 	}
-	log.Printf("BBB")
 
 	// start the net
 	flow.RunNet(g)
@@ -127,11 +125,9 @@ func (g *Network) Execute(timeout int) error {
 	for result := range out {
 		fmt.Printf("RESULT: %s\n", result)
 	}
-	log.Printf("DDD")
 
 	// Wait until the app has done its job
 	<-g.Wait()
-	log.Printf("EEE")
 
 	return nil
 }

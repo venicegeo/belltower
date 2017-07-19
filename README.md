@@ -44,17 +44,13 @@ _"Do Nothing 'til You Hear from Me"_
 * conventions and best practices for writing components
 * error propagation
 * glossary of terms
-* generalize executing a graph
-* add tests for Graph
-* printer component
-* test N ins/outs for START/STOP
-* build Replicate component
+* add tests for Graph, using logger
 * build Or component
 
 ## Next
 
+* add "verbose/logging" mode
 * add support for pre/post conditions
-* move Factory, Component classes into engine pkg? common pkg?
 * "slow motion" mode
 * support running more than one graph at a time
 * all components should have these fields at the core level:
@@ -72,29 +68,48 @@ _"Do Nothing 'til You Hear from Me"_
 * add automated description generation
 * add funcs to govaluate library
 * implement rest of components library
-* revivie file watcher lib (and tests)
+* revive file watcher lib (and tests)
 * document classes
 * code coverage
 * linting
-* remove dead classes
 * "names" should only be alphanumeric
-* build more infrastrcuture to make defining Components easier
+* build more infrastructure to make defining Components easier
 * nice model for error handling in general
-* need a /dev/null (Grounder) component
+* need a /dev/null (Grounder) component?
 * validate graph connectivity
 * remove START/STOP req'ments; tie all open output ports to STOP (ground?)
 * design an AND component
 * put panic-checks around all goflow calls (and one big one at app level?)
 * can we generalize Replicator to have num output ports set at config time, e.g. an array of Output chans?
+* Document the syntax extensions in govaluate
+* add test cases for wrong number of port connections; goflow seems to have bad diagnostics for this,
+  need to handle ourselves in validation
 
 ## Future
 
 * Use CWL (http://www.commonwl.org/) to describe ommand-line usage for proxy nodes?
-* Document the syntax extensions in govaluate
 * Sheller components (sh, ssh) are a security hole
 * Provenance tracking - collect history of processing from each component
 * Components eventually become almost lamdba-like, or maybe get fully disributed using message queues, or...
 * 
+
+
+# Designing Components and Networks
+
+* A component must have at least one input port. It must be read by the
+  component, even if the input value is not going to be used.
+* A component must have at least one output port. It must be written to
+  by the component, even if the value is just the "empty payload" of "{}".
+
+# Designing Networks
+
+* In the network graph, each input and output port must be connected to
+  another component. You may use the special START component as a dummy input
+  and the special STOP component as a dummy output. _(Note: some day we will
+  "ground" any unused ports automatically.)_
+* An output port must be connected to one and only one input port.
+* More than one output port may connect to the same input port. (This is equivalent to
+  an Or component.)
 
 
 # Library of Components
@@ -119,7 +134,7 @@ _"Do Nothing 'til You Hear from Me"_
 * M
   * _Mailer - sends mail, with body (and To/Subject?) taken from in_
 * O
-  * _Orer - when an input is recieved at any one or two or more input ports, forwards the result to out_
+  * _Orer - when an input is recieved at any of two or more input ports, forwards the result to out_
 * P
   * _Piazzaer - runs a Piazza command_
 * R
@@ -136,7 +151,7 @@ _"Do Nothing 'til You Hear from Me"_
   * _SSHer - runs am ssh shell command, with in->stdin and stdout->out_
 * T
   * **Ticker** - sends a simple output every N seconds
-  * _Timer - sends a simple output at a specified time (e.g. every day at midnight)
+  * _Timer - sends a simple output at a specified time (e.g. every day at midnight)_
 * W
   * _WebPageWatcher - watches a web page (web site?), sends changes to out_
 

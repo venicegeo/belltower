@@ -56,20 +56,24 @@ func (logger *Logger) OnInput(inJ string) {
 		panic(err)
 	}
 
-	var f *os.File
+	var file *os.File
+	p := func() { fmt.Fprintf(file, "%s\n", dst) }
+
 	switch logger.filename {
 	case "STDOUT":
-		f = os.Stdout
+		file = os.Stdout
+
 	case "STDERR":
-		f = os.Stderr
+		file = os.Stderr
 	default:
-		f, err := os.OpenFile(logger.filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+		file, err = os.OpenFile(logger.filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 		if err != nil {
 			panic(err)
 		}
-		defer f.Close()
+		defer file.Close()
 	}
-	fmt.Fprintf(f, "%s\n", dst)
+
+	p()
 
 	logger.Output <- "{}"
 }

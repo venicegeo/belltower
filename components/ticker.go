@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/venicegeo/belltower/common"
@@ -14,18 +15,22 @@ func init() {
 }
 
 type TickerConfigData struct {
-	//   Time between each tick event, expressed as a Duration.
-	//   Default is "1s".
+	// Time between each tick event, expressed as a Duration.
+	// Default is "1s".
 	Interval time.Duration
 
-	//   If false, the interval lengths will be constant, using the Interval setting.
-	//   If true, the interval lengths will be random, in the range [0..Interval).
-	//   Default is false.
+	// If false, the interval lengths will be constant, using the Interval setting.
+	// If true, the interval lengths will be random, in the range [0..Interval).
+	// Default is false.
 	IsRandomized bool
 
-	//   How many ticks should be issued before stopping.
-	//   If zero, will never stop.
+	// How many ticks should be issued before stopping.
+	// If zero, will never stop.
 	Limit int
+
+	// Initial value of ticker. Default is zero, of course.
+	// (This weird feature is useful in some testing scenarios.)
+	InitialValue int
 }
 
 // Nope.
@@ -55,6 +60,7 @@ type Ticker struct {
 	counter      int
 	interval     time.Duration
 	limit        int
+	initialValue int
 }
 
 func (ticker *Ticker) Configure() error {
@@ -68,7 +74,11 @@ func (ticker *Ticker) Configure() error {
 	ticker.interval = data.Interval
 	ticker.limit = data.Limit
 	ticker.isRandomized = data.IsRandomized
+	ticker.initialValue = data.InitialValue
 
+	ticker.counter = data.InitialValue
+
+	log.Printf("%#v", ticker.counter)
 	return nil
 }
 
