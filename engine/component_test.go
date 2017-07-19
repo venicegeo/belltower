@@ -1,17 +1,23 @@
-package common
+package engine
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+func init() {
+	// register our test component types
+	Factory.Register("MySender", &MySender{})
+	Factory.Register("MyReceiver", &MyReceiver{})
+	Factory.Register("MyAdder", &MyAdder{})
+	Factory.Register("MyCopier", &MyCopier{})
+}
+
 func TestMySender(t *testing.T) {
 	assert := assert.New(t)
-
-	// register our new component type
-	Factory.Register("MySender", &MySender{})
 
 	// set up config data
 	config := ArgMap{
@@ -47,8 +53,6 @@ func TestMySender(t *testing.T) {
 func TestMyReceiver(t *testing.T) {
 	assert := assert.New(t)
 
-	Factory.Register("MyReceiver", &MyReceiver{})
-
 	myreceiverX, err := Factory.Create("MyReceiver", nil)
 	assert.NoError(err)
 	assert.NotNil(myreceiverX)
@@ -68,7 +72,65 @@ func TestMyReceiver(t *testing.T) {
 	assert.Equal(11, myreceiver.i)
 }
 
+func TestMyCopier(t *testing.T) {
+	assert := assert.New(t)
+
+	config := ArgMap{}
+	copierX, err := Factory.Create("MyCopier", config)
+	assert.NoError(err)
+	copier := copierX.(*MyCopier)
+
+	// this setup is normally done by goflow itself
+	chIn := make(chan string)
+	chOut1 := make(chan string)
+	chOut2 := make(chan string)
+	copier.Input = chIn
+	copier.Output1 = chOut1
+	copier.Output2 = chOut2
+
+	inJ := `{
+		"alpha": 11.0,
+		"beta":  22.0,
+		"gamma": 33.0
+	}`
+	go copier.OnInput(inJ)
+
+	// check the returned result
+	out1J := <-chOut1
+	out2J := <-chOut2
+
+	assert.JSONEq(inJ, out1J)
+	assert.JSONEq(inJ, out2J)
+}
+
+func TestMyAdder(t *testing.T) {
+	assert := assert.New(t)
+
+	config := ArgMap{
+		"addend": 3,
+	}
+	adderX, err := Factory.Create("MyAdder", config)
+	assert.NoError(err)
+	adder := adderX.(*MyAdder)
+
+	// this setup is normally done by goflow itself
+	chIn := make(chan string)
+	chOut := make(chan string)
+	adder.Input = chIn
+	adder.Output = chOut
+
+	inJ := `{"Value": 7}`
+	go adder.OnInput(inJ)
+
+	// check the returned result
+	outJ := <-chOut
+	assert.JSONEq(`{"Sum":10.0}`, outJ)
+}
+
 //---------------------------------------------------------------------
+
+// package-scoped variable used so the graph tests can reach into these components
+var mySender *MySender
 
 type MySenderConfigData struct{ I int }
 type MySenderOutputData struct{ I int }
@@ -88,6 +150,8 @@ type MySender struct {
 }
 
 func (mysender *MySender) Configure() error {
+	mySender = mysender
+
 	// get the config data into a proper struct
 	data := MySenderConfigData{}
 	err := mysender.Config.ToStruct(&data)
@@ -119,7 +183,13 @@ func (mysender *MySender) OnInput(_ string) {
 
 //---------------------------------------------------------------------
 
-type MyReceiverInputData struct{ I int }
+// package-scoped variable used so the graph tests can reach into these components
+var myReceiver *MyReceiver
+
+type MyReceiverInputData struct {
+	I   int
+	Sum int
+}
 
 func (m *MyReceiverInputData) ReadFromJSON(jsn string) error { return ReadFromJSON(jsn, m) }
 
@@ -132,13 +202,17 @@ type MyReceiver struct {
 	Output chan<- string
 
 	// local state, for testing
-	i int
+	i   int
+	sum int
 }
 
-func (myreceiver *MyReceiver) Configure() error { return nil }
+func (myreceiver *MyReceiver) Configure() error {
+	myReceiver = myreceiver
+	return nil
+}
 
 func (myreceiver *MyReceiver) OnInput(inJ string) {
-
+	log.Printf("RECV: %s", inJ)
 	// get the input into a proper input struct
 	inS := &MyReceiverInputData{}
 	err := inS.ReadFromJSON(inJ)
@@ -146,16 +220,13 @@ func (myreceiver *MyReceiver) OnInput(inJ string) {
 		panic(err)
 	}
 
-	myreceiver.i = inS.I
+	myreceiver.i += inS.I
+	myreceiver.sum += inS.Sum
 
 	myreceiver.Output <- "{}"
 }
 
 //---------------------------------------------------------------------
-
-func init() {
-	Factory.Register("MyCopier", &MyCopier{})
-}
 
 type MyCopierConfigData struct{}
 
@@ -176,10 +247,6 @@ func (mycopier *MyCopier) OnInput(inJ string) {
 }
 
 //---------------------------------------------------------------------
-
-func init() {
-	Factory.Register("MyAdder", &MyAdder{})
-}
 
 type MyAdderConfigData struct {
 

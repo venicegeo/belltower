@@ -4,19 +4,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/engine"
 )
 
 func TestRemapper(t *testing.T) {
 	assert := assert.New(t)
 
-	config := common.ArgMap{
+	config := engine.ArgMap{
 		"remaps": map[string]string{
 			"alpha": "omega",
 			"beta":  "psi",
 		},
 	}
-	remapperX, err := common.Factory.Create("Remapper", config)
+	remapperX, err := engine.Factory.Create("Remapper", config)
 	assert.NoError(err)
 	remapper := remapperX.(*Remapper)
 
@@ -35,7 +35,7 @@ func TestRemapper(t *testing.T) {
 
 	// check the returned result
 	outJ := <-chOut
-	outM, err := common.NewArgMap(outJ)
+	outM, err := engine.NewArgMap(outJ)
 	assert.NoError(err)
 
 	assert.Equal(11.0, outM["omega"])

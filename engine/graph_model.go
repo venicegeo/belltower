@@ -1,4 +1,4 @@
-package common
+package engine
 
 type GraphModel struct {
 	Name string `json:"name"`

@@ -3,11 +3,11 @@ package components
 import (
 	"fmt"
 
-	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/engine"
 )
 
 func init() {
-	common.Factory.Register("Copier", &Copier{})
+	engine.Factory.Register("Copier", &Copier{})
 }
 
 type CopierConfigData struct{}
@@ -17,7 +17,7 @@ type CopierConfigData struct{}
 //type CopierOutputData struct {}
 
 type Copier struct {
-	common.ComponentCore
+	engine.ComponentCore
 
 	Input   <-chan string
 	Output1 chan<- string

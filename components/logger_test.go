@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/engine"
 )
 
 func TestLogger(t *testing.T) {
@@ -19,10 +19,10 @@ func TestLogger(t *testing.T) {
 	err := os.Remove(file)
 	assert.NoError(err)
 
-	config := common.ArgMap{
+	config := engine.ArgMap{
 		"FileName": file,
 	}
-	loggerX, err := common.Factory.Create("Logger", config)
+	loggerX, err := engine.Factory.Create("Logger", config)
 	assert.NoError(err)
 	logger := loggerX.(*Logger)
 

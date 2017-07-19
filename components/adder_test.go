@@ -4,16 +4,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/engine"
 )
 
 func TestAdder(t *testing.T) {
 	assert := assert.New(t)
 
-	config := common.ArgMap{
+	config := engine.ArgMap{
 		"addend": 3,
 	}
-	adderX, err := common.Factory.Create("Adder", config)
+	adderX, err := engine.Factory.Create("Adder", config)
 	assert.NoError(err)
 	adder := adderX.(*Adder)
 

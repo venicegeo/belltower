@@ -3,11 +3,11 @@ package components
 import (
 	"fmt"
 
-	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/engine"
 )
 
 func init() {
-	common.Factory.Register("Remapper", &Remapper{})
+	engine.Factory.Register("Remapper", &Remapper{})
 }
 
 type RemapperConfigData struct {
@@ -21,7 +21,7 @@ type RemapperConfigData struct {
 //type RemapperOutputData struct {}
 
 type Remapper struct {
-	common.ComponentCore
+	engine.ComponentCore
 
 	Input  <-chan string
 	Output chan<- string
@@ -46,7 +46,7 @@ func (remapper *Remapper) Configure() error {
 func (remapper *Remapper) OnInput(inJ string) {
 	fmt.Printf("Remapper OnInput: %s\n", inJ)
 
-	inMap, err := common.NewArgMap(inJ)
+	inMap, err := engine.NewArgMap(inJ)
 	if err != nil {
 		panic(err)
 	}
@@ -64,7 +64,7 @@ func (remapper *Remapper) OnInput(inJ string) {
 	remapper.Output <- outJ
 }
 
-func (remapper *Remapper) run(inMap common.ArgMap) (common.ArgMap, error) {
+func (remapper *Remapper) run(inMap engine.ArgMap) (engine.ArgMap, error) {
 
 	outMap := inMap
 

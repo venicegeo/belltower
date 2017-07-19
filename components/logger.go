@@ -7,11 +7,11 @@ import (
 
 	"encoding/json"
 
-	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/engine"
 )
 
 func init() {
-	common.Factory.Register("Logger", &Logger{})
+	engine.Factory.Register("Logger", &Logger{})
 }
 
 type LoggerConfigData struct {
@@ -23,7 +23,7 @@ type LoggerConfigData struct {
 
 // TODO: rather than log the whole actual JSON, would be nice to use JSON to describe the log message text
 type Logger struct {
-	common.ComponentCore
+	engine.ComponentCore
 
 	Input  <-chan string
 	Output chan<- string

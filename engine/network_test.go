@@ -1,10 +1,10 @@
 package engine
 
 import (
+	"bufio"
+	"io/ioutil"
 	"os"
 	"testing"
-
-	"github.com/venicegeo/belltower/common"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -12,43 +12,43 @@ import (
 func TestFlow(t *testing.T) {
 	assert := assert.New(t)
 
-	const logfile = "testflow.log"
-	_ = os.Remove(logfile)
-
-	components := []*common.ComponentModel{
-		&common.ComponentModel{
+	components := []*ComponentModel{
+		&ComponentModel{
 			Name: "START",
 			Type: "Starter",
 		},
-		&common.ComponentModel{
+		&ComponentModel{
 			Name: "STOP",
 			Type: "Stopper",
 		},
-		&common.ComponentModel{
+		&ComponentModel{
 			Name: "mysender",
 			Type: "MySender",
+			Config: ArgMap{
+				"i": 17,
+			},
 		},
-		&common.ComponentModel{
+		&ComponentModel{
 			Name: "myreceiver",
 			Type: "MyReceiver",
 		},
-		&common.ComponentModel{
+		&ComponentModel{
 			Name: "myadder",
 			Type: "MyAdder",
-			Config: common.ArgMap{
-				"addend": 10.0,
+			Config: ArgMap{
+				"addend": 13.0,
 			},
 		},
 	}
 
-	connections := []*common.ConnectionModel{
-		&common.ConnectionModel{Source: "START.Output", Destination: "mysender.Input"},
-		&common.ConnectionModel{Source: "mysender.Output", Destination: "myadder.Input"},
-		&common.ConnectionModel{Source: "myadder.Output", Destination: "myreceiver.Input"},
-		&common.ConnectionModel{Source: "myreceiver.Output", Destination: "STOP.Input"},
+	connections := []*ConnectionModel{
+		&ConnectionModel{Source: "START.Output", Destination: "mysender.Input"},
+		&ConnectionModel{Source: "mysender.Output", Destination: "myadder.Input"},
+		&ConnectionModel{Source: "myadder.Output", Destination: "myreceiver.Input"},
+		&ConnectionModel{Source: "myreceiver.Output", Destination: "STOP.Input"},
 	}
 
-	g := &common.GraphModel{
+	g := &GraphModel{
 		Components:  components,
 		Connections: connections,
 	}
@@ -60,16 +60,9 @@ func TestFlow(t *testing.T) {
 	err = net.Execute(7)
 	assert.NoError(err)
 
-	expected := []string{
-		`{"Sum":11}`,
-		`{"Sum":12}`,
-		`{"Sum":13}`,
-		`{"Sum":14}`,
-		`{"Sum":15}`,
-	}
-	common.AssertLogContainsLines(t, logfile, expected)
+	assert.Equal(13, myReceiver.sum)
 
-	_ = os.Remove(logfile)
+	assert.NotNil(net)
 }
 
 func TestTwoOutputs(t *testing.T) {
@@ -78,39 +71,42 @@ func TestTwoOutputs(t *testing.T) {
 	const logfile = "testtwooutput.log"
 	_ = os.Remove(logfile)
 
-	components := []*common.ComponentModel{
-		&common.ComponentModel{
+	components := []*ComponentModel{
+		&ComponentModel{
 			Name: "START",
 			Type: "Starter",
 		},
-		&common.ComponentModel{
+		&ComponentModel{
 			Name: "STOP",
 			Type: "Stopper",
 		},
-		&common.ComponentModel{
+		&ComponentModel{
 			Name: "mycopier",
-			Type: "Copier",
+			Type: "MyCopier",
 		},
-		&common.ComponentModel{
+		&ComponentModel{
 			Name: "mysender",
 			Type: "MySender",
+			Config: ArgMap{
+				"i": 17,
+			},
 		},
-		&common.ComponentModel{
+		&ComponentModel{
 			Name: "myreceiver",
 			Type: "MyReceiver",
 		},
 	}
 
 	// two outputs tied to same single input
-	connections := []*common.ConnectionModel{
-		&common.ConnectionModel{Source: "START.Output", Destination: "mysender.Input"},
-		&common.ConnectionModel{Source: "mysender.Output", Destination: "mycopier.Input"},
-		&common.ConnectionModel{Source: "mycopier.Output1", Destination: "myreceiver.Input"},
-		&common.ConnectionModel{Source: "mycopier.Output2", Destination: "myreceiver.Input"},
-		&common.ConnectionModel{Source: "mylogger.Output", Destination: "STOP.Input"},
+	connections := []*ConnectionModel{
+		&ConnectionModel{Source: "START.Output", Destination: "mysender.Input"},
+		&ConnectionModel{Source: "mysender.Output", Destination: "mycopier.Input"},
+		&ConnectionModel{Source: "mycopier.Output1", Destination: "myreceiver.Input"},
+		&ConnectionModel{Source: "mycopier.Output2", Destination: "myreceiver.Input"},
+		&ConnectionModel{Source: "myreceiver.Output", Destination: "STOP.Input"},
 	}
 
-	g := &common.GraphModel{
+	g := &GraphModel{
 		Components:  components,
 		Connections: connections,
 	}
@@ -122,15 +118,44 @@ func TestTwoOutputs(t *testing.T) {
 	err = net.Execute(6)
 	assert.NoError(err)
 
-	expected := []string{
-		`{"Count":1}`,
-		`{"Count":2}`,
-		`{"Count":3}`,
-		`{"Count":11}`,
-		`{"Count":12}`,
-		`{"Count":13}`,
-	}
-	common.AssertLogContainsLines(t, logfile, expected)
+	assert.Equal(34, myReceiver.i)
 
 	_ = os.Remove(logfile)
+}
+
+//---------------------------------------------------------------------
+
+func readFile(t *testing.T, filename string) string {
+	assert := assert.New(t)
+
+	byts, err := ioutil.ReadFile(filename)
+	assert.NoError(err)
+
+	return string(byts)
+}
+
+func readLines(t *testing.T, filename string) []string {
+	assert := assert.New(t)
+
+	lines := []string{}
+
+	file, err := os.Open(filename)
+	assert.NoError(err)
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	assert.NoError(scanner.Err())
+
+	return lines
+}
+
+// we want the files to contain the expected lines, but in no particular order
+func assertLogContainsLines(t *testing.T, filename string, expected []string) {
+	actual := readLines(t, filename)
+	assert.Len(t, actual, len(expected))
+	for _, v := range expected {
+		assert.Contains(t, actual, v)
+	}
 }

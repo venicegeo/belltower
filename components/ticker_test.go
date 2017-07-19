@@ -4,16 +4,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/engine"
 )
 
 func TestTicker(t *testing.T) {
 	assert := assert.New(t)
 
-	config := common.ArgMap{
+	config := engine.ArgMap{
 		"Limit": 3,
 	}
-	tickerX, err := common.Factory.Create("Ticker", config)
+	tickerX, err := engine.Factory.Create("Ticker", config)
 	assert.NoError(err)
 	ticker := tickerX.(*Ticker)
 

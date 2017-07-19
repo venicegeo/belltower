@@ -3,11 +3,11 @@ package components
 import (
 	"fmt"
 
-	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/engine"
 )
 
 func init() {
-	common.Factory.Register("Adder", &Adder{})
+	engine.Factory.Register("Adder", &Adder{})
 }
 
 type AdderConfigData struct {
@@ -24,8 +24,8 @@ type AdderInputData struct {
 }
 
 func (m *AdderInputData) Validate() error               { return nil } // TODO
-func (m *AdderInputData) ReadFromJSON(jsn string) error { return common.ReadFromJSON(jsn, m) }
-func (m *AdderInputData) WriteToJSON() (string, error)  { return common.WriteToJSON(m) }
+func (m *AdderInputData) ReadFromJSON(jsn string) error { return engine.ReadFromJSON(jsn, m) }
+func (m *AdderInputData) WriteToJSON() (string, error)  { return engine.WriteToJSON(m) }
 
 // implements Serializer
 type AdderOutputData struct {
@@ -35,11 +35,11 @@ type AdderOutputData struct {
 }
 
 func (m *AdderOutputData) Validate() error               { return nil } // TODO
-func (m *AdderOutputData) ReadFromJSON(jsn string) error { return common.ReadFromJSON(jsn, m) }
-func (m *AdderOutputData) WriteToJSON() (string, error)  { return common.WriteToJSON(m) }
+func (m *AdderOutputData) ReadFromJSON(jsn string) error { return engine.ReadFromJSON(jsn, m) }
+func (m *AdderOutputData) WriteToJSON() (string, error)  { return engine.WriteToJSON(m) }
 
 type Adder struct {
-	common.ComponentCore
+	engine.ComponentCore
 
 	Input  <-chan string
 	Output chan<- string

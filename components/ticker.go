@@ -5,13 +5,13 @@ import (
 	"log"
 	"sync"
 
-	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/engine"
 
 	"time"
 )
 
 func init() {
-	common.Factory.Register("Ticker", &Ticker{})
+	engine.Factory.Register("Ticker", &Ticker{})
 }
 
 type TickerConfigData struct {
@@ -43,11 +43,11 @@ type TickerOutputData struct {
 }
 
 func (m *TickerOutputData) Validate() error               { return nil } // TODO
-func (m *TickerOutputData) ReadFromJSON(jsn string) error { return common.ReadFromJSON(jsn, m) }
-func (m *TickerOutputData) WriteToJSON() (string, error)  { return common.WriteToJSON(m) }
+func (m *TickerOutputData) ReadFromJSON(jsn string) error { return engine.ReadFromJSON(jsn, m) }
+func (m *TickerOutputData) WriteToJSON() (string, error)  { return engine.WriteToJSON(m) }
 
 type Ticker struct {
-	common.ComponentCore
+	engine.ComponentCore
 
 	Input  <-chan string
 	Output chan<- string

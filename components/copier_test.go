@@ -4,14 +4,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/venicegeo/belltower/common"
+	"github.com/venicegeo/belltower/engine"
 )
 
 func TestCopier(t *testing.T) {
 	assert := assert.New(t)
 
-	config := common.ArgMap{}
-	copierX, err := common.Factory.Create("Copier", config)
+	config := engine.ArgMap{}
+	copierX, err := engine.Factory.Create("Copier", config)
 	assert.NoError(err)
 	copier := copierX.(*Copier)
 

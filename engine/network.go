@@ -5,25 +5,20 @@ import (
 
 	"strings"
 
-	"github.com/venicegeo/belltower/common"
-
-	// just to invoke the init()'s in our components library
-	_ "github.com/venicegeo/belltower/components"
-
 	"time"
 
 	flow "github.com/trustmaster/goflow"
 )
 
-// Network represents a running instance of a common.Graph
+// Network represents a running instance of a Graph
 // We can have several Networks running at the same time.
 type Network struct {
 	flow.Graph
 
-	model *common.GraphModel
+	model *GraphModel
 }
 
-func NewNetwork(graphModel *common.GraphModel) (*Network, error) {
+func NewNetwork(graphModel *GraphModel) (*Network, error) {
 	net := &Network{}
 	net.model = graphModel
 
@@ -34,7 +29,7 @@ func NewNetwork(graphModel *common.GraphModel) (*Network, error) {
 	//
 	for _, componentModel := range graphModel.Components {
 
-		c, err := common.Factory.Create(componentModel.Type, componentModel.Config)
+		c, err := Factory.Create(componentModel.Type, componentModel.Config)
 		if err != nil {
 			return nil, err
 		}
