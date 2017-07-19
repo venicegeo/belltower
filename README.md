@@ -99,15 +99,14 @@ represented formally by a _graph._
 
 ## Now
 
-* move network.go into core, rename to graph; remove deps on component list; set up
-  separate dir to run system level tests which use the components
 * error propagation, both within the libraries and from running components
-* glossary of terms
+* add "verbose/logging" mode
+* revive file watcher lib (and tests)
+* nice model for error handling in general
 
 ## Next
 
 * can the graph contain cycles?
-* add "verbose/logging" mode
 * add support for pre/post conditions
 * "slow motion" mode
 * support running more than one graph at a time
@@ -126,13 +125,11 @@ represented formally by a _graph._
 * add automated description generation
 * add funcs to govaluate library
 * implement rest of components library
-* revive file watcher lib (and tests)
 * document classes
 * code coverage
 * linting
 * "names" should only be alphanumeric
 * build more infrastructure to make defining Components easier
-* nice model for error handling in general
 * need a /dev/null (Grounder) component?
 * validate graph connectivity
 * remove START/STOP req'ments; tie all open output ports to STOP (ground?)
