@@ -1,10 +1,52 @@
 package common
 
 import (
+	"bufio"
 	"encoding/json"
+	"io/ioutil"
+	"os"
+	"testing"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/stretchr/testify/assert"
 )
+
+//---------------------------------------------------------------------
+
+func ReadFile(t *testing.T, filename string) string {
+	assert := assert.New(t)
+
+	byts, err := ioutil.ReadFile(filename)
+	assert.NoError(err)
+
+	return string(byts)
+}
+
+func ReadLines(t *testing.T, filename string) []string {
+	assert := assert.New(t)
+
+	lines := []string{}
+
+	file, err := os.Open(filename)
+	assert.NoError(err)
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	assert.NoError(scanner.Err())
+
+	return lines
+}
+
+// we want the files to contain the expected lines, but in no particular order
+func AssertLogContainsLines(t *testing.T, filename string, expected []string) {
+	actual := ReadLines(t, filename)
+	assert.Len(t, actual, len(expected))
+	for _, v := range expected {
+		assert.Contains(t, actual, v)
+	}
+}
 
 //---------------------------------------------------------------------
 

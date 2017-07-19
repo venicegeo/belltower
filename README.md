@@ -1,54 +1,112 @@
+# BellTower
+
 _Campanile (cam-pin-EE-lay): a bell tower or watchtower; the tallest building in Venice_
 
 
-# Goals
+# Technical Goals
 
 _"Do Nothing 'til You Hear from Me"_
 
-1. Needs to support existing applications/services as they are, as no one will update their service to meet some new system we invent (e.g. try to get a 3rd party to do REST calls to us or monitor a message queue).
+1. Needs to support existing applications/services as they are, as no one
+will update their service to meet some new system we invent (e.g. try to
+get a 3rd party to do REST calls to us or monitor a message queue). In
+particular, we must not require the client services to be able to maintain
+state.
 
-2. The system should not preclude any ability the apps may have to scale themselves. The system is not responsible for scaling clients.
+2. The system should not preclude any ability the apps may have to scale
+themselves. The system is not responsible for scaling clients.
 
-3. The communications protocol between workflow nodes must be simple, to make it easier to write components. It also must be language-independent, to allow for a future where components can be written in any language. 
-(In addition, components should have no shared memory between them, so they can be deployed to a distributed system.) This means all communications should be doen via JSON. 
+3. The communications protocol between workflow nodes must be simple, to make
+it easier to write components. It also must be language-independent, to allow
+for a future where components can be written in any language.  (In addition,
+components should have no shared memory between them, so that someday we
+have the option of moving to a fully distributed system.) This means all
+communications should be done via JSON. 
 
-4. We must not require the client services to be able to maintain state.
+4. We do not want to reinvent the idea of a workflow or build something from
+scratch. If there is a open source workflow package that meets our criteria
+and allows us to readily build on top of it, we should use it. Such an
+underlying system should make no assumptions about a security model; our
+system will layer that on top. If we use an open source framework, it should
+be well-supported by the community _or_ it should be relatively small enough
+that we could fork and own it ourselves.
 
-5. We do not want to reinvent the idea of a workflow or build something from scratch. If there is a open source workflow package that meets our criteria and allows us to readily build on top of it, we should use it. Such an underlying system should make no assumptions about a security model; our system will layer that on top. If we use an open source framework, it should be well-supported by the community _or_ it should be relatively small enough that we could fork and own it ourselves.
+5. All "local" processing (the components) should not be heavy-weight or
+long-running: they should not do much more than simple JSON processing. Heavy
+work should be done at the client level, invoked remotely by the local components.
 
-6. All "local" processing (the components) should not be heavy-weight or long-running: they should not do much more than simple JSON processing. Heavy work should be done at the client level, invoked remotely by the local components.
+6. Ideally, for development purposes, the system should be able to be run on a
+laptop.
 
-7. Ideally, for development purposes, the system should be able to be run on a laptop.
+7. Our focus is on _orchestration,_ meaning taking charge over which thing
+runs when and with what (lightweight) inputs. In contrast, our focus is _not_
+on _data processing,_ meaning the actual computational work on the (often
+heavy) data files. Furthermore, our focus is not on supporting high-speed,
+high-volume, streaming data feeds, e.g. Twitter, as other, existing frameworks
+do that well already.
 
-8. Our focus is on _orchestration,_ meaning taking charge over which thing runs when and with what (lightweight) inputs. Our focus is not on _data processing,_ meaning the actual computational work on the (often heavy) data files. Furthermore, our focus is not on supporting high-speed, high-volume, streaming data feeds, e.g. Twitter, as other systems do that well already.
+8. The system is not responsible for "starting" or "owning" client jobs.
+The system will invoke remote services, but any "job management" within
+the context of that job belomgs to the client service.
 
-9. The system is not responsible for "starting" or "owning" client jobs. The system will invoke remote services, but any "job management" within the context of that job belomgs to the client service.
-
-**Open:** Should we allow the graph to be changed while it is running? (does goflow support this?)
+9. The system should provide a rich library of components to perform the
+basic operations common workflows will require, such as logging, timers,
+simple JSON transformations, conditionals, etc.
 
 
 
 # Example Use Cases
 
-* **Data processing chain:** Every hour, check Planet feed for new imagery and if any image in the given AOIs, then run image through BF to get coast line, then report it to me. If any error, log it and email me a nightly report of all errors. Allow me to change the AOIs.
+* **If This Then That (IFTTT):** When a file is updated on GitHub, send me
+a note via Slack.
 
-* **Monitoring:** Watch a set of detection feeds, S3 buckets, and web pages. Every night, summarize the changes/updates into a single email to me. Allow me to add/remove feeds.
+* **Monitoring:** Watch a set of detection feeds, S3 buckets, and web pages.
+Every night, summarize the changes/updates into a single email to me. Allow
+me to add/remove feeds while the system is running.
 
-* **If This Then That (IFTTT)** When a file is updated on GitHub, send me a note via Slack.
+* **Data Processing/Analytics:** Every hour, check Planet feed for new imagery
+and if any image is in the given AOIs, then run image through Beachfront to
+compute the coast line, then report the results to me. If any error occurs,
+log it and email me a nightly report of all errors. Allow me to change the
+AOIs while the system is running.
+
+
+# Glossary
+
+* **Component:** a node in the _graph_ performs some function, such as writing
+to a file, performing a simple computation, or invoking a remote service.
+Components contain one or more input _ports_ and one or more output ports.
+
+* **Connection:** the link formed between an output _port_ of one _component_
+and the _input_ port of another component. _Messages_ are sent across connections.
+
+* **Graph:** the set of nodes _(components)_ and edges _(connections)_ that
+together make up a single _workflow._
+
+* **Message:** the data payload passed between _components_ via their
+_ports._ Messages are formatted as JSON objects.
+
+* **Port:** an input (or output) channel to a _component_, through which a
+message can be received from (or sent to) another component.
+
+* **Workflow:** an ordered set of operations that together perform some end goal
+task, such as providing notification when a file is added to an S3 bucket or
+running a series of analytical operations on a piece of data. A workflow is
+represented formally by a _graph._
 
 
 # TO DO
 
 ## Now
 
-* conventions and best practices for writing components
-* error propagation
+* move network.go into core, rename to graph; remove deps on component list; set up
+  separate dir to run system level tests which use the components
+* error propagation, both within the libraries and from running components
 * glossary of terms
-* add tests for Graph, using logger
-* build Or component
 
 ## Next
 
+* can the graph contain cycles?
 * add "verbose/logging" mode
 * add support for pre/post conditions
 * "slow motion" mode
@@ -84,6 +142,8 @@ _"Do Nothing 'til You Hear from Me"_
 * Document the syntax extensions in govaluate
 * add test cases for wrong number of port connections; goflow seems to have bad diagnostics for this,
   need to handle ourselves in validation
+* Should we allow the graph to be changed while it is running? (does goflow support this?)
+  
 
 ## Future
 
@@ -109,7 +169,7 @@ _"Do Nothing 'til You Hear from Me"_
   "ground" any unused ports automatically.)_
 * An output port must be connected to one and only one input port.
 * More than one output port may connect to the same input port. (This is equivalent to
-  an Or component.)
+  what would be an Or component, if we provided one.)
 
 
 # Library of Components

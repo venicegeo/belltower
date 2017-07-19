@@ -12,7 +12,7 @@ func init() {
 
 type CopierConfigData struct{}
 
-// Remapper doesn't use an input or output data object, since it works with fields known only at runtime
+// Copier doesn't use an input or output data object, since it works with fields known only at runtime
 //type CopierInputData struct {}
 //type CopierOutputData struct {}
 

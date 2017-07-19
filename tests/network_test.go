@@ -1,4 +1,4 @@
-package engine
+package tests
 
 import (
 	"os"
@@ -25,27 +25,41 @@ func TestFlow(t *testing.T) {
 			Type: "Stopper",
 		},
 		&common.ComponentModel{
-			Name: "mysender",
-			Type: "MySender",
+			Name: "myticker",
+			Type: "Ticker",
+			Config: common.ArgMap{
+				"limit": 5.0,
+			},
 		},
 		&common.ComponentModel{
-			Name: "myreceiver",
-			Type: "MyReceiver",
+			Name: "mylogger",
+			Type: "Logger",
+			Config: common.ArgMap{
+				"FileName": logfile,
+			},
 		},
 		&common.ComponentModel{
 			Name: "myadder",
-			Type: "MyAdder",
+			Type: "Adder",
 			Config: common.ArgMap{
 				"addend": 10.0,
+			},
+		},
+		&common.ComponentModel{
+			Name: "myremapper",
+			Type: "Remapper",
+			Config: common.ArgMap{
+				"remaps": map[string]string{"Count": "Value"},
 			},
 		},
 	}
 
 	connections := []*common.ConnectionModel{
-		&common.ConnectionModel{Source: "START.Output", Destination: "mysender.Input"},
-		&common.ConnectionModel{Source: "mysender.Output", Destination: "myadder.Input"},
-		&common.ConnectionModel{Source: "myadder.Output", Destination: "myreceiver.Input"},
-		&common.ConnectionModel{Source: "myreceiver.Output", Destination: "STOP.Input"},
+		&common.ConnectionModel{Source: "START.Output", Destination: "myticker.Input"},
+		&common.ConnectionModel{Source: "myticker.Output", Destination: "myremapper.Input"},
+		&common.ConnectionModel{Source: "myremapper.Output", Destination: "myadder.Input"},
+		&common.ConnectionModel{Source: "myadder.Output", Destination: "mylogger.Input"},
+		&common.ConnectionModel{Source: "mylogger.Output", Destination: "STOP.Input"},
 	}
 
 	g := &common.GraphModel{
@@ -92,21 +106,36 @@ func TestTwoOutputs(t *testing.T) {
 			Type: "Copier",
 		},
 		&common.ComponentModel{
-			Name: "mysender",
-			Type: "MySender",
+			Name: "myticker1",
+			Type: "Ticker",
+			Config: common.ArgMap{
+				"limit": 3.0,
+			},
 		},
 		&common.ComponentModel{
-			Name: "myreceiver",
-			Type: "MyReceiver",
+			Name: "myticker10",
+			Type: "Ticker",
+			Config: common.ArgMap{
+				"initialValue": 10,
+				"limit":        13.0,
+			},
+		},
+		&common.ComponentModel{
+			Name: "mylogger",
+			Type: "Logger",
+			Config: common.ArgMap{
+				"FileName": logfile,
+			},
 		},
 	}
 
 	// two outputs tied to same single input
 	connections := []*common.ConnectionModel{
-		&common.ConnectionModel{Source: "START.Output", Destination: "mysender.Input"},
-		&common.ConnectionModel{Source: "mysender.Output", Destination: "mycopier.Input"},
-		&common.ConnectionModel{Source: "mycopier.Output1", Destination: "myreceiver.Input"},
-		&common.ConnectionModel{Source: "mycopier.Output2", Destination: "myreceiver.Input"},
+		&common.ConnectionModel{Source: "START.Output", Destination: "mycopier.Input"},
+		&common.ConnectionModel{Source: "mycopier.Output1", Destination: "myticker1.Input"},
+		&common.ConnectionModel{Source: "mycopier.Output2", Destination: "myticker10.Input"},
+		&common.ConnectionModel{Source: "myticker1.Output", Destination: "mylogger.Input"},
+		&common.ConnectionModel{Source: "myticker10.Output", Destination: "mylogger.Input"},
 		&common.ConnectionModel{Source: "mylogger.Output", Destination: "STOP.Input"},
 	}
 
