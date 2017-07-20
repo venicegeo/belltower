@@ -1,4 +1,4 @@
-/* Copyright 2017, RadiantBlue Technologies, Inc.
+Copyright 2017, RadiantBlue Technologies, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -11,18 +11,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-*/
-package mutils
-
-import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
-func TestX(t *testing.T) {
-	assert := assert.New(t)
-
-	assert.Equal("mutils.go:10", SourceFile(0))
-	assert.Equal("mutils_test.go:13", SourceFile(1))
-}
