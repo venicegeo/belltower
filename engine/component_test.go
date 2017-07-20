@@ -2,10 +2,10 @@ package engine
 
 import (
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/venicegeo/belltower/mpg/mlog"
 )
 
 func init() {
@@ -212,7 +212,7 @@ func (myreceiver *MyReceiver) Configure() error {
 }
 
 func (myreceiver *MyReceiver) OnInput(inJ string) {
-	log.Printf("RECV: %s", inJ)
+	mlog.Debugf("RECV: %s", inJ)
 	// get the input into a proper input struct
 	inS := &MyReceiverInputData{}
 	err := inS.ReadFromJSON(inJ)
