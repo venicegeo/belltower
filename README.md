@@ -263,3 +263,6 @@ Notes:
   you can have more than one note per object
 
 
+# Credits
+
+Belltower happily uses GoFlow (https://github.com/trustmaster/goflow) and GoValuate (https://github.com/Knetic/govaluate).
