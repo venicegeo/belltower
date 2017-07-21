@@ -1,3 +1,18 @@
+/* Copyright 2017, RadiantBlue Technologies, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package engine
 
 import (
@@ -8,6 +23,7 @@ import (
 	"time"
 
 	flow "github.com/trustmaster/goflow"
+	"github.com/venicegeo/belltower/mpg/merr"
 )
 
 // Network represents a running instance of a Graph
@@ -18,8 +34,15 @@ type Network struct {
 	model *GraphModel
 }
 
-func NewNetwork(graphModel *GraphModel) (*Network, error) {
-	net := &Network{}
+func NewNetwork(graphModel *GraphModel) (net *Network, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			net = nil
+			err = merr.Newf("panic inside goflow (NewNetwork): %s", r)
+		}
+	}()
+
+	net = &Network{}
 	net.model = graphModel
 
 	net.InitGraphState()
@@ -38,6 +61,8 @@ func NewNetwork(graphModel *GraphModel) (*Network, error) {
 		if !ok {
 			return nil, fmt.Errorf("failed to add component: %s (type %s)", componentModel.Name, componentModel.Type)
 		}
+
+		/*componentModel.Component = c*/
 	}
 
 	ok := net.MapInPort("START.Input", "START", "Input")
@@ -48,6 +73,23 @@ func NewNetwork(graphModel *GraphModel) (*Network, error) {
 	if !ok {
 		return nil, fmt.Errorf("failed to add OutPort")
 	}
+
+	/*for _, componentModel := range graphModel.Components {
+		for _, connectionModel := range graphModel.Connections {
+
+			send := strings.Split(connectionModel.Source, ".")[0]
+			//sendPort := strings.Split(connectionModel.Source, ".")[1]
+			recv := strings.Split(connectionModel.Destination, ".")[0]
+			//recvPort := strings.Split(connectionModel.Destination, ".")[1]
+			name := connectionModel.Source + "." + connectionModel.Destination
+
+			if send == componentModel.Name {
+				componentModel.OutConnections[name] = connectionModel
+			} else if recv == componentModel.Name {
+				componentModel.InConnections[name] = connectionModel
+			}
+		}
+	}*/
 
 	//
 	// now add the connection edges
@@ -87,7 +129,12 @@ func (net *Network) portExists(componentName string, portName string) bool {
 }
 
 // timeout is in seconds, zero means no timeout
-func (g *Network) Execute(timeout int) error {
+func (g *Network) Execute(timeout int) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = merr.Newf("panic inside goflow (Execute): %s", r)
+		}
+	}()
 
 	// input channel
 	in := make(chan string)

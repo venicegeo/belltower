@@ -12,17 +12,42 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package mutils
+package merr
 
 import (
-	"testing"
+	"fmt"
 
-	"github.com/stretchr/testify/assert"
+	mutils "github.com/venicegeo/belltower/mpg"
 )
 
-func TestSourceFile(t *testing.T) {
-	assert := assert.New(t)
+var UseSourceStamp = true
 
-	assert.Equal("mutils.go:24", SourceFile(0))
-	assert.Equal("mutils_test.go:27", SourceFile(1))
+type MErr struct {
+	Message string
+	Source  string
+}
+
+func New(mssg string) MErr {
+	return MErr{
+		Message: mssg,
+		Source:  mutils.SourceFile(2),
+	}
+}
+
+func Newf(format string, v ...interface{}) MErr {
+	return MErr{
+		Message: fmt.Sprintf(format, v...),
+		Source:  mutils.SourceFile(2),
+	}
+}
+
+func (err MErr) Error() string {
+	return err.String()
+}
+
+func (err MErr) String() string {
+	if UseSourceStamp {
+		return err.Source + " " + err.Message
+	}
+	return err.Message
 }

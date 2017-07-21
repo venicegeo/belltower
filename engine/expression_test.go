@@ -1,3 +1,18 @@
+/* Copyright 2017, RadiantBlue Technologies, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package engine
 
 import (
@@ -106,27 +121,27 @@ func TestConversion(t *testing.T) {
 		assert.NoError(err)
 		x, err := e.Eval(nil)
 		assert.NoError(err)
-		f := AsFloat(x)
-		assert.NotNil(f)
-		assert.Equal(1.23, *f)
+		f, ok := x.(float64)
+		assert.True(ok)
+		assert.Equal(1.23, f)
 	}
 	{
 		e, err := NewExpression(`"1,2,3"`, nil)
 		assert.NoError(err)
 		x, err := e.Eval(nil)
 		assert.NoError(err)
-		s := AsString(x)
-		assert.NotNil(s)
-		assert.Equal("1,2,3", *s)
+		s, ok := x.(string)
+		assert.True(ok)
+		assert.Equal("1,2,3", s)
 	}
 	{
 		e, err := NewExpression("true", nil)
 		assert.NoError(err)
 		x, err := e.Eval(nil)
 		assert.NoError(err)
-		b := AsBool(x)
-		assert.NotNil(b)
-		assert.Equal(true, *b)
+		b, ok := x.(bool)
+		assert.True(ok)
+		assert.Equal(true, b)
 	}
 }
 func TestFunction(t *testing.T) {
@@ -149,7 +164,7 @@ func TestFunction(t *testing.T) {
 	assert.NoError(err)
 	x, err := e.Eval(nil)
 	assert.NoError(err)
-	v := AsFloat(x)
-	assert.NotNil(v)
-	assert.Equal(-12.0, *v)
+	v, ok := x.(float64)
+	assert.True(ok)
+	assert.Equal(-12.0, v)
 }

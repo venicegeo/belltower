@@ -27,6 +27,9 @@ import (
 func TestMLog(t *testing.T) {
 	assert := assert.New(t)
 
+	savedFlags := Flags()
+	savedVerbose := Verbose
+
 	const filename = "testmlog.log"
 	os.Remove(filename)
 	SetFlags(0)
@@ -52,7 +55,7 @@ func TestMLog(t *testing.T) {
 two
 five
 six
-mlog_test.go:33 seven
+mlog_test.go:50 seven
 `
 	byts, err := ioutil.ReadFile(filename)
 	assert.NoError(err)
@@ -60,4 +63,6 @@ mlog_test.go:33 seven
 
 	os.Remove(filename)
 
+	SetFlags(savedFlags)
+	Verbose = savedVerbose
 }

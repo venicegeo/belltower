@@ -12,12 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package engine
+package mutils
 
 import (
 	"encoding/json"
-
-	"github.com/mitchellh/mapstructure"
 )
 
 //---------------------------------------------------------------------
@@ -47,31 +45,4 @@ func WriteToJSON(obj interface{}) (string, error) {
 	}
 
 	return string(buf), nil
-}
-
-//---------------------------------------------------------------------
-
-func SetStructFromMap(input map[string]interface{}, result interface{}, weakly bool) (interface{}, error) {
-
-	var md mapstructure.Metadata
-	config := &mapstructure.DecoderConfig{
-		Metadata: &md,
-		Result:   result,
-	}
-	if weakly {
-		config.WeaklyTypedInput = true
-		config.DecodeHook = mapstructure.StringToTimeDurationHookFunc()
-	}
-
-	decoder, err := mapstructure.NewDecoder(config)
-	if err != nil {
-		return nil, err
-	}
-
-	err = decoder.Decode(input)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
 }
