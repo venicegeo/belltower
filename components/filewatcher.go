@@ -87,6 +87,9 @@ func (fw *FileWatcher) OnInput(inJ string) {
 
 	outS := &FileWatcherOutputData{}
 
+	// TODO: support checking for new files, deleted files, updated files
+	// TODO: return the whole os.FileInfo object, not just the name
+
 	files := []string{}
 	if fw.endTime.IsZero() {
 		// the first time, so we just establish the starting time
