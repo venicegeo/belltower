@@ -180,9 +180,9 @@ represented formally by a _graph._
 * C
   * **Copier** - duplicates the input, e.g. "in -> out1, out2
 * F
-  * _FileWatcher - watches a (local) directory for changes (new files, deletes, modifies)_
+  * **FileWatcher** - watches a (local) directory for new files (someday, also deletes and modifies)
 * H
-  * _HttpVerber - executes a HTTP GET, POST, etc, using in as the body and sending the repsonse to out_
+  * **HTTPer** - executes a HTTP GET, POST, etc, using in as the body and sending the repsonse to out
 * J
   * _JQer - runs a JQ command on the input_
   * _Joiner - waits until it has an message on all input ports, then sends the concatenation(?) to out_
