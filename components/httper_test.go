@@ -51,5 +51,5 @@ func TestHTTPer(t *testing.T) {
 
 	// check the returned result
 	outJ := <-chOut
-	assert.Contains(outJ, "used for illustratve examples")
+	assert.Contains(outJ, "used for illustrative examples")
 }
