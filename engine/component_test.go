@@ -17,6 +17,7 @@ package engine
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -215,6 +216,8 @@ type MyReceiver struct {
 	// required: our component has one input port and one output port
 	Input  <-chan string
 	Output chan<- string
+
+	StateLock *sync.Mutex
 
 	// local state, for testing
 	i   int
