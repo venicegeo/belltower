@@ -20,9 +20,10 @@ import (
 	"log"
 	"sync"
 
-	"github.com/venicegeo/belltower/engine"
-
+	"math/rand"
 	"time"
+
+	"github.com/venicegeo/belltower/engine"
 )
 
 func init() {
@@ -70,6 +71,8 @@ type Ticker struct {
 	// lock around state change in Run()
 	StateLock *sync.Mutex
 
+	rnd *rand.Rand
+
 	// local state
 	isRandomized bool
 	counter      int
@@ -85,6 +88,9 @@ func (ticker *Ticker) Configure() error {
 	if err != nil {
 		return err
 	}
+
+	ticker.rnd = rand.New(rand.NewSource(17))
+	ticker.rnd.Seed(17)
 
 	ticker.interval = data.Interval
 	ticker.limit = data.Limit
@@ -117,7 +123,12 @@ func (ticker *Ticker) OnInput(_ string) {
 	}
 
 	for {
-		time.Sleep(ticker.interval)
+		secs := ticker.interval.Seconds()
+		if ticker.isRandomized {
+			// TODO: not tested
+			secs = ticker.rnd.Float64() * secs
+		}
+		time.Sleep(time.Duration(secs) * time.Second)
 
 		f()
 
