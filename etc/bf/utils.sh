@@ -91,9 +91,9 @@ http_request()
 	# and $code (the status code) are available in the calling script.
 	
 	AUTH="$3"
-	if [ -n "$AUTH" ]; then		# Unless empty, add --user tag.
-		AUTH="--user $AUTH"
-	fi
+#	if [ -n "$AUTH" ]; then		# Unless empty, add --user tag.
+#		AUTH="--user $AUTH"
+#	fi
 	
 	METHOD="$1"
 	URL="$2"
@@ -116,14 +116,24 @@ http_request()
 	fi
 	
 	yy=`curl $METHOD $AUTH $PAYLOAD -s -w ✓%{http_code} $HEADERS $URL`
-	echo YY $yy
+	echo ----
+	echo curl $METHOD $AUTH $PAYLOAD -s -w ✓%{http_code} $HEADERS $URL
 	echo ----
 	code=${yy##*✓}
-	echo CODE $code
-	echo ----
+	#echo CODE $code
+	#echo ----
 	body=${yy%✓*}
-	echo BODY $body
-	echo ----
+	#echo BODY $body
+	#echo ----
+
+	echo RESPONSE CODE: $code
+	echo RESPONSE BODY: $body
+
+	echo vvvvvvvvvvvvv
+	echo curl -S -s "$METHOD" $HEADERS -u "$AUTH""" "$PAYLOAD"  $URL
+	ret=$(curl -S -s "$METHOD" $HEADERS -u "$AUTH""" "$PAYLOAD"  $URL)
+	echo $ret
+	echo ^^^^^^^^^^^^^^^^^
 }
 
 http_get()
@@ -152,7 +162,7 @@ http_post()
 	#
 	# A 'Content-Type: application/json' header is always sent.
 	
-	http_request "POST" "$1" "$2" "$3" "Content-Type: application/json" "${@:4}"
+	http_request "POST" "$1" "$2" "$3" "Content-Type:application/json" "${@:4}"
 }
 
 assert_jq_array_contains()
