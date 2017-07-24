@@ -122,6 +122,7 @@ func (ticker *Ticker) OnInput(_ string) {
 		ticker.Output <- outJ
 	}
 
+	// TODO: should be using time.Ticker
 	for {
 		secs := ticker.interval.Seconds()
 		if ticker.isRandomized {

@@ -106,6 +106,7 @@ represented formally by a _graph._
 
 ## Next
 
+* dump graph model to "dot" file?
 * can the graph contain cycles?
 * add support for pre/post conditions
 * "slow motion" mode
