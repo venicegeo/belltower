@@ -44,4 +44,7 @@ endgraph`
 	tokenizer := Tokenizer{}
 	err := tokenizer.Scan(lines)
 	assert.NoError(err)
+
+	err = tokenizer.Parse()
+	assert.NoError(err)
 }
