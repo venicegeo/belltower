@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 
 # usage:
 #  ./beachfront.sh [image-id]
@@ -18,8 +18,9 @@ echo IMAGE: $selected_image
 
 echo -------------------------------------------------------------
 ret=$(curl -S -s -X GET -u $auth:""  ${url}/v0/algorithm)
-service_id=$(echo $ret | jq -r '.algorithms[0].service_id')
-echo SERVICE ID: $service_id
+service_id=$(echo $ret | jq -r '.algorithms[2].service_id')
+service_name=$(echo $ret | jq -r '.algorithms[2].name')
+echo SERVICE ID: $service_id "($service_name)"
 echo -------------------------------------------------------------
 echo
 
