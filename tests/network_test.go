@@ -65,63 +65,110 @@ func assertLogContainsLines(t *testing.T, filename string, expected []string) {
 }
 
 //---------------------------------------------------------------------
+
 func TestFlow(t *testing.T) {
 	assert := assert.New(t)
 
 	const logfile = "testflow.log"
 	_ = os.Remove(logfile)
 
-	components := []*engine.ComponentModel{
-		&engine.ComponentModel{
-			Name: "START",
-			Type: "Starter",
-		},
-		&engine.ComponentModel{
-			Name: "STOP",
-			Type: "Stopper",
-		},
-		&engine.ComponentModel{
-			Name: "myticker",
-			Type: "Ticker",
-			Config: engine.ArgMap{
-				"limit": 5.0,
+	/*
+		components := []*engine.ComponentModel{
+			&engine.ComponentModel{
+				Name: "START",
+				Type: "Starter",
 			},
-		},
-		&engine.ComponentModel{
-			Name: "mylogger",
-			Type: "Logger",
-			Config: engine.ArgMap{
-				"FileName": logfile,
+			&engine.ComponentModel{
+				Name: "STOP",
+				Type: "Stopper",
 			},
-		},
-		&engine.ComponentModel{
-			Name: "myadder",
-			Type: "Adder",
-			Config: engine.ArgMap{
-				"addend": 10.0,
+			&engine.ComponentModel{
+				Name: "myticker",
+				Type: "Ticker",
+				Config: engine.ArgMap{
+					"limit": 5.0,
+				},
 			},
-		},
-		&engine.ComponentModel{
-			Name: "myremapper",
-			Type: "Remapper",
-			Config: engine.ArgMap{
-				"remaps": map[string]string{"Count": "Value"},
+			&engine.ComponentModel{
+				Name: "mylogger",
+				Type: "Logger",
+				Config: engine.ArgMap{
+					"FileName": logfile,
+				},
 			},
-		},
-	}
+			&engine.ComponentModel{
+				Name: "myadder",
+				Type: "Adder",
+				Config: engine.ArgMap{
+					"addend": 10.0,
+				},
+			},
+			&engine.ComponentModel{
+				Name: "myremapper",
+				Type: "Remapper",
+				Config: engine.ArgMap{
+					"remaps": map[string]string{"Count": "Value"},
+				},
+			},
+		}
 
-	connections := []*engine.ConnectionModel{
-		&engine.ConnectionModel{Source: "START.Output", Destination: "myticker.Input"},
-		&engine.ConnectionModel{Source: "myticker.Output", Destination: "myremapper.Input"},
-		&engine.ConnectionModel{Source: "myremapper.Output", Destination: "myadder.Input"},
-		&engine.ConnectionModel{Source: "myadder.Output", Destination: "mylogger.Input"},
-		&engine.ConnectionModel{Source: "mylogger.Output", Destination: "STOP.Input"},
-	}
+		connections := []*engine.ConnectionModel{
+			&engine.ConnectionModel{Source: "START.Output", Destination: "myticker.Input"},
+			&engine.ConnectionModel{Source: "myticker.Output", Destination: "myremapper.Input"},
+			&engine.ConnectionModel{Source: "myremapper.Output", Destination: "myadder.Input"},
+			&engine.ConnectionModel{Source: "myadder.Output", Destination: "mylogger.Input"},
+			&engine.ConnectionModel{Source: "mylogger.Output", Destination: "STOP.Input"},
+		}
 
-	g := &engine.GraphModel{
-		Components:  components,
-		Connections: connections,
-	}
+		g := &engine.GraphModel{
+			Components:  components,
+			Connections: connections,
+		}
+	*/
+
+	dsl := `
+	graph mygraph
+		component START
+			type: Starter
+		end
+		component STOP
+			type: Stopper
+		end
+		component myticker
+			type: Ticker
+			config
+				limit: 5.0
+			end
+		end
+		component mylogger
+			type: Logger
+			config
+				fileName: logfile
+			end
+		end
+		component myadder
+			type: Adder
+			config
+				addend: 10.0
+			end
+		end
+		component myremapper
+			type: Remapper
+			config
+				remaps: {"Count": "Value"}
+			end
+		end
+	
+ 		START.Output -> myticker.Input
+ 		myticker.Output -> myremapper.Input
+ 		myremapper.Output -> myadder.Input
+ 		myadder.Output -> mylogger.Input
+ 		mylogger.Output -> STOP.Input
+	end
+	`
+
+	g, err := engine.ParseDSL(dsl)
+	assert.NoError(err)
 
 	net, err := engine.NewNetwork(g)
 	assert.NoError(err)

@@ -15,6 +15,8 @@ limitations under the License.
 
 package engine
 
+import "fmt"
+
 type GraphModel struct {
 	Name string `json:"name"`
 
@@ -53,6 +55,27 @@ func (m *ConnectionModel) ReadFromJSON(jsn string) error { return ReadFromJSON(j
 func (m *ConnectionModel) WriteToJSON() (string, error)  { return WriteToJSON(m) }
 
 //---------------------------------------------------------------------
+
+func (g *GraphModel) String() string {
+	s := fmt.Sprintf("Name: %s\n", g.Name)
+	for _, v := range g.Components {
+		s += fmt.Sprintf("Component: %s\n", v)
+	}
+	for _, v := range g.Connections {
+		s += fmt.Sprintf("Connection: %s\n", v)
+	}
+	return s
+}
+
+func (c *ComponentModel) String() string {
+	s := fmt.Sprintf("Name: %s, Type: %s", c.Name, c.Type)
+	return s
+}
+
+func (c *ConnectionModel) String() string {
+	s := fmt.Sprintf("Source: %s, Dest: %s", c.Source, c.Destination)
+	return s
+}
 
 /*
 type ComponentVisitor func(*ComponentModel) error

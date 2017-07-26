@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestScanner(t *testing.T) {
+func TestTokenizer(t *testing.T) {
 	assert := assert.New(t)
 
 	lines := `
@@ -41,10 +41,7 @@ graph
     endconnections
 endgraph`
 
-	tokenizer := Tokenizer{}
+	tokenizer := &Tokenizer{}
 	err := tokenizer.Scan(lines)
-	assert.NoError(err)
-
-	err = tokenizer.Parse()
 	assert.NoError(err)
 }
