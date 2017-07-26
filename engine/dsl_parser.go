@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/venicegeo/belltower/mpg/mlog"
@@ -173,7 +174,9 @@ func (p *Parser) toComponentState() error {
 	mlog.Printf("STATE: component")
 	var err error
 
-	component := &ComponentModel{}
+	component := &ComponentModel{
+		Config: ArgMap{},
+	}
 
 	token := p.tokenizer.Pop()
 	if !token.isIdent() {
@@ -202,7 +205,7 @@ func (p *Parser) toComponentState() error {
 		case token.isIdentN("postcondition"):
 			err = p.toFieldValueState(&component.Postcondition)
 		case token.isIdentN("config"):
-			err = p.toConfigState()
+			err = p.toConfigState(&component.Config)
 		case token.isIdentN("end"):
 			err = p.matchEOLs()
 			done = true
@@ -291,11 +294,9 @@ func (p *Parser) toConnectionState() error {
 	return nil
 }
 
-func (p *Parser) toConfigState() error {
+func (p *Parser) toConfigState(argMap *ArgMap) error {
 	mlog.Printf("STATE: config")
 	var err error
-
-	config := map[string]interface{}{}
 
 	err = p.matchEOLs()
 	if err != nil {
@@ -309,23 +310,16 @@ func (p *Parser) toConfigState() error {
 
 		token := p.tokenizer.Pop()
 
-		// TODO: handle structs in here
-
 		switch {
 		case token.isIdentN("end"):
 			err = p.matchEOLs()
 			done = true
 		case token.isIdent():
 			key := token.str
-			token = p.tokenizer.Pop()
-			if token.typ != ColonMarker {
-				err = p.toErrorState(token, "expected ':'")
-			} else {
-				err = p.toErrorState(token, "expected '??????'")
-				token = p.tokenizer.Pop()
-				value := token.str
-				config[key] = value
-				err = p.matchEOLs()
+			var value interface{}
+			value, err = p.toConfigValueState()
+			if err == nil {
+				(*argMap)[key] = value
 			}
 		default:
 			err = p.toErrorState(token, "expected identifier or 'end'")
@@ -341,6 +335,60 @@ func (p *Parser) toConfigState() error {
 	}
 
 	return nil
+}
+
+func (p *Parser) toConfigValueState() (interface{}, error) {
+
+	var err error
+
+	token := p.tokenizer.Pop()
+
+	if token.typ == ColonMarker {
+		token = p.tokenizer.Pop()
+		value := token.str
+		err = p.matchEOLs()
+
+		// TODO: handle ints and floats here
+
+		// if quoted string, remove quotes
+		if len(value) > 2 && value[0:1] == `"` && value[len(value)-1:len(value)] == `"` {
+			value = value[1 : len(value)-1]
+		}
+		return value, err
+	}
+
+	if token.typ == WigglyMarker {
+
+		s := ""
+		for {
+			err = nil
+
+			token = p.tokenizer.Pop()
+			if token.isEOL() {
+				p.skipEOLs()
+				break
+			}
+			s += " " + token.str
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		mlog.Printf("MAPa %s\n", s)
+
+		value := &map[string]interface{}{}
+		err = json.Unmarshal([]byte(s), value)
+		if err != nil {
+			return nil, err
+		}
+		mlog.Printf("MAPb %#v\n", value)
+		return value, err
+	}
+
+	err = p.toErrorState(token, "expected ':' or '~'")
+
+	return nil, err
 }
 
 func (p *Parser) toMetadataState() error {

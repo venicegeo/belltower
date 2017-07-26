@@ -23,6 +23,7 @@ import (
 
 	_ "github.com/venicegeo/belltower/components"
 	"github.com/venicegeo/belltower/engine"
+	"github.com/venicegeo/belltower/mpg/mlog"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -137,13 +138,13 @@ func TestFlow(t *testing.T) {
 		component myticker
 			type: Ticker
 			config
-				limit: 5.0
+				limit: 5
 			end
 		end
 		component mylogger
 			type: Logger
 			config
-				fileName: logfile
+				fileName: "testflow.log"
 			end
 		end
 		component myadder
@@ -155,7 +156,7 @@ func TestFlow(t *testing.T) {
 		component myremapper
 			type: Remapper
 			config
-				remaps: {"Count": "Value"}
+				remaps ~ {"Count": "Value"}
 			end
 		end
 	
@@ -169,6 +170,8 @@ func TestFlow(t *testing.T) {
 
 	g, err := engine.ParseDSL(dsl)
 	assert.NoError(err)
+
+	mlog.Printf("---\n%s---\n", g.String())
 
 	net, err := engine.NewNetwork(g)
 	assert.NoError(err)
@@ -192,60 +195,107 @@ func TestFlow(t *testing.T) {
 func TestTwoOutputs(t *testing.T) {
 	assert := assert.New(t)
 
-	const logfile = "testtwooutput.log"
+	const logfile = "testtwooutputs.log"
 	_ = os.Remove(logfile)
 
-	components := []*engine.ComponentModel{
-		&engine.ComponentModel{
-			Name: "START",
-			Type: "Starter",
-		},
-		&engine.ComponentModel{
-			Name: "STOP",
-			Type: "Stopper",
-		},
-		&engine.ComponentModel{
-			Name: "mycopier",
-			Type: "Copier",
-		},
-		&engine.ComponentModel{
-			Name: "myticker1",
-			Type: "Ticker",
-			Config: engine.ArgMap{
-				"limit": 3.0,
+	/*
+		components := []*engine.ComponentModel{
+			&engine.ComponentModel{
+				Name: "START",
+				Type: "Starter",
 			},
-		},
-		&engine.ComponentModel{
-			Name: "myticker10",
-			Type: "Ticker",
-			Config: engine.ArgMap{
-				"initialValue": 10,
-				"limit":        13.0,
+			&engine.ComponentModel{
+				Name: "STOP",
+				Type: "Stopper",
 			},
-		},
-		&engine.ComponentModel{
-			Name: "mylogger",
-			Type: "Logger",
-			Config: engine.ArgMap{
-				"FileName": logfile,
+			&engine.ComponentModel{
+				Name: "mycopier",
+				Type: "Copier",
 			},
-		},
-	}
+			&engine.ComponentModel{
+				Name: "myticker1",
+				Type: "Ticker",
+				Config: engine.ArgMap{
+					"limit": 3.0,
+				},
+			},
+			&engine.ComponentModel{
+				Name: "myticker10",
+				Type: "Ticker",
+				Config: engine.ArgMap{
+					"initialValue": 10,
+					"limit":        13.0,
+				},
+			},
+			&engine.ComponentModel{
+				Name: "mylogger",
+				Type: "Logger",
+				Config: engine.ArgMap{
+					"FileName": logfile,
+				},
+			},
+		}
 
-	// two outputs tied to same single input
-	connections := []*engine.ConnectionModel{
-		&engine.ConnectionModel{Source: "START.Output", Destination: "mycopier.Input"},
-		&engine.ConnectionModel{Source: "mycopier.Output1", Destination: "myticker1.Input"},
-		&engine.ConnectionModel{Source: "mycopier.Output2", Destination: "myticker10.Input"},
-		&engine.ConnectionModel{Source: "myticker1.Output", Destination: "mylogger.Input"},
-		&engine.ConnectionModel{Source: "myticker10.Output", Destination: "mylogger.Input"},
-		&engine.ConnectionModel{Source: "mylogger.Output", Destination: "STOP.Input"},
-	}
+		// two outputs tied to same single input
+		connections := []*engine.ConnectionModel{
+			&engine.ConnectionModel{Source: "START.Output", Destination: "mycopier.Input"},
+			&engine.ConnectionModel{Source: "mycopier.Output1", Destination: "myticker1.Input"},
+			&engine.ConnectionModel{Source: "mycopier.Output2", Destination: "myticker10.Input"},
+			&engine.ConnectionModel{Source: "myticker1.Output", Destination: "mylogger.Input"},
+			&engine.ConnectionModel{Source: "myticker10.Output", Destination: "mylogger.Input"},
+			&engine.ConnectionModel{Source: "mylogger.Output", Destination: "STOP.Input"},
+		}
 
-	g := &engine.GraphModel{
-		Components:  components,
-		Connections: connections,
-	}
+		g := &engine.GraphModel{
+			Components:  components,
+			Connections: connections,
+		}
+	*/
+
+	dsl := `
+	graph mygraph
+		component START
+			type: Starter
+		end
+		component STOP
+			type: Stopper
+		end
+		component mycopier
+			type: Copier
+		end
+		component myticker1
+			type: Ticker
+			config
+				limit: 3
+			end
+		end
+		component myticker10
+			type: Ticker
+			config
+				initialValue: 10
+				limit:        13
+			end
+		end
+		component mylogger
+			type: Logger
+			config
+				fileName: "testtwooutputs.log"
+			end
+		end
+
+		START.Output -> mycopier.Input
+		mycopier.Output1 -> myticker1.Input
+		mycopier.Output2 -> myticker10.Input
+		myticker1.Output -> mylogger.Input
+		myticker10.Output -> mylogger.Input
+		mylogger.Output -> STOP.Input
+	end
+	`
+
+	g, err := engine.ParseDSL(dsl)
+	assert.NoError(err)
+
+	mlog.Printf("---\n%s---\n", g.String())
 
 	net, err := engine.NewNetwork(g)
 	assert.NoError(err)

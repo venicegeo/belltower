@@ -68,7 +68,7 @@ func (g *GraphModel) String() string {
 }
 
 func (c *ComponentModel) String() string {
-	s := fmt.Sprintf("Name: %s, Type: %s", c.Name, c.Type)
+	s := fmt.Sprintf("Name: %s, Type: %s, Config: %s", c.Name, c.Type, c.Config)
 	return s
 }
 

@@ -17,6 +17,7 @@ const (
 	PeriodMarker  = 46
 	HyphenMarker  = 45
 	GreaterMarker = 62
+	WigglyMarker  = 126
 )
 
 func (t Token) isEOL() bool {

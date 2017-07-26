@@ -36,6 +36,14 @@ func NewArgMap(jsn string) (ArgMap, error) {
 	return m, nil
 }
 
+func (m ArgMap) String() string {
+	s := ""
+	for k, v := range m {
+		s += fmt.Sprintf("[%s:%s]", k, v)
+	}
+	return s
+}
+
 func (m ArgMap) ToJSON() (string, error) {
 
 	buf := []byte{}
