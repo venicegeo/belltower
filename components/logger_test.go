@@ -57,6 +57,8 @@ func TestLogger(t *testing.T) {
 
 	// ignore the returned result
 	_ = <-chOut
+	_ = <-chOut
+	_ = <-chOut
 
 	// verify the log file
 	result, err := ioutil.ReadFile(file)
