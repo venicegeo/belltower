@@ -42,7 +42,7 @@ end
 	parser := &Parser{
 		tokenizer: tokenizer,
 	}
-	err = parser.Parse()
+	err = parser.parse()
 	assert.NoError(err)
 
 	mlog.Printf("---\n%s---\n", parser.graph.String())
