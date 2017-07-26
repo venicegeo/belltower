@@ -118,7 +118,7 @@ func httpRequest(verb string, url string, reqBody string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	req.Header.Add("If-None-Match", `some value`)
+
 	resp, err := client.Do(req)
 
 	body, err := ioutil.ReadAll(resp.Body)
