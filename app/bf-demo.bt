@@ -39,6 +39,12 @@ graph bfdemo
             path: "/tmp/bf/outputs"
         end
     end
+    component notifier
+        type: Notifier
+        config
+            path: "/tmp/bf/outputs"
+        end
+    end
 
     // connections
     START.Output -> ticker.Input
@@ -46,5 +52,6 @@ graph bfdemo
     fw.Output -> bf.Input
     bf.Output -> dl.Input
     dl.Output -> burn.Input
-    burn.Output -> STOP.Input
+    burn.Output -> notifier.Input
+    notifier.Output -> STOP.Input
 end
