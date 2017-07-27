@@ -24,6 +24,7 @@ import (
 
 	flow "github.com/trustmaster/goflow"
 	"github.com/venicegeo/belltower/mpg/merr"
+	"github.com/venicegeo/belltower/mpg/mlog"
 )
 
 // Network represents a running instance of a Graph
@@ -112,7 +113,7 @@ func NewNetwork(graphModel *GraphModel) (net *Network, err error) {
 		if !ok {
 			return nil, fmt.Errorf("failed to add connection: %s to %s", connectionModel.Source, connectionModel.Destination)
 		}
-		fmt.Printf("NewNetwork: connected: %s to %s\n", connectionModel.Source, connectionModel.Destination)
+		mlog.Debugf("NewNetwork: connected: %s to %s\n", connectionModel.Source, connectionModel.Destination)
 	}
 
 	return net, nil
@@ -159,13 +160,13 @@ func (g *Network) Execute(timeout int) (err error) {
 	// set up the shutdown mechanism
 	go func() {
 		time.Sleep(time.Duration(timeout) * time.Second)
-		fmt.Printf("closing after %d seconds\n", timeout)
+		mlog.Printf("Closing engine after %d seconds\n", timeout)
 		close(in)
 	}()
 
 	// read all the outputs
 	for result := range out {
-		fmt.Printf("RESULT: %s\n", result)
+		mlog.Printf("ENGINE RESULT: %s\n", result)
 	}
 
 	// Wait until the app has done its job

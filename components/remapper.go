@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/venicegeo/belltower/engine"
+	"github.com/venicegeo/belltower/mpg/mlog"
 )
 
 func init() {
@@ -58,7 +59,7 @@ func (remapper *Remapper) Configure() error {
 }
 
 func (remapper *Remapper) OnInput(inJ string) {
-	fmt.Printf("Remapper OnInput: %s\n", inJ)
+	mlog.Printf("Remapper OnInput: %s\n", inJ)
 
 	inMap, err := engine.NewArgMap(inJ)
 	if err != nil {

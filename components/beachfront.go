@@ -129,7 +129,7 @@ func (bf *Beachfront) readBeachfrontrc() error {
 }
 
 func (bf *Beachfront) OnInput(inJ string) {
-	fmt.Printf("Beachfront OnInput: %s\n", inJ)
+	mlog.Printf("Beachfront OnInput: %s\n", inJ)
 
 	inS := &BeachfrontInputData{}
 	err := inS.ReadFromJSON(inJ)
@@ -246,7 +246,7 @@ func (bf *Beachfront) getJobStatus(jobId string) (string, error) {
 		return "", fmt.Errorf("GetJobStatus expected %d, got %d", 200, code)
 	}
 
-	//mlog.Printf("getJobStatus returned: %s", body)
+	//mlog.Debugf("getJobStatus returned: %s", body)
 
 	rt := respType{}
 	err = json.Unmarshal([]byte(body), &rt)
@@ -255,7 +255,7 @@ func (bf *Beachfront) getJobStatus(jobId string) (string, error) {
 	}
 
 	status := rt.Job.Properties.Status
-	//mlog.Printf("getJobStatus returned: %s", status)
+	//mlog.Debugf("getJobStatus returned: %s", status)
 
 	return status, nil
 }
@@ -283,7 +283,7 @@ func (bf *Beachfront) getServiceId() (string, error) {
 		return "", fmt.Errorf("GetServiceId expected %d, got %d", 200, status)
 	}
 
-	//mlog.Printf("getServiceId returned: %s", body)
+	//mlog.Debugf("getServiceId returned: %s", body)
 
 	type algType struct {
 		Name      string `json:"name"`
@@ -298,7 +298,7 @@ func (bf *Beachfront) getServiceId() (string, error) {
 		return "", err
 	}
 
-	//mlog.Printf("getServiceId returned: %v", data)
+	//mlog.Debugf("getServiceId returned: %v", data)
 
 	for _, alg := range algs.Algorithms {
 		if alg.Name == "NDWI_PY" { // TODO: don't hardcode this
@@ -317,7 +317,7 @@ func (bf *Beachfront) submitJob(serviceId string, selectedImage string) (string,
 		"planet_api_key": "` + bf.planet_key + `"
 	}`
 
-	//mlog.Printf("submitJob payload: %s", payload)
+	//mlog.Debugf("submitJob payload: %s", payload)
 
 	respBody, status, err := bf.httpRequest("POST", "/v0/job", payload)
 	if err != nil {
@@ -327,7 +327,7 @@ func (bf *Beachfront) submitJob(serviceId string, selectedImage string) (string,
 		panic(status)
 	}
 
-	//mlog.Printf("submitJob response: (%d) %s", status, respBody)
+	//mlog.Debugf("submitJob response: (%d) %s", status, respBody)
 
 	rt := respType{}
 	err = json.Unmarshal([]byte(respBody), &rt)
@@ -350,7 +350,7 @@ func (bf *Beachfront) httpRequest(verb string, urlPath string, reqBody string) (
 	req.Header.Set("Authorization", "Basic "+bf.auth64)
 	req.Header.Set("Content-Type", "application/json")
 
-	//mlog.Printf("req: %#v", req)
+	//mlog.Debugf("req: %#v", req)
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", 0, err

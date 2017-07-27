@@ -127,7 +127,7 @@ func (ls *Landsat) readBeachfrontrc() error {
 }
 
 func (ls *Landsat) OnInput(inJ string) {
-	fmt.Printf("Landsat OnInput: %s\n", inJ)
+	mlog.Printf("Landsat OnInput: %s\n", inJ)
 
 	inS := &LandsatInputData{}
 	err := inS.ReadFromJSON(inJ)
@@ -148,19 +148,19 @@ func (ls *Landsat) OnInput(inJ string) {
 			panic(status)
 		}
 
-		//mlog.Printf(string(byts))
+		//mlog.Debugf(string(byts))
 		data := map[string]interface{}{}
 		err = json.Unmarshal(byts, &data)
 		if err != nil {
 			panic(err)
 		}
 
-		//mlog.Print(data)
+		//mlog.Debug(data)
 
 		for _, color := range []string{"red", "green", "blue"} {
 
 			url := data["properties"].(map[string]interface{})["bands"].(map[string]interface{})[color].(string)
-			mlog.Print(url)
+			mlog.Debug(url)
 
 			byts, status, err = ls.httpRequest("GET", url, false)
 			if err != nil {
@@ -198,7 +198,7 @@ func (ls *Landsat) httpRequest(verb string, urlPath string, useAuth bool) ([]byt
 		req.Header.Set("Authorization", "Basic "+ls.auth64)
 	}
 
-	//mlog.Printf("req: %#v", req)
+	//mlog.Debugf("req: %#v", req)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, 0, err

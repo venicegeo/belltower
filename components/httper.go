@@ -15,7 +15,6 @@ limitations under the License.
 package components
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -82,7 +81,7 @@ func (h *HTTPer) Configure() error {
 }
 
 func (h *HTTPer) OnInput(inJ string) {
-	fmt.Printf("HTTPer OnInput: %s\n", inJ)
+	mlog.Printf("HTTPer OnInput: %s\n", inJ)
 
 	inS := &HTTPerInputData{}
 	err := inS.ReadFromJSON(inJ)

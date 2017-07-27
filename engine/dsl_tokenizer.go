@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"text/scanner"
+
+	"github.com/venicegeo/belltower/mpg/mlog"
 )
 
 type Token struct {
@@ -96,7 +98,7 @@ func (t *Tokenizer) Scan(lines string) error {
 	//t.Push(Token{typ: 0, pos: scanner.Position{}, str: "EOF"})
 
 	for _, v := range t.tokens {
-		fmt.Printf("%d  %s  %s\n", v.typ, v.pos, v.str)
+		mlog.Debugf("%d  %s  %s\n", v.typ, v.pos, v.str)
 	}
 	return nil
 }

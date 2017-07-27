@@ -15,9 +15,8 @@ limitations under the License.
 package components
 
 import (
-	"fmt"
-
 	"github.com/venicegeo/belltower/engine"
+	"github.com/venicegeo/belltower/mpg/mlog"
 )
 
 func init() {
@@ -76,7 +75,7 @@ func (adder *Adder) Configure() error {
 }
 
 func (adder *Adder) OnInput(inJ string) {
-	fmt.Printf("Adder OnInput: %s\n", inJ)
+	mlog.Printf("Adder OnInput: %s\n", inJ)
 
 	inS := &AdderInputData{}
 	err := inS.ReadFromJSON(inJ)

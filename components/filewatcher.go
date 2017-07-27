@@ -15,7 +15,6 @@ limitations under the License.
 package components
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -40,10 +39,11 @@ func (m *FileWatcherInputData) ReadFromJSON(jsn string) error { return engine.Re
 func (m *FileWatcherInputData) WriteToJSON() (string, error)  { return engine.WriteToJSON(m) }
 
 type FileWatcherOutputData struct {
-	Path      string
-	Names     []string
-	StartTime time.Time
-	EndTime   time.Time
+	Path          string
+	Names         []string
+	StartTime     time.Time
+	EndTime       time.Time
+	SelectedImage string // TEMP
 }
 
 func (m *FileWatcherOutputData) Validate() error               { return nil } // TODO
@@ -79,13 +79,11 @@ func (fw *FileWatcher) Configure() error {
 // connected to a timer. The interval is taken from the last time we
 // were run (and the first time we're run we just record the start time).
 func (fw *FileWatcher) OnInput(inJ string) {
-	fmt.Printf("FileWatcher OnInput: %s\n", inJ)
+	mlog.Printf("FileWatcher OnInput: %s\n", inJ)
 
 	var err error
 
 	now := time.Now()
-
-	outS := &FileWatcherOutputData{}
 
 	// TODO: support checking for new files, deleted files, updated files
 	// TODO: return the whole os.FileInfo object, not just the name
@@ -94,13 +92,13 @@ func (fw *FileWatcher) OnInput(inJ string) {
 	if fw.endTime.IsZero() {
 		// the first time, so we just establish the starting time
 		fw.endTime = now
-		mlog.Printf("Not walking: to %s", fw.endTime)
+		mlog.Debugf("Not walking: to %s", fw.endTime)
 
 	} else {
 		fw.startTime = fw.endTime
 		fw.endTime = now
 
-		mlog.Printf("Walking: %s to %s", fw.startTime, fw.endTime)
+		mlog.Debugf("Walking: %s to %s", fw.startTime, fw.endTime)
 
 		files, err = walk(fw.path, fw.startTime, fw.endTime)
 		if err != nil {
@@ -108,20 +106,23 @@ func (fw *FileWatcher) OnInput(inJ string) {
 		}
 	}
 
-	// TODO: lastRun is set too late -- need to have walk() use a time range,
-	// and make the new time range start at the end of the old one
+	for _, file := range files {
+		outS := &FileWatcherOutputData{}
+		outS.Names = []string{file}
+		outS.SelectedImage = file[len(fw.path)+1 : len(file)]
+		outS.Path = fw.path
+		outS.StartTime = fw.startTime
+		outS.EndTime = fw.endTime
 
-	outS.Names = files
-	outS.Path = fw.path
-	outS.StartTime = fw.startTime
-	outS.EndTime = fw.endTime
+		outJ, err := outS.WriteToJSON()
+		if err != nil {
+			panic(err)
+		}
 
-	outJ, err := outS.WriteToJSON()
-	if err != nil {
-		panic(err)
+		mlog.Printf("FileWatcher output: %s\n", outJ)
+
+		fw.Output <- outJ
 	}
-
-	fw.Output <- outJ
 }
 
 func inTimeRange(t, start, end time.Time) bool {

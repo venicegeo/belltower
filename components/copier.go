@@ -15,9 +15,8 @@ limitations under the License.
 package components
 
 import (
-	"fmt"
-
 	"github.com/venicegeo/belltower/engine"
+	"github.com/venicegeo/belltower/mpg/mlog"
 )
 
 func init() {
@@ -50,7 +49,7 @@ func (copier *Copier) Configure() error {
 }
 
 func (copier *Copier) OnInput(inJ string) {
-	fmt.Printf("Copier OnInput: %s\n", inJ)
+	mlog.Printf("Copier OnInput: %s\n", inJ)
 
 	copier.Output1 <- inJ
 	copier.Output2 <- inJ

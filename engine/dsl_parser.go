@@ -118,7 +118,7 @@ func (p *Parser) toErrorState(tok Token, msg string) error {
 }
 
 func (p *Parser) toGraphState() error {
-	mlog.Printf("at actionGraph")
+	mlog.Debugf("at actionGraph")
 	var err error
 
 	p.graph = &GraphModel{}
@@ -152,7 +152,7 @@ func (p *Parser) toGraphState() error {
 			done = true
 		case token.isIdent():
 			p.tokenizer.PutBack(token)
-			mlog.Printf("PUSHING %s", token)
+			mlog.Debugf("PUSHING %s", token)
 			err = p.toConnectionState()
 		default:
 			err = p.toErrorState(token, "expected 'component', 'metadata', 'end', or identifier")
@@ -171,7 +171,7 @@ func (p *Parser) toGraphState() error {
 }
 
 func (p *Parser) toComponentState() error {
-	mlog.Printf("STATE: component")
+	mlog.Debugf("STATE: component")
 	var err error
 
 	component := &ComponentModel{
@@ -228,7 +228,7 @@ func (p *Parser) toComponentState() error {
 }
 
 func (p *Parser) toConnectionState() error {
-	mlog.Printf("STATE: connection %s", p.tokenizer.Peek())
+	mlog.Debugf("STATE: connection %s", p.tokenizer.Peek())
 	var err error
 
 	// name.name -> name.name
@@ -282,7 +282,7 @@ func (p *Parser) toConnectionState() error {
 		return err
 	}
 
-	mlog.Printf("GOT: %s.%s -> %s.%s", sourceComponent, sourcePort, destinationComponent, destinationPort)
+	mlog.Debugf("GOT: %s.%s -> %s.%s", sourceComponent, sourcePort, destinationComponent, destinationPort)
 
 	connection := &ConnectionModel{
 		Source:      sourceComponent + "." + sourcePort,
@@ -295,7 +295,7 @@ func (p *Parser) toConnectionState() error {
 }
 
 func (p *Parser) toConfigState(argMap *ArgMap) error {
-	mlog.Printf("STATE: config")
+	mlog.Debugf("STATE: config")
 	var err error
 
 	err = p.matchEOLs()
@@ -375,14 +375,14 @@ func (p *Parser) toConfigValueState() (interface{}, error) {
 			return nil, err
 		}
 
-		mlog.Printf("MAPa %s\n", s)
+		mlog.Debugf("MAPa %s\n", s)
 
 		value := &map[string]interface{}{}
 		err = json.Unmarshal([]byte(s), value)
 		if err != nil {
 			return nil, err
 		}
-		mlog.Printf("MAPb %#v\n", value)
+		mlog.Debugf("MAPb %#v\n", value)
 		return value, err
 	}
 
@@ -392,7 +392,7 @@ func (p *Parser) toConfigValueState() (interface{}, error) {
 }
 
 func (p *Parser) toMetadataState() error {
-	mlog.Printf("STATE: metadata")
+	mlog.Debugf("STATE: metadata")
 	var err error
 
 	meta := map[string]interface{}{}

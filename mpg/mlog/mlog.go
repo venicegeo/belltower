@@ -24,8 +24,14 @@ import (
 
 // mlog presents a restricted view of the standard log package
 
-// Verbose controls whether or not Debug and Debugf do anything
-var Verbose bool
+// Verbose controls whether or not anything is logged
+var Verbose int
+
+const (
+	VerboseOff  = 0
+	VerboseOn   = 1
+	VerboseFull = 2
+)
 
 // log.Lshortfile doesn't work: it will always report the source file is mlog.go,
 // because the log pavkage has the call depth hard-coded to 2.
@@ -38,34 +44,38 @@ func useSource() bool {
 }
 
 func Printf(format string, v ...interface{}) {
-	if useSource() {
-		format = mutils.SourceFile(calldepth) + " " + format
+	if Verbose >= VerboseOn {
+		if useSource() {
+			format = mutils.SourceFile(calldepth) + " " + format
+		}
+		log.Printf(format, v...)
 	}
-	log.Printf(format, v...)
 }
 
 func Print(v ...interface{}) {
-	if useSource() {
-		vv := []interface{}{
-			mutils.SourceFile(calldepth) + " ",
+	if Verbose >= VerboseOn {
+		if useSource() {
+			vv := []interface{}{
+				mutils.SourceFile(calldepth) + " ",
+			}
+			for _, x := range v {
+				vv = append(vv, x)
+			}
+			log.Print(vv...)
+		} else {
+			log.Print(v...)
 		}
-		for _, x := range v {
-			vv = append(vv, x)
-		}
-		log.Print(vv...)
-	} else {
-		log.Print(v...)
 	}
 }
 
 func Debugf(format string, v ...interface{}) {
-	if Verbose {
+	if Verbose >= VerboseFull {
 		Printf(format, v...)
 	}
 }
 
 func Debug(v ...interface{}) {
-	if Verbose {
+	if Verbose >= VerboseFull {
 		log.Print(v...)
 	}
 }

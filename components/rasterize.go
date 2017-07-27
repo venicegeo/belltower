@@ -105,16 +105,16 @@ func (r *Rasterize) OnInput(inJ string) {
 			{"gdal_rasterize", "-q", "-b", "1", "-b", "2", "-b", "3", "-burn", "65535", "-burn", "65535", "-burn", "65535", geojson, coastTif},
 		}
 		for _, args := range commands {
-			mlog.Print(args)
+			mlog.Debug(args)
 			stdout, stderr, err := r.run(args[0], args[1:])
 			if err != nil {
 				panic(err)
 			}
 			if stdout != "" {
-				mlog.Printf("STDOUT: %s", stdout)
+				mlog.Debugf("STDOUT: %s", stdout)
 			}
 			if stderr != "" {
-				mlog.Printf("STDERR: %s", stderr)
+				mlog.Debugf("STDERR: %s", stderr)
 				panic(stderr)
 			}
 		}
@@ -153,14 +153,11 @@ func (r *Rasterize) run(nam string, args []string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	//mlog.Printf("STDERR: %s\n", slurpErr)
 
 	slurpOut, err := ioutil.ReadAll(stdout)
 	if err != nil {
 		return "", "", err
 	}
-
-	//mlog.Printf("STDOUT: %s\n", slurpOut)
 
 	err = cmd.Wait()
 	if err != nil {

@@ -16,9 +16,8 @@ limitations under the License.
 package engine
 
 import (
-	"fmt"
-
 	"github.com/trustmaster/goflow"
+	"github.com/venicegeo/belltower/mpg/mlog"
 )
 
 type Component interface {
@@ -104,7 +103,7 @@ type Starter struct {
 
 func (*Starter) Configure() error { return nil }
 func (s *Starter) OnInput(string) {
-	fmt.Printf("Starter OnInput\n")
+	mlog.Printf("Starter OnInput\n")
 	s.Output <- "{}"
 }
 
@@ -117,6 +116,6 @@ type Stopper struct {
 func (*Stopper) Configure() error { return nil }
 
 func (s *Stopper) OnInput(string) {
-	fmt.Printf("Stopper OnInput\n")
+	mlog.Printf("Stopper OnInput\n")
 	s.Output <- "{}"
 }

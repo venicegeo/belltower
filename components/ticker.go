@@ -16,14 +16,13 @@ limitations under the License.
 package components
 
 import (
-	"fmt"
-	"log"
 	"sync"
 
 	"math/rand"
 	"time"
 
 	"github.com/venicegeo/belltower/engine"
+	"github.com/venicegeo/belltower/mpg/mlog"
 )
 
 func init() {
@@ -99,16 +98,16 @@ func (ticker *Ticker) Configure() error {
 
 	ticker.counter = data.InitialValue
 
-	log.Printf("%#v", ticker.counter)
+	mlog.Debugf("%#v", ticker.counter)
 	return nil
 }
 
 func (ticker *Ticker) OnInput(_ string) {
-	fmt.Printf("Ticker OnInput\n")
+	mlog.Printf("Ticker OnInput\n")
 
 	f := func() {
 		ticker.counter++
-		fmt.Printf("Ticker.Run: counter=%d\n", ticker.counter)
+		mlog.Debugf("Ticker.Run: counter=%d\n", ticker.counter)
 
 		outS := &TickerOutputData{
 			Count: ticker.counter,

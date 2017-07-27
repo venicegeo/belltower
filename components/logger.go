@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 
 	"github.com/venicegeo/belltower/engine"
+	"github.com/venicegeo/belltower/mpg/mlog"
 )
 
 func init() {
@@ -59,7 +60,7 @@ func (logger *Logger) Configure() error {
 }
 
 func (logger *Logger) OnInput(inJ string) {
-	fmt.Printf("Logger OnInput: %s\n", inJ)
+	mlog.Printf("Logger OnInput: %s\n", inJ)
 
 	dst := new(bytes.Buffer)
 
