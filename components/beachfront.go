@@ -315,6 +315,9 @@ func (bf *Beachfront) httpRequest(verb string, urlPath string, reqBody string) (
 
 	//mlog.Printf("req: %#v", req)
 	resp, err := client.Do(req)
+	if err != nil {
+		return "", 0, err
+	}
 
 	status := resp.StatusCode
 
