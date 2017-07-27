@@ -169,7 +169,7 @@ func (ls *Landsat) OnInput(inJ string) {
 			if status != 200 {
 				panic(status)
 			}
-			err = ioutil.WriteFile(color+".tif", byts, 0600)
+			err = ioutil.WriteFile(inS.SelectedImage+"-"+color+".tif", byts, 0600)
 			if err != nil {
 				panic(err)
 			}

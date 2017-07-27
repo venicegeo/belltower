@@ -35,7 +35,6 @@ func init() {
 type BeachfrontConfigData struct {
 }
 
-// implements Serializer
 type BeachfrontInputData struct {
 	SelectedImage string
 }
@@ -44,7 +43,6 @@ func (m *BeachfrontInputData) Validate() error               { return nil } // T
 func (m *BeachfrontInputData) ReadFromJSON(jsn string) error { return engine.ReadFromJSON(jsn, m) }
 func (m *BeachfrontInputData) WriteToJSON() (string, error)  { return engine.WriteToJSON(m) }
 
-// implements Serializer
 type BeachfrontOutputData struct {
 	SelectedImage string
 }
@@ -161,6 +159,11 @@ func (bf *Beachfront) OnInput(inJ string) {
 		if err != nil {
 			panic(err)
 		}
+
+		err = bf.getFiles(jobId, inS.SelectedImage)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	outS.SelectedImage = inS.SelectedImage
@@ -171,6 +174,40 @@ func (bf *Beachfront) OnInput(inJ string) {
 	}
 
 	bf.Output <- outJ
+}
+
+func (bf *Beachfront) getFiles(jobId string, image string) error {
+	body, code, err := bf.httpRequest("GET", "/v0/job/"+jobId, "")
+	if err != nil {
+		return err
+	}
+	byts := []byte(body)
+
+	if code != 200 {
+		return fmt.Errorf("GetFiles expected %d, got %d", 200, code)
+	}
+
+	err = ioutil.WriteFile(image+".json", byts, 0600)
+	if err != nil {
+		panic(err)
+	}
+
+	body, code, err = bf.httpRequest("GET", "/v0/job/"+jobId+".geojson", "")
+	if err != nil {
+		return err
+	}
+	byts = []byte(body)
+
+	if code != 200 {
+		return fmt.Errorf("GetFiles expected %d, got %d", 200, code)
+	}
+
+	err = ioutil.WriteFile(image+".geojson", byts, 0600)
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
 }
 
 func (bf *Beachfront) waitForSuccess(jobId string) error {
