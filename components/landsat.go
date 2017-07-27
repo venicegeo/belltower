@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/venicegeo/belltower/engine"
 	"github.com/venicegeo/belltower/mpg/mlog"
@@ -31,6 +32,7 @@ func init() {
 }
 
 type LandsatConfigData struct {
+	Path string
 }
 
 type LandsatInputData struct {
@@ -64,6 +66,7 @@ type Landsat struct {
 
 	// local state
 	addend float64
+	path   string
 }
 
 func (ls *Landsat) Configure() error {
@@ -81,6 +84,8 @@ func (ls *Landsat) Configure() error {
 
 	ls.url = "https://bf-ia-broker." + ls.domain
 	ls.auth64 = base64.StdEncoding.EncodeToString([]byte(ls.auth))
+
+	ls.path = data.Path
 
 	return nil
 }
@@ -159,6 +164,8 @@ func (ls *Landsat) OnInput(inJ string) {
 
 		for _, color := range []string{"red", "green", "blue"} {
 
+			mlog.Printf("Landsat downloading %s / %s\n", inS.SelectedImage, color)
+
 			url := data["properties"].(map[string]interface{})["bands"].(map[string]interface{})[color].(string)
 			mlog.Debug(url)
 
@@ -169,7 +176,7 @@ func (ls *Landsat) OnInput(inJ string) {
 			if status != 200 {
 				panic(status)
 			}
-			err = ioutil.WriteFile(inS.SelectedImage+"-"+color+".tif", byts, 0600)
+			err = ioutil.WriteFile(ls.path+"/"+inS.SelectedImage+"-"+color+".tif", byts, 0600)
 			if err != nil {
 				panic(err)
 			}
@@ -188,7 +195,7 @@ func (ls *Landsat) OnInput(inJ string) {
 
 func (ls *Landsat) httpRequest(verb string, urlPath string, useAuth bool) ([]byte, int, error) {
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: time.Duration(30 * time.Minute)}
 	req, err := http.NewRequest(verb, urlPath, nil)
 	if err != nil {
 		return nil, 0, err

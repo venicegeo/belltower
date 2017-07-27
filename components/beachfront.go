@@ -33,6 +33,7 @@ func init() {
 }
 
 type BeachfrontConfigData struct {
+	Path string
 }
 
 type BeachfrontInputData struct {
@@ -66,6 +67,7 @@ type Beachfront struct {
 
 	// local state
 	addend float64
+	path   string
 }
 
 func (bf *Beachfront) Configure() error {
@@ -83,6 +85,8 @@ func (bf *Beachfront) Configure() error {
 
 	bf.url = "https://bf-api." + bf.domain
 	bf.auth64 = base64.StdEncoding.EncodeToString([]byte(bf.auth))
+
+	bf.path = data.Path
 
 	return nil
 }
@@ -129,13 +133,14 @@ func (bf *Beachfront) readBeachfrontrc() error {
 }
 
 func (bf *Beachfront) OnInput(inJ string) {
-	mlog.Printf("Beachfront OnInput: %s\n", inJ)
 
 	inS := &BeachfrontInputData{}
 	err := inS.ReadFromJSON(inJ)
 	if err != nil {
 		panic(err)
 	}
+
+	mlog.Printf("Beachfront OnInput: %s\n", inS)
 
 	outS := &BeachfrontOutputData{}
 
@@ -160,6 +165,7 @@ func (bf *Beachfront) OnInput(inJ string) {
 			panic(err)
 		}
 
+		mlog.Printf("Beachfront downloading %s / geojson\n", inS.SelectedImage)
 		err = bf.getFiles(jobId, inS.SelectedImage)
 		if err != nil {
 			panic(err)
@@ -187,7 +193,7 @@ func (bf *Beachfront) getFiles(jobId string, image string) error {
 		return fmt.Errorf("GetFiles expected %d, got %d", 200, code)
 	}
 
-	err = ioutil.WriteFile(image+".json", byts, 0600)
+	err = ioutil.WriteFile(bf.path+"/"+image+".json", byts, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -202,7 +208,7 @@ func (bf *Beachfront) getFiles(jobId string, image string) error {
 		return fmt.Errorf("GetFiles expected %d, got %d", 200, code)
 	}
 
-	err = ioutil.WriteFile(image+".geojson", byts, 0600)
+	err = ioutil.WriteFile(bf.path+"/"+image+".geojson", byts, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -341,7 +347,7 @@ func (bf *Beachfront) submitJob(serviceId string, selectedImage string) (string,
 func (bf *Beachfront) httpRequest(verb string, urlPath string, reqBody string) (string, int, error) {
 	reqBodyBuf := bytes.NewBufferString(reqBody)
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: time.Duration(30 * time.Minute)}
 	req, err := http.NewRequest(verb, bf.url+urlPath, reqBodyBuf)
 	if err != nil {
 		return "", 0, err

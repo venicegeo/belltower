@@ -28,6 +28,7 @@ func init() {
 }
 
 type RasterizeConfigData struct {
+	Path string
 }
 
 type RasterizeInputData struct {
@@ -61,16 +62,18 @@ type Rasterize struct {
 
 	// local state
 	addend float64
+	path   string
 }
 
-func (ls *Rasterize) Configure() error {
+func (r *Rasterize) Configure() error {
 
 	data := RasterizeConfigData{}
-	err := ls.Config.ToStruct(&data)
+	err := r.Config.ToStruct(&data)
 	if err != nil {
 		return err
 	}
 
+	r.path = data.Path
 	return nil
 }
 
@@ -91,12 +94,12 @@ func (r *Rasterize) OnInput(inJ string) {
 		//gdal_merge.py -separate -o rgb.tif red.tif green.tif blue.tif
 		//gdal_rasterize -b 1 -b 2 -b 3 -burn 65535 -burn 65535 -burn 65535 in.geojson rgb.tif
 
-		redTif := inS.SelectedImage + "-red.tif"
-		greenTif := inS.SelectedImage + "-green.tif"
-		blueTif := inS.SelectedImage + "-blue.tif"
-		rgbTif := inS.SelectedImage + "-rgb.tif"
-		coastTif := inS.SelectedImage + "-coast.tif"
-		geojson := inS.SelectedImage + ".geojson"
+		redTif := r.path + "/" + inS.SelectedImage + "-red.tif"
+		greenTif := r.path + "/" + inS.SelectedImage + "-green.tif"
+		blueTif := r.path + "/" + inS.SelectedImage + "-blue.tif"
+		rgbTif := r.path + "/" + inS.SelectedImage + "-rgb.tif"
+		coastTif := r.path + "/" + inS.SelectedImage + "-coast.tif"
+		geojson := r.path + "/" + inS.SelectedImage + ".geojson"
 
 		commands := [][]string{
 			{"rm", "-f", rgbTif, coastTif},

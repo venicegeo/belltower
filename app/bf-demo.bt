@@ -1,0 +1,50 @@
+graph bfdemo
+
+    // required
+    component START
+        type: Starter
+    end
+    component STOP
+        type: Stopper
+    end
+
+    component ticker
+        type: Ticker
+        config
+            interval: "5s"
+            limit: 10
+        end
+    end
+    component fw
+        type: FileWatcher
+        config
+            path: "/tmp/bf/inputs"
+        end
+    end
+    component bf
+        type: Beachfront
+        config
+            path: "/tmp/bf/outputs"
+        end
+    end
+    component dl
+        type: Landsat
+        config
+            path: "/tmp/bf/outputs"
+        end
+    end
+    component burn
+        type: Rasterize
+        config
+            path: "/tmp/bf/outputs"
+        end
+    end
+
+    // connections
+    START.Output -> ticker.Input
+    ticker.Output -> fw.Input
+    fw.Output -> bf.Input
+    bf.Output -> dl.Input
+    dl.Output -> burn.Input
+    burn.Output -> STOP.Input
+end
