@@ -100,9 +100,10 @@ represented formally by a _graph._
 ## Now
 
 * error propagation, both within the libraries and from running components
-* add "verbose/logging" mode
-* revive file watcher lib (and tests)
 * nice model for error handling in general
+* rename Rasterizer, Landsat ("bf-" or something)
+* split out BF library
+* add graph/dot support
 
 ## Next
 
@@ -119,7 +120,6 @@ represented formally by a _graph._
   * security
   * user management
   * database to persist state
-* add DSL support - parser, etc.
 * add argument type checking
 * add metadata support
 * add "notes" support
@@ -177,7 +177,9 @@ represented formally by a _graph._
 * A
   * **Adder** - just adds a set value to a field: "in.x + config.y -> out.z"
 * B
-  * _Beachfronter - runs a BF command_
+  * **Beachfronter** - runs a BF job
+  * **bf-Landsat** - downloads Landsat images for BF
+  * **bf-Rasterizer** - merges landsat bands + geojson
 * C
   * **Copier** - duplicates the input, e.g. "in -> out1, out2
 * F
@@ -191,6 +193,8 @@ represented formally by a _graph._
   * **Logger** - writes in to a file (or stdout (or stderr))
 * M
   * _Mailer - sends mail, with body (and To/Subject?) taken from in_
+* N
+  * **Notifier** - sends a dektop-style notification (Mac only)
 * O
   * _Orer - when an input is recieved at any of two or more input ports, forwards the result to out_
 * P
